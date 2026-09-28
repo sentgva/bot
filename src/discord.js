@@ -1,39 +1,34 @@
 import { discordInvite } from './content.js';
 
 // Живые цифры сервера из публичного инвайта. Discord легко отдаёт 429,
-// поэтому держим кэш и при ошибке показываем последнее известное значение.
+// поэтому кэшируем в хранилище на 10 минут, а при ошибке показываем последнее известное.
 
-const TTL = 10 * 60 * 1000;
-const RETRY = 2 * 60 * 1000;
-
-let cache = { members: null, online: null };
-let nextFetchAt = 0;
-let inflight = null;
-
-async function refresh() {
+async function fetchCounts() {
   try {
     const res = await fetch(
       `https://discord.com/api/v10/invites/${encodeURIComponent(discordInvite)}?with_counts=true`,
-      { signal: AbortSignal.timeout(5000) },
+      { signal: AbortSignal.timeout(4000) },
     );
     if (!res.ok) throw new Error(`Discord ${res.status}`);
     const data = await res.json();
-    cache = {
-      members: data.approximate_member_count ?? cache.members,
-      online: data.approximate_presence_count ?? cache.online,
-    };
-    nextFetchAt = Date.now() + TTL;
+    return { members: data.approximate_member_count ?? null, online: data.approximate_presence_count ?? null };
   } catch (err) {
-    nextFetchAt = Date.now() + RETRY;
     console.warn('Не удалось обновить статистику Discord:', err.message);
-  } finally {
-    inflight = null;
+    return null;
   }
 }
 
-export async function discordStats() {
-  if (Date.now() >= nextFetchAt && !inflight) inflight = refresh();
-  // Первый раз ждём ответа, дальше отдаём кэш сразу и обновляем в фоне
-  if (cache.members === null && inflight) await inflight;
-  return cache;
+let memo = null;
+
+export async function discordStats(db) {
+  if (memo && Date.now() - memo.at < 60_000) return memo.value;
+  let value = await db.cacheGet('discord');
+  if (!value && !(await db.cacheGet('discord:wait'))) {
+    value = await fetchCounts();
+    if (value) await Promise.all([db.cacheSet('discord', value, 600), db.cacheSet('discord:last', value, 30 * 86400)]);
+    else await db.cacheSet('discord:wait', 1, 120);
+  }
+  value ||= (await db.cacheGet('discord:last')) || { members: null, online: null };
+  memo = { at: Date.now(), value };
+  return value;
 }

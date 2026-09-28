@@ -9,8 +9,13 @@ const ADMIN = 1;
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sovside-'));
 Object.assign(process.env, { BOT_TOKEN: TOKEN, ADMIN_ID: String(ADMIN), DATA_DIR: dir, WEBAPP_URL: 'https://example.com' });
 
+const { Bot } = await import('grammy');
+const { config } = await import('../src/config.js');
+const { openStore } = await import('../src/store.js');
 const { openDb } = await import('../src/db.js');
+const { openMedia } = await import('../src/media.js');
 const { createChat } = await import('../src/chat.js');
+const { registerBot } = await import('../src/bot.js');
 const { createServer } = await import('../src/server.js');
 const { signInitData, verifyInitData } = await import('../src/auth.js');
 const { buildOrder } = await import('../src/orders.js');
@@ -23,8 +28,15 @@ const fakeApi = {
   getFile: async () => ({ file_path: 'photos/x.jpg' }),
 };
 
-const db = openDb(dir);
-const chat = createChat(db, fakeApi);
+// С TEST_DATABASE_URL тесты идут на настоящем Postgres, в отдельном пространстве ключей
+const db = openDb(openStore({ postgresUrl: process.env.TEST_DATABASE_URL }), { prefix: `test${Date.now()}` });
+const media = openMedia({ dataDir: dir });
+const chat = createChat(db, fakeApi, media);
+const bot = new Bot(TOKEN, { botInfo: { id: 42, is_bot: true, first_name: 'sovside', username: 'sovside_bot' } });
+bot.api.config.use(async () => ({ ok: true, result: true }));
+registerBot(bot, db, chat);
+config.botUsername = 'sovside_bot';
+await db.cacheSet('discord', { members: 11970, online: 4000 }, 600);
 let server;
 let base;
 
@@ -46,13 +58,12 @@ async function call(user, route, { method = 'GET', body } = {}) {
 const tick = () => new Promise((r) => setTimeout(r, 20));
 
 before(async () => {
-  server = createServer(db, chat).listen(0);
+  server = createServer({ db, chat, bot, media, webhook: true }).listen(0);
   await new Promise((r) => server.once('listening', r));
   base = `http://127.0.0.1:${server.address().port}`;
 });
 after(() => {
   server.close();
-  db.flush();
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
@@ -81,6 +92,7 @@ test('публичная информация доступна без Telegram',
   assert.equal(status, 200);
   assert.ok(data.catalog.length > 0);
   assert.ok(data.links.discord.startsWith('https://discord.gg/'));
+  assert.equal(data.stats.members, 11970);
 });
 
 test('без подписи Telegram приватное API закрыто', async () => {
@@ -97,7 +109,7 @@ test('сообщение клиента уходит админу, ответ р
   const note = sent.find((s) => s.chatId === ADMIN);
   assert.ok(note, 'админ получил уведомление');
   assert.match(note.text, /Привет &lt;b&gt;/);
-  assert.equal(db.getRelay(ADMIN, messageId), alice.id);
+  assert.equal(await db.getRelay(ADMIN, messageId), alice.id);
 });
 
 test('клиент видит только свой чат', async () => {
@@ -168,10 +180,32 @@ test('картинки: принимаем только настоящие из�
   );
   const ok = await call(alice, 'chat', { method: 'POST', body: { image: `data:image/png;base64,${png.toString('base64')}` } });
   assert.equal(ok.status, 200);
-  assert.ok(fs.existsSync(path.join(dir, 'uploads', ok.data.message.image)));
+  assert.match(ok.data.message.image, /^media\/[a-f0-9]{24}\.png$/);
+  assert.ok(fs.existsSync(path.join(dir, 'uploads', path.basename(ok.data.message.image))));
 
   const fake = await call(alice, 'chat', { method: 'POST', body: { image: `data:image/png;base64,${Buffer.from('<script>').toString('base64')}` } });
   assert.equal(fake.status, 400);
   const svgImg = await call(alice, 'chat', { method: 'POST', body: { image: 'data:image/svg+xml;base64,PHN2Zz4=' } });
   assert.equal(svgImg.status, 400);
+});
+
+test('опрос чата: без изменений отвечаем коротко', async () => {
+  const first = await call(alice, 'chat');
+  assert.ok(first.data.messages.length > 0);
+  const again = await call(alice, `chat?v=${first.data.v}&after=${first.data.messages.at(-1).id}`);
+  assert.deepEqual(again.data, { v: first.data.v, same: true });
+  await call(admin, 'chat', { method: 'POST', body: { text: 'новое', user: alice.id } });
+  const changed = await call(alice, `chat?v=${first.data.v}&after=${first.data.messages.at(-1).id}`);
+  assert.equal(changed.data.messages.length, 1);
+  assert.equal(changed.data.messages[0].text, 'новое');
+});
+
+test('вебхук Telegram принимает только запросы с секретом', async () => {
+  const update = { update_id: 1, message: { message_id: 1, date: 0, chat: { id: 555, type: 'private' }, from: { id: 555, is_bot: false, first_name: 'Hook' }, text: 'через вебхук' } };
+  const post = (headers) =>
+    fetch(`${base}/api/telegram`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...headers }, body: JSON.stringify(update) });
+  assert.equal((await post({ 'X-Telegram-Bot-Api-Secret-Token': 'wrong' })).status, 401);
+  assert.equal((await db.messages(555)).length, 0);
+  assert.equal((await post({ 'X-Telegram-Bot-Api-Secret-Token': config.webhookSecret })).status, 200);
+  assert.equal((await db.messages(555))[0].text, 'через вебхук');
 });

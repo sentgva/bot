@@ -8,12 +8,15 @@
   "scripts": {
     "start": "node --disable-warning=DEP0040 src/index.js",
     "dev": "node --disable-warning=DEP0040 --watch src/index.js",
-    "test": "node --test test/*.test.js"
+    "test": "node --test test/*.test.js",
+    "setup": "node scripts/setup.js"
   },
   "engines": {
     "node": ">=20.12"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.1.0",
+    "@vercel/blob": "^2.8.0",
     "express": "^5.2.1",
     "grammy": "^1.46.0"
   }

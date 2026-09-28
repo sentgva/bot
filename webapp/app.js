@@ -213,7 +213,7 @@
 
       intro.addEventListener('pointerdown', () => { haptic.tap(); leave(); }, { once: true });
 
-      const fonts = document.fonts ? document.fonts.load('72px "Rubik Wet Paint"').catch(() => {}) : null;
+      const fonts = document.fonts ? document.fonts.load('300 52px "Unbounded"').catch(() => {}) : null;
       const img = $('img', fly);
       const imgReady = img.decode ? img.decode().catch(() => {}) : null;
       Promise.race([Promise.all([fonts, imgReady]), wait(1200)]).then(() => {
@@ -413,6 +413,7 @@
     userId: null,
     epoch: 0,
     lastId: 0,
+    v: null,
     ids: new Set(),
     orders: new Map(),
     prev: null,
@@ -428,6 +429,7 @@
     chat.userId = userId;
     chat.epoch++;
     chat.lastId = 0;
+    chat.v = null;
     chat.ids.clear();
     chat.orders.clear();
     chat.prev = null;
@@ -514,7 +516,7 @@
     }
 
     const bubble = h('div', { class: 'bubble' });
-    const src = m.localImage || (m.image && `media/${m.image}`);
+    const src = m.localImage || m.image;
     if (src) {
       bubble.classList.add('has-img');
       if (!m.text) bubble.classList.add('img-only');
@@ -557,7 +559,7 @@
       h('div', { class: 'empty' },
         h('img', { src: 'assets/butterfly.webp', alt: '' }),
         h('b', { text: 'Напиши, что хочешь сделать' }),
-        h('p', { text: 'Отвечу здесь же. Эту переписку видим только мы двое.' }),
+        h('p', { text: 'Отвечу здесь же.' }),
       ),
     );
   }
@@ -567,9 +569,11 @@
     const epoch = chat.epoch;
     const q = new URLSearchParams();
     if (chat.lastId) q.set('after', chat.lastId);
+    if (chat.v !== null) q.set('v', chat.v);
     if (state.isAdmin) q.set('user', chat.userId);
     const data = await api(`chat?${q}`);
-    if (epoch !== chat.epoch) return;
+    if (epoch !== chat.epoch || data.same) return;
+    chat.v = data.v;
 
     if (data.peer) setPeer(data.peer);
     updateOrders(data.orders);

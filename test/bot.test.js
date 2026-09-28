@@ -9,13 +9,19 @@ const CLIENT = 100;
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sovside-bot-'));
 Object.assign(process.env, { BOT_TOKEN: '123456:TEST_TOKEN', ADMIN_ID: String(ADMIN), DATA_DIR: dir, WEBAPP_URL: 'https://example.com' });
 
+const { Bot } = await import('grammy');
+const { config } = await import('../src/config.js');
+const { openStore } = await import('../src/store.js');
 const { openDb } = await import('../src/db.js');
-const { createBot } = await import('../src/bot.js');
+const { openMedia } = await import('../src/media.js');
+const { createChat } = await import('../src/chat.js');
+const { registerBot } = await import('../src/bot.js');
 const { buildOrder } = await import('../src/orders.js');
 
-const db = openDb(dir);
-const { bot, chat } = createBot(db);
-bot.botInfo = { id: 42, is_bot: true, first_name: 'sovside', username: 'sovside_bot' };
+const db = openDb(openStore());
+const bot = new Bot(process.env.BOT_TOKEN, { botInfo: { id: 42, is_bot: true, first_name: 'sovside', username: 'sovside_bot' } });
+const chat = createChat(db, bot.api, openMedia({ dataDir: dir }));
+registerBot(bot, db, chat);
 
 // Перехватываем все вызовы Bot API, в сеть ничего не уходит
 const calls = [];
@@ -29,7 +35,6 @@ bot.api.config.use(async (prev, method, payload) => {
 });
 
 after(() => {
-  db.flush();
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
@@ -63,21 +68,21 @@ test('клиент пишет боту → админ получает, отве
   await message(ADMIN, { text: 'сделаю', reply_to_message: { message_id: relayId, date: 0, chat: { id: ADMIN, type: 'private' } } });
   await tick();
   assert.ok(sentTo(CLIENT).some((c) => c.payload.text.includes('сделаю')));
-  const texts = db.messages(CLIENT).map((m) => `${m.from}:${m.text}`);
+  const texts = (await db.messages(CLIENT)).map((m) => `${m.from}:${m.text}`);
   assert.deepEqual(texts.slice(-2), ['client:нужен ганпак', 'admin:сделаю']);
 });
 
 test('сообщение админа без реплая никуда не уходит', async () => {
   calls.length = 0;
-  const before = db.messages(CLIENT).length;
+  const before = (await db.messages(CLIENT)).length;
   await message(ADMIN, { text: 'кому это?' });
   assert.equal(sentTo(CLIENT).length, 0);
-  assert.equal(db.messages(CLIENT).length, before);
+  assert.equal((await db.messages(CLIENT)).length, before);
   assert.match(sentTo(ADMIN)[0].payload.text, /реплаем/);
 });
 
 test('кнопки статуса заказа работают только у админа', async () => {
-  const order = chat.placeOrder(db.getUser(CLIENT), buildOrder([{ id: 'ot-logo' }], ''));
+  const order = await chat.placeOrder(await db.getUser(CLIENT), buildOrder([{ id: 'ot-logo' }], ''));
   const press = (userId) =>
     bot.handleUpdate({
       update_id: ++updateId,
@@ -92,12 +97,39 @@ test('кнопки статуса заказа работают только у 
 
   calls.length = 0;
   await press(CLIENT);
-  assert.equal(db.getOrder(order.id).status, 'new');
+  assert.equal((await db.getOrder(order.id)).status, 'new');
   assert.equal(calls.find((c) => c.method === 'answerCallbackQuery').payload.text, 'Нет доступа');
 
   calls.length = 0;
   await press(ADMIN);
-  assert.equal(db.getOrder(order.id).status, 'done');
+  assert.equal((await db.getOrder(order.id)).status, 'done');
   assert.ok(calls.some((c) => c.method === 'editMessageText'));
   assert.ok(sentTo(CLIENT).some((c) => c.payload.text.includes('готов')));
+});
+
+test('секретная ссылка назначает админа только один раз', async () => {
+  const saved = config.adminIds;
+  config.adminIds = []; // бот без ADMIN_ID
+  try {
+    const db2 = openDb(openStore());
+    const bot2 = new Bot(process.env.BOT_TOKEN, { botInfo: bot.botInfo });
+    bot2.api.config.use(async () => ({ ok: true, result: true }));
+    registerBot(bot2, db2, createChat(db2, bot2.api, openMedia({ dataDir: dir })));
+    const start = (userId, payload) =>
+      bot2.handleUpdate({
+        update_id: ++updateId,
+        message: {
+          message_id: ++messageId, date: 0, chat: { id: userId, type: 'private' }, from: from(userId),
+          text: `/start ${payload}`, entities: [{ type: 'bot_command', offset: 0, length: 6 }],
+        },
+      });
+    await start(777, 'admin-wrong');
+    assert.equal(await db2.isAdmin(777), false);
+    await start(777, config.adminClaim);
+    assert.equal(await db2.isAdmin(777), true);
+    await start(888, config.adminClaim);
+    assert.equal(await db2.isAdmin(888), false);
+  } finally {
+    config.adminIds = saved;
+  }
 });

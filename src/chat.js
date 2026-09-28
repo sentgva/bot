@@ -1,7 +1,5 @@
-import fs from 'node:fs';
 import path from 'node:path';
-import crypto from 'node:crypto';
-import { InlineKeyboard, InputFile } from 'grammy';
+import { InlineKeyboard } from 'grammy';
 import { config } from './config.js';
 import { STATUS, itemLabel, totalLabel } from './orders.js';
 
@@ -19,15 +17,15 @@ export const displayName = (u) =>
 
 const who = (u) => `<b>${esc(displayName(u))}</b>${u?.username ? ` · @${esc(u.username)}` : ''}`;
 
+const fail = (status, message) => Object.assign(new Error(message), { status });
+
 // Всё общение клиент <-> админ проходит здесь: и из Mini App, и из самого бота.
-// Каждый клиент видит только свой чат, админ видит все.
-export function createChat(db, api) {
+// Уведомления отправляются до ответа на запрос: на Vercel после ответа функция может заснуть.
+export function createChat(db, api, media) {
   const log = (where) => (err) => console.error(`[${where}]`, err.description || err.message);
 
   const appButton = (text, query = '') =>
     config.webAppUrl ? new InlineKeyboard().webApp(text, `${config.webAppUrl}/${query}`) : undefined;
-
-  const localPhoto = (name) => (name ? new InputFile(path.join(db.uploads, name)) : null);
 
   async function send(chatId, { html, photo, keyboard }) {
     const extra = { parse_mode: 'HTML', reply_markup: keyboard };
@@ -38,21 +36,23 @@ export function createChat(db, api) {
     return api.sendMessage(chatId, html, { ...extra, link_preview_options: { is_disabled: true } });
   }
 
-  // Шлём всем админам и запоминаем, какому клиенту принадлежит сообщение,
+  // Шлём всем админам и запоминаем, какому клиенту принадлежит уведомление,
   // чтобы ответ реплаем в боте ушёл этому клиенту.
   async function toAdmins(userId, build) {
-    for (const adminId of config.adminIds) {
+    for (const adminId of await db.adminIds()) {
       try {
         const sent = await send(adminId, build());
-        db.setRelay(adminId, sent.message_id, userId);
+        await db.setRelay(adminId, sent.message_id, userId);
       } catch (err) {
         log('admin')(err);
       }
     }
   }
 
-  function orderHtml(order) {
-    const u = db.getUser(order.userId) || { id: order.userId };
+  const photoFor = (fileId, image) => fileId || (image ? media.forTelegram(image) : null);
+
+  async function orderHtml(order) {
+    const u = (await db.getUser(order.userId)) || { id: order.userId };
     const lines = [
       `<b>Заказ #${order.id}</b> · ${STATUS[order.status]}`,
       `от ${who(u)}`,
@@ -80,52 +80,53 @@ export function createChat(db, api) {
     orderKeyboard,
     appButton,
 
-    // Сообщение от клиента. fileId есть, если фото пришло через бота (перешлём без повторной загрузки).
-    fromClient(user, { text = '', image = null, fileId = null }) {
-      const msg = db.addMessage(user.id, { from: 'client', text, image });
-      if (!db.isWatching(user.id, 'admin')) {
-        toAdmins(user.id, () => ({
+    // fileId есть, если фото пришло через бота (перешлём без повторной загрузки)
+    async fromClient(user, { text = '', image = null, fileId = null }) {
+      const msg = await db.addMessage(user.id, { from: 'client', text, image });
+      if (!(await db.isWatching(user.id, 'admin'))) {
+        await toAdmins(user.id, () => ({
           html: [`💬 ${who(user)}`, esc(text)].filter(Boolean).join('\n'),
-          photo: fileId || localPhoto(image),
+          photo: photoFor(fileId, image),
           keyboard: appButton('Открыть чат', `?chat=${user.id}`),
         }));
       }
       return msg;
     },
 
-    fromAdmin(userId, { text = '', image = null, fileId = null }) {
-      const msg = db.addMessage(userId, { from: 'admin', text, image });
-      if (!db.isWatching(userId, 'client')) {
-        send(userId, {
+    async fromAdmin(userId, { text = '', image = null, fileId = null }) {
+      const msg = await db.addMessage(userId, { from: 'admin', text, image });
+      if (!(await db.isWatching(userId, 'client'))) {
+        await send(userId, {
           html: ['<b>SOVSIDE</b>', esc(text)].filter(Boolean).join('\n'),
-          photo: fileId || localPhoto(image),
+          photo: photoFor(fileId, image),
           keyboard: appButton('Открыть чат', '?tab=chat'),
         }).catch(log('client'));
       }
       return msg;
     },
 
-    placeOrder(user, { items, comment, total }) {
-      const order = db.createOrder(user.id, { items, comment, total });
-      db.addMessage(user.id, { from: 'system', kind: 'order', orderId: order.id, text: `Заказ #${order.id}` }, 'admin');
-      toAdmins(user.id, () => ({ html: orderHtml(order), keyboard: orderKeyboard(order) }));
+    async placeOrder(user, { items, comment, total }) {
+      const order = await db.createOrder(user.id, { items, comment, total });
+      await db.addMessage(user.id, { from: 'system', kind: 'order', orderId: order.id, text: `Заказ #${order.id}` }, 'admin');
+      const html = await orderHtml(order);
+      await toAdmins(user.id, () => ({ html, keyboard: orderKeyboard(order) }));
       return order;
     },
 
-    setStatus(orderId, status) {
-      if (!STATUS[status]) throw Object.assign(new Error('Неизвестный статус'), { status: 400 });
-      const current = db.getOrder(orderId);
-      if (!current) throw Object.assign(new Error('Заказ не найден'), { status: 404 });
-      const order = db.setOrderStatus(orderId, status);
+    async setStatus(orderId, status) {
+      if (!STATUS[status]) throw fail(400, 'Неизвестный статус');
+      const current = await db.getOrder(orderId);
+      if (!current) throw fail(404, 'Заказ не найден');
+      const order = await db.setOrderStatus(orderId, status);
       if (!order) return current;
 
-      db.addMessage(
+      await db.addMessage(
         order.userId,
         { from: 'system', kind: 'status', orderId, text: `Заказ #${orderId} · ${STATUS[status]}` },
         'client',
       );
-      if (!db.isWatching(order.userId, 'client')) {
-        send(order.userId, { html: STATUS_NOTICE[status](orderId), keyboard: appButton('Открыть чат', '?tab=chat') })
+      if (!(await db.isWatching(order.userId, 'client'))) {
+        await send(order.userId, { html: STATUS_NOTICE[status](orderId), keyboard: appButton('Открыть чат', '?tab=chat') })
           .catch(log('client'));
       }
       return order;
@@ -138,9 +139,8 @@ export function createChat(db, api) {
         signal: AbortSignal.timeout(15000),
       });
       if (!res.ok) throw new Error(`Не удалось скачать фото: ${res.status}`);
-      const name = `${crypto.randomBytes(12).toString('hex')}${path.extname(file.file_path) || '.jpg'}`;
-      await fs.promises.writeFile(path.join(db.uploads, name), Buffer.from(await res.arrayBuffer()));
-      return name;
+      const ext = path.extname(file.file_path).slice(1).toLowerCase();
+      return media.save(Buffer.from(await res.arrayBuffer()), ['png', 'webp'].includes(ext) ? ext : 'jpg');
     },
   };
 }

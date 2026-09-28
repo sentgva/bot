@@ -1,50 +1,56 @@
 import path from 'node:path';
-import { Bot, InputFile } from 'grammy';
-import { config, isAdmin } from './config.js';
-import { createChat } from './chat.js';
+import { InputFile } from 'grammy';
+import { config } from './config.js';
 import { STATUS } from './orders.js';
 
 const COVER = path.resolve(import.meta.dirname, '../webapp/assets/cover.jpg');
 const MAX_TEXT = 3500;
 
-export function createBot(db) {
-  const bot = new Bot(config.botToken);
-  const chat = createChat(db, bot.api);
+export function registerBot(bot, db, chat) {
   let coverFileId = null;
 
   // Только личные сообщения
   bot.use(async (ctx, next) => {
     if (ctx.chat && ctx.chat.type !== 'private') return;
-    if (ctx.from && !ctx.from.is_bot) db.upsertUser(ctx.from);
+    if (ctx.from && !ctx.from.is_bot) await db.upsertUser(ctx.from);
     await next();
   });
 
   bot.command('start', async (ctx) => {
-    const admin = isAdmin(ctx.from.id);
+    // Секретная ссылка t.me/<бот>?start=admin-… делает первого открывшего админом
+    if (ctx.match === config.adminClaim) {
+      const admins = await db.adminIds();
+      if (admins.has(ctx.from.id)) return ctx.reply('Ты уже админ.');
+      if (admins.size) return ctx.reply('Админ уже назначен. Чтобы добавить ещё одного, впиши его ID в ADMIN_ID.');
+      await db.addAdmin(ctx.from.id);
+      return ctx.reply('Готово, теперь ты админ. Сообщения и заказы клиентов будут приходить сюда. Нажми /start.');
+    }
+
+    const admin = await db.isAdmin(ctx.from.id);
     const caption = admin
       ? '<b>SOVSIDE</b> · режим админа\n\n' +
         'Сообщения и заказы клиентов приходят сюда. Ответь реплаем, и ответ уйдёт клиенту. ' +
         'Все переписки и статусы заказов в приложении.'
       : '<b>SOVSIDE</b> · моды для GTA5RP и Majestic RP\n\n' +
-        'Ганпаки, одежда, редуксы. В приложении прайс, заказ и личный чат со мной.';
-    const extra = {
+        'Ганпаки, одежда, редуксы. В приложении прайс, заказ и чат со мной.';
+    const cover = coverFileId || (config.webAppUrl ? `${config.webAppUrl}/assets/cover.jpg` : new InputFile(COVER));
+    const sent = await ctx.replyWithPhoto(cover, {
       caption: config.webAppUrl ? caption : `${caption}\n\n<i>Приложение ещё не подключено.</i>`,
       parse_mode: 'HTML',
       reply_markup: chat.appButton('Открыть SOVSIDE'),
-    };
-    const sent = await ctx.replyWithPhoto(coverFileId || new InputFile(COVER), extra);
+    });
     coverFileId ??= sent.photo?.at(-1)?.file_id ?? null;
   });
 
   bot.command('id', (ctx) => ctx.reply(`Твой ID: <code>${ctx.from.id}</code>`, { parse_mode: 'HTML' }));
 
   bot.callbackQuery(/^st:(\d+):(\w+)$/, async (ctx) => {
-    if (!isAdmin(ctx.from.id)) return ctx.answerCallbackQuery({ text: 'Нет доступа' });
+    if (!(await db.isAdmin(ctx.from.id))) return ctx.answerCallbackQuery({ text: 'Нет доступа' });
     try {
-      const order = chat.setStatus(Number(ctx.match[1]), ctx.match[2]);
+      const order = await chat.setStatus(Number(ctx.match[1]), ctx.match[2]);
       await ctx.answerCallbackQuery({ text: `Заказ #${order.id}: ${STATUS[order.status]}` });
       await ctx
-        .editMessageText(chat.orderHtml(order), { parse_mode: 'HTML', reply_markup: chat.orderKeyboard(order) })
+        .editMessageText(await chat.orderHtml(order), { parse_mode: 'HTML', reply_markup: chat.orderKeyboard(order) })
         .catch(() => {});
     } catch (err) {
       await ctx.answerCallbackQuery({ text: err.message });
@@ -57,9 +63,9 @@ export function createBot(db) {
 
     // Админ отвечает клиенту реплаем на пересланное ботом сообщение
     let clientId = null;
-    if (isAdmin(ctx.from.id)) {
+    if (await db.isAdmin(ctx.from.id)) {
       const reply = msg.reply_to_message;
-      clientId = reply && db.getRelay(ctx.chat.id, reply.message_id);
+      clientId = reply && (await db.getRelay(ctx.chat.id, reply.message_id));
       if (!clientId) {
         return ctx.reply('Чтобы ответить клиенту, ответь реплаем на его сообщение. Или открой приложение.', {
           reply_markup: chat.appButton('Все чаты', '?tab=chat'),
@@ -74,10 +80,10 @@ export function createBot(db) {
     if (!text && !image) return;
 
     if (clientId) {
-      chat.fromAdmin(clientId, { text, image, fileId });
-      db.markRead(clientId, 'admin');
+      await chat.fromAdmin(clientId, { text, image, fileId });
+      await db.markRead(clientId, 'admin');
     } else {
-      chat.fromClient(db.getUser(ctx.from.id), { text, image, fileId });
+      await chat.fromClient(await db.getUser(ctx.from.id), { text, image, fileId });
     }
     await ctx.react('👌').catch(() => {});
   });
@@ -88,16 +94,23 @@ export function createBot(db) {
     console.error(`Ошибка в апдейте ${ctx.update.update_id}:`, error);
   });
 
-  return { bot, chat };
+  return bot;
 }
 
-export async function setupBot(bot) {
-  await bot.api.setMyCommands([
+// Кнопка меню, команды и (на Vercel) вебхук. Вызывается при деплое и локальном запуске.
+export async function setupBot(api, { webhook }) {
+  await api.setMyCommands([
     { command: 'start', description: 'Открыть SOVSIDE' },
     { command: 'id', description: 'Мой Telegram ID' },
   ]);
   if (!config.webAppUrl) return;
-  await bot.api.setChatMenuButton({
+  await api.setChatMenuButton({
     menu_button: { type: 'web_app', text: 'SOVSIDE', web_app: { url: `${config.webAppUrl}/` } },
   });
+  if (webhook) {
+    await api.setWebhook(`${config.webAppUrl}/api/telegram`, {
+      secret_token: config.webhookSecret,
+      allowed_updates: ['message', 'callback_query'],
+    });
+  }
 }

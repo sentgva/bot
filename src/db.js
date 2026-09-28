@@ -1,75 +1,38 @@
-import fs from 'node:fs';
-import path from 'node:path';
+import { config } from './config.js';
 
-// Простое хранилище в JSON-файле. Для личного бота с заказами этого хватает с запасом:
-// всё держится в памяти, на диск пишется атомарно с небольшой задержкой.
+// Данные бота поверх хранилища из store.js (Redis или файл).
+//
+//   sv:users            hash  id -> пользователь
+//   sv:m:<id>           zset  сообщения чата клиента (score = id сообщения)
+//   sv:t:*              hash  id клиента -> время, последнее сообщение, непрочитанное, версия чата
+//   sv:orders           hash  id заказа -> заказ;  sv:uo:<id> list — заказы клиента
+//   sv:seen:<side>:<id>       «сейчас смотрит этот чат в приложении», живёт 10 секунд
+//   sv:relay:<chat>:<msg>     какому клиенту принадлежит уведомление у админа
 
-const RELAY_LIMIT = 5000;
 const OTHER_SIDE = { client: 'admin', admin: 'client' };
+const UNREAD = { admin: 't:ua', client: 't:uc' };
 
-const empty = () => ({
-  seq: { msg: 0, order: 0 },
-  users: {},
-  threads: {},
-  orders: {},
-  relay: {},
-});
+const J = (v) => JSON.stringify(v);
+const P = (s) => (s == null ? null : JSON.parse(s));
+const pairs = (flat) => {
+  const out = {};
+  for (let i = 0; i < flat.length; i += 2) out[flat[i]] = flat[i + 1];
+  return out;
+};
 
-export function openDb(dir) {
-  const file = path.join(dir, 'db.json');
-  const uploads = path.join(dir, 'uploads');
-  fs.mkdirSync(uploads, { recursive: true });
+// prefix позволяет держать в одной базе несколько ботов (или тесты)
+export function openDb(store, { prefix = 'sv' } = {}) {
+  const K = (...parts) => `${prefix}:${parts.join(':')}`;
+  const users = new Map(); // кэш, чтобы не писать пользователя на каждый запрос
+  let admins = { at: 0, ids: null };
 
-  const state = empty();
-  if (fs.existsSync(file)) Object.assign(state, JSON.parse(fs.readFileSync(file, 'utf8')));
+  const db = {
+    store,
 
-  let timer = null;
-  const flush = () => {
-    clearTimeout(timer);
-    timer = null;
-    const tmp = `${file}.tmp`;
-    fs.writeFileSync(tmp, JSON.stringify(state));
-    fs.renameSync(tmp, file);
-  };
-  const save = () => {
-    if (!timer) timer = setTimeout(flush, 250);
-  };
-
-  const ordersOf = (userId) =>
-    Object.values(state.orders)
-      .filter((o) => o.userId === Number(userId))
-      .sort((a, b) => a.id - b.id);
-
-  // side: 'client' | 'admin'
-  const markRead = (userId, side) => {
-    const t = state.threads[userId];
-    const key = side === 'admin' ? 'unreadAdmin' : 'unreadClient';
-    if (t?.[key]) {
-      t[key] = 0;
-      save();
-    }
-  };
-
-  const thread = (userId) => {
-    const id = String(userId);
-    state.threads[id] ??= {
-      userId: Number(userId),
-      messages: [],
-      updatedAt: 0,
-      unreadAdmin: 0,
-      unreadClient: 0,
-      clientSeenAt: 0,
-      adminSeenAt: 0,
-    };
-    return state.threads[id];
-  };
-
-  return {
-    uploads,
-    flush,
-
-    upsertUser(u) {
-      const prev = state.users[u.id];
+    async upsertUser(u) {
+      const id = String(u.id);
+      const prevJson = users.get(id) ?? (await store.cmd('HGET', K('users'), id));
+      const prev = P(prevJson);
       const next = {
         id: u.id,
         firstName: u.first_name || '',
@@ -77,110 +40,143 @@ export function openDb(dir) {
         username: u.username || '',
         createdAt: prev?.createdAt || Date.now(),
       };
-      if (!prev || JSON.stringify(prev) !== JSON.stringify(next)) {
-        state.users[u.id] = next;
-        save();
-      }
+      const json = J(next);
+      if (json !== prevJson) await store.cmd('HSET', K('users'), id, json);
+      users.set(id, json);
       return next;
     },
 
-    getUser: (id) => state.users[id] || null,
+    getUser: async (id) => P(await store.cmd('HGET', K('users'), String(id))),
 
-    // from: 'client' | 'admin' | 'system'; unreadFor: чья сторона получит «непрочитанное»
-    // kind у системных сообщений: 'order' (новый заказ) | 'status' (смена статуса)
-    addMessage(userId, { from, text = '', image = null, orderId = null, kind = null }, unreadFor = OTHER_SIDE[from]) {
-      const t = thread(userId);
-      const msg = { id: ++state.seq.msg, from, kind, text, image, orderId, at: Date.now() };
-      t.messages.push(msg);
-      t.updatedAt = msg.at;
-      if (unreadFor === 'admin') t.unreadAdmin++;
-      if (unreadFor === 'client') t.unreadClient++;
-      save();
+    // from: 'client' | 'admin' | 'system'; kind у системных: 'order' | 'status'
+    async addMessage(userId, { from, text = '', image = null, orderId = null, kind = null }, unreadFor = OTHER_SIDE[from]) {
+      const id = Number(await store.cmd('INCR', K('seq', 'msg')));
+      const msg = { id, from, kind, text, image, orderId, at: Date.now() };
+      const u = String(userId);
+      const cmds = [
+        ['ZADD', K('m', u), id, J(msg)],
+        ['HSET', K('t', 'updated'), u, msg.at],
+        ['HSET', K('t', 'last'), u, J(msg)],
+        ['HINCRBY', K('t', 'ver'), u, 1],
+      ];
+      if (UNREAD[unreadFor]) cmds.push(['HINCRBY', K(UNREAD[unreadFor]), u, 1]);
+      await store.pipe(cmds);
       return msg;
     },
 
-    messages(userId, afterId = 0) {
-      const t = state.threads[userId];
-      if (!t) return [];
-      return afterId ? t.messages.filter((m) => m.id > afterId) : t.messages;
+    messages: async (userId, afterId = 0) =>
+      (await store.cmd('ZRANGEBYSCORE', K('m', userId), `(${afterId}`, '+inf')).map(P),
+
+    // Отметка «смотрю чат» + версия чата одним запросом. Если версия не изменилась,
+    // клиенту нечего перерисовывать и можно не читать сообщения.
+    async touch(userId, side) {
+      const [, ver] = await store.pipe([
+        ['SET', K('seen', side, userId), 1, 'EX', 10],
+        ['HGET', K('t', 'ver'), String(userId)],
+      ]);
+      return Number(ver) || 0;
     },
 
-    hasThread: (userId) => Boolean(state.threads[userId]?.messages.length),
+    markRead: (userId, side) => store.cmd('HSET', K(UNREAD[side]), String(userId), 0),
 
-    markRead,
+    isWatching: async (userId, side) => (await store.cmd('EXISTS', K('seen', side, userId))) > 0,
 
-    // Сторона открыла чат в Mini App
-    seen(userId, side) {
-      thread(userId)[`${side}SeenAt`] = Date.now();
-      markRead(userId, side);
+    unread: async (userId, side) => Number(await store.cmd('HGET', K(UNREAD[side]), String(userId))) || 0,
+
+    async totalUnreadAdmin() {
+      const vals = await store.cmd('HVALS', K('t', 'ua'));
+      return vals.reduce((sum, v) => sum + (Number(v) || 0), 0);
     },
 
-    // Смотрит ли сторона в этот чат прямо сейчас (Mini App опрашивает сервер каждые пару секунд)
-    isWatching(userId, side, windowMs = 9000) {
-      const t = state.threads[userId];
-      return Boolean(t && Date.now() - t[`${side}SeenAt`] < windowMs);
+    async threads() {
+      const [updated, last, unread, order] = (
+        await store.pipe([
+          ['HGETALL', K('t', 'updated')],
+          ['HGETALL', K('t', 'last')],
+          ['HGETALL', K('t', 'ua')],
+          ['HGETALL', K('t', 'order')],
+        ])
+      ).map(pairs);
+      const ids = Object.keys(updated).sort((a, b) => updated[b] - updated[a]).slice(0, 200);
+      if (!ids.length) return [];
+      const people = await store.cmd('HMGET', K('users'), ...ids);
+      return ids.map((id, i) => ({
+        user: P(people[i]) || { id: Number(id) },
+        last: P(last[id]),
+        unread: Number(unread[id]) || 0,
+        updatedAt: Number(updated[id]),
+        order: P(order[id]),
+      }));
     },
 
-    unread(userId, side) {
-      const t = state.threads[userId];
-      if (!t) return 0;
-      return side === 'admin' ? t.unreadAdmin : t.unreadClient;
-    },
-
-    threads() {
-      return Object.values(state.threads)
-        .filter((t) => t.messages.length)
-        .sort((a, b) => b.updatedAt - a.updatedAt)
-        .map((t) => ({
-          user: state.users[t.userId] || { id: t.userId },
-          last: t.messages[t.messages.length - 1],
-          unread: t.unreadAdmin,
-          updatedAt: t.updatedAt,
-          order: ordersOf(t.userId).at(-1) || null,
-        }));
-    },
-
-    totalUnreadAdmin: () => Object.values(state.threads).reduce((s, t) => s + t.unreadAdmin, 0),
-
-    createOrder(userId, data) {
-      const order = {
-        id: ++state.seq.order,
-        userId: Number(userId),
-        status: 'new',
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-        ...data,
-      };
-      state.orders[order.id] = order;
-      save();
+    async createOrder(userId, data) {
+      const id = Number(await store.cmd('INCR', K('seq', 'order')));
+      const order = { id, userId: Number(userId), status: 'new', createdAt: Date.now(), updatedAt: Date.now(), ...data };
+      const u = String(userId);
+      await store.pipe([
+        ['HSET', K('orders'), id, J(order)],
+        ['RPUSH', K('uo', u), id],
+        ['HSET', K('t', 'order'), u, J({ id, status: order.status })],
+      ]);
       return order;
     },
 
-    getOrder: (id) => state.orders[id] || null,
+    getOrder: async (id) => P(await store.cmd('HGET', K('orders'), String(id))),
 
-    setOrderStatus(id, status) {
-      const order = state.orders[id];
+    async setOrderStatus(id, status) {
+      const order = await db.getOrder(id);
       if (!order || order.status === status) return null;
+      const prev = order.status;
       order.status = status;
       order.updatedAt = Date.now();
-      save();
+      const u = String(order.userId);
+      const [latest] = await store.cmd('LRANGE', K('uo', u), -1, -1);
+      const cmds = [
+        ['HSET', K('orders'), id, J(order)],
+        ['HINCRBY', K('t', 'ver'), u, 1],
+      ];
+      if (Number(latest) === order.id) cmds.push(['HSET', K('t', 'order'), u, J({ id: order.id, status })]);
+      if (status === 'done') cmds.push(['INCR', K('stat', 'done')]);
+      if (prev === 'done') cmds.push(['DECRBY', K('stat', 'done'), 1]);
+      await store.pipe(cmds);
       return order;
     },
 
-    ordersOf,
-
-    countOrders: (status) => Object.values(state.orders).filter((o) => o.status === status).length,
-
-    // Связь «сообщение бота у админа» -> клиент, чтобы ответ реплаем ушёл нужному человеку
-    setRelay(chatId, messageId, userId) {
-      state.relay[`${chatId}:${messageId}`] = Number(userId);
-      const keys = Object.keys(state.relay);
-      if (keys.length > RELAY_LIMIT) {
-        for (const k of keys.slice(0, keys.length - RELAY_LIMIT)) delete state.relay[k];
-      }
-      save();
+    async ordersOf(userId) {
+      const ids = await store.cmd('LRANGE', K('uo', userId), 0, -1);
+      if (!ids.length) return [];
+      return (await store.cmd('HMGET', K('orders'), ...ids)).map(P).filter(Boolean);
     },
 
-    getRelay: (chatId, messageId) => state.relay[`${chatId}:${messageId}`] || null,
+    countDone: async () => Math.max(0, Number(await store.cmd('GET', K('stat', 'done'))) || 0),
+
+    setRelay: (chatId, messageId, userId) =>
+      store.cmd('SET', K('relay', chatId, messageId), userId, 'EX', 60 * 24 * 3600),
+
+    getRelay: async (chatId, messageId) => Number(await store.cmd('GET', K('relay', chatId, messageId))) || null,
+
+    // Админы: из ADMIN_ID и назначенные по секретной ссылке
+    async adminIds() {
+      if (admins.ids && Date.now() - admins.at < 30_000) return admins.ids;
+      const saved = await store.cmd('SMEMBERS', K('admins'));
+      admins = { at: Date.now(), ids: new Set([...config.adminIds, ...saved.map(Number)]) };
+      return admins.ids;
+    },
+    isAdmin: async (id) => (await db.adminIds()).has(Number(id)),
+    async addAdmin(id) {
+      await store.cmd('SADD', K('admins'), id);
+      admins = { at: 0, ids: null };
+    },
+
+    // Лимит запросов, общий для всех копий сервера
+    async hit(kind, id, max, windowSec) {
+      const key = K('rl', kind, id, Math.floor(Date.now() / 1000 / windowSec));
+      const [n] = await store.pipe([['INCR', key], ['EXPIRE', key, windowSec]]);
+      return Number(n) <= max;
+    },
+
+    cacheGet: async (key) => P(await store.cmd('GET', K('cache', key))),
+    cacheSet: (key, value, ttlSec) => store.cmd('SET', K('cache', key), J(value), 'EX', ttlSec),
   };
+  return db;
 }
