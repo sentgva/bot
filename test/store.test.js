@@ -27,6 +27,11 @@ for (const [name, store] of stores) {
     const all = await store.cmd('HGETALL', `${p}h`);
     assert.deepEqual(Object.fromEntries([[all[0], all[1]], [all[2], all[3]]]), { a: '6', b: '2' });
     assert.deepEqual((await store.cmd('HVALS', `${p}h`)).sort(), ['2', '6']);
+    assert.deepEqual((await store.cmd('HKEYS', `${p}h`)).sort(), ['a', 'b']);
+
+    await store.cmd('SET', `${p}del`, '1');
+    assert.equal(await store.cmd('DEL', `${p}del`, `${p}nope`), 1);
+    assert.equal(await store.cmd('GET', `${p}del`), null);
 
     const [, , third] = await store.pipe([
       ['ZADD', `${p}z`, 3, 'c'],

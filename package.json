@@ -17,6 +17,7 @@
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
     "@vercel/blob": "^2.8.0",
+    "@vercel/functions": "^3.9.9",
     "express": "^5.2.1",
     "grammy": "^1.46.0"
   }

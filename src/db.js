@@ -168,6 +168,24 @@ export function openDb(store, { prefix = 'sv' } = {}) {
       admins = { at: 0, ids: null };
     },
 
+    userIds: async () => (await store.cmd('HKEYS', K('users'))).map(Number),
+
+    // Рассылка /news: «жду текст», черновики и защита от повторной отправки
+    setNewsAwait: (adminId) => store.cmd('SET', K('news', 'await', adminId), 1, 'EX', 1800),
+    isNewsAwait: async (adminId) => (await store.cmd('EXISTS', K('news', 'await', adminId))) > 0,
+    clearNewsAwait: (adminId) => store.cmd('DEL', K('news', 'await', adminId)),
+    async saveNewsDraft(draft) {
+      const id = Number(await store.cmd('INCR', K('seq', 'news')));
+      await store.cmd('SET', K('news', 'draft', id), J(draft), 'EX', 7 * 86400);
+      return id;
+    },
+    getNewsDraft: async (id) => P(await store.cmd('GET', K('news', 'draft', id))),
+    // true только для первого вызова: кнопку нажали дважды или Telegram повторил апдейт — второй раз не шлём
+    async claimNews(id) {
+      const [n] = await store.pipe([['INCR', K('news', 'lock', id)], ['EXPIRE', K('news', 'lock', id), 30 * 86400]]);
+      return Number(n) === 1;
+    },
+
     // Лимит запросов, общий для всех копий сервера
     async hit(kind, id, max, windowSec) {
       const key = K('rl', kind, id, Math.floor(Date.now() / 1000 / windowSec));

@@ -133,3 +133,84 @@ test('секретная ссылка назначает админа тольк
     config.adminIds = saved;
   }
 });
+
+test('/news: рассылка всем клиентам, один раз', async () => {
+  const press = (userId, data) =>
+    bot.handleUpdate({
+      update_id: ++updateId,
+      callback_query: {
+        id: String(updateId), from: from(userId), chat_instance: 'x', data,
+        message: { message_id: 9000, date: 0, chat: { id: userId, type: 'private' } },
+      },
+    });
+  const cmd = (userId, text) =>
+    message(userId, { text, entities: [{ type: 'bot_command', offset: 0, length: text.split(' ')[0].length }] });
+  const waitFor = async (check) => {
+    for (let i = 0; i < 100 && !check(); i++) await new Promise((r) => setTimeout(r, 20));
+    assert.ok(check(), 'не дождались');
+  };
+
+  // клиенту команда недоступна
+  calls.length = 0;
+  await cmd(CLIENT, '/news привет всем');
+  assert.match(sentTo(CLIENT)[0].payload.text, /Такой команды нет/);
+  assert.equal(calls.filter((c) => c.method === 'copyMessage').length, 0);
+
+  // админ: /news → сообщение → подтверждение
+  await message(101, { text: 'я второй клиент' });
+  calls.length = 0;
+  await cmd(ADMIN, '/news');
+  assert.match(sentTo(ADMIN)[0].payload.text, /Пришли одним сообщением/);
+  calls.length = 0;
+  await message(ADMIN, { text: 'Скидка 20% до пятницы' });
+  const confirm = sentTo(ADMIN)[0];
+  assert.match(confirm.payload.text, /Отправить это сообщение 2 людям/);
+  const go = confirm.payload.reply_markup.inline_keyboard[0][0].callback_data;
+  assert.match(go, /^news:\d+:go$/);
+
+  // обычные сообщения админа снова идут как раньше, а не в рассылку
+  calls.length = 0;
+  await message(ADMIN, { text: 'просто текст' });
+  assert.match(sentTo(ADMIN)[0].payload.text, /реплаем/);
+
+  calls.length = 0;
+  await press(ADMIN, go);
+  const copies = () => calls.filter((c) => c.method === 'copyMessage');
+  await waitFor(() => calls.some((c) => c.method === 'editMessageText' && /Рассылка отправлена: 2 из 2/.test(c.payload.text)));
+  assert.deepEqual(copies().map((c) => c.payload.chat_id).sort(), [CLIENT, 101]);
+  assert.ok(copies().every((c) => c.payload.from_chat_id === ADMIN));
+
+  // повторное нажатие (или повтор апдейта от Telegram) ничего не шлёт
+  calls.length = 0;
+  await press(ADMIN, go);
+  await tick();
+  assert.equal(copies().length, 0);
+  assert.match(calls.find((c) => c.method === 'answerCallbackQuery').payload.text, /уже отправлена/);
+});
+
+test('/news текст: сразу черновик с форматированием, /cancel и отмена', async () => {
+  calls.length = 0;
+  await message(ADMIN, {
+    text: '/news Новый прайс',
+    entities: [{ type: 'bot_command', offset: 0, length: 5 }, { type: 'bold', offset: 6, length: 5 }],
+  });
+  const [preview, confirm] = sentTo(ADMIN);
+  assert.equal(preview.payload.text, 'Новый прайс');
+  assert.deepEqual(preview.payload.entities, [{ type: 'bold', offset: 0, length: 5 }]);
+  assert.match(confirm.payload.text, /Отправить/);
+
+  const no = confirm.payload.reply_markup.inline_keyboard[0][1].callback_data;
+  calls.length = 0;
+  await bot.handleUpdate({
+    update_id: ++updateId,
+    callback_query: { id: 'c', from: from(ADMIN), chat_instance: 'x', data: no, message: { message_id: 1, date: 0, chat: { id: ADMIN, type: 'private' } } },
+  });
+  assert.ok(calls.some((c) => c.method === 'editMessageText' && c.payload.text === 'Рассылка отменена.'));
+  assert.equal(calls.filter((c) => c.method === 'copyMessage').length, 0);
+
+  await message(ADMIN, { text: '/news', entities: [{ type: 'bot_command', offset: 0, length: 5 }] });
+  await message(ADMIN, { text: '/cancel', entities: [{ type: 'bot_command', offset: 0, length: 7 }] });
+  calls.length = 0;
+  await message(ADMIN, { text: 'после отмены' });
+  assert.match(sentTo(ADMIN)[0].payload.text, /реплаем/);
+});

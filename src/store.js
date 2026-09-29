@@ -45,6 +45,11 @@ const SQL = {
       map: () => 'OK',
     };
   },
+  DEL: (...keys) => ({
+    text: 'delete from kv where k = any($1::text[]) returning k',
+    params: [keys],
+    map: (r) => new Set(r.map((x) => x.k)).size,
+  }),
   EXISTS: (k) => ({
     text: `select exists(select 1 from kv where k = $1 and ${LIVE}) as e`,
     params: [k],
@@ -80,6 +85,7 @@ const SQL = {
   },
   HGETALL: (k) => ({ text: 'select f, v from kv where k = $1', params: [k], map: (r) => r.flatMap((x) => [x.f, x.v]) }),
   HVALS: (k) => ({ text: 'select v from kv where k = $1', params: [k], map: (r) => r.map((x) => x.v) }),
+  HKEYS: (k) => ({ text: 'select f from kv where k = $1', params: [k], map: (r) => r.map((x) => x.f) }),
   HMGET: (k, ...fields) => ({
     text: 'select f, v from kv where k = $1 and f = any($2::text[])',
     params: [k, fields],
@@ -279,6 +285,7 @@ function memoryStore(file) {
     },
     HGETALL: (k) => Object.entries(live(k)?.v || {}).flat(),
     HVALS: (k) => Object.values(live(k)?.v || {}),
+    HKEYS: (k) => Object.keys(live(k)?.v || {}),
     HMGET: (k, ...fields) => fields.map((f) => live(k)?.v[f] ?? null),
     HINCRBY(k, f, n) {
       const h = of(k, 'h', {});
