@@ -252,13 +252,42 @@ test('/mode: админ пишет боту как клиент, потом во
   assert.match(sentTo(ADMIN)[0].payload.caption, /режим админа/);
 });
 
-test('/clear очищает переписку у того, кто вызвал', async () => {
-  const cmd = (userId) => message(userId, { text: '/clear', entities: [{ type: 'bot_command', offset: 0, length: 6 }] });
+test('/clear удаляет сообщения в чате с ботом и очищает переписку в приложении', async () => {
   calls.length = 0;
-  await cmd(CLIENT);
-  assert.match(sentTo(CLIENT)[0].payload.text, /очищена/);
+  const commandId = 150;
+  await bot.handleUpdate({
+    update_id: ++updateId,
+    message: { message_id: commandId, date: 0, chat: { id: CLIENT, type: 'private' }, from: from(CLIENT), text: '/clear', entities: [{ type: 'bot_command', offset: 0, length: 6 }] },
+  });
+  const deletes = calls.filter((c) => c.method === 'deleteMessages');
+  assert.ok(deletes.length > 0);
+  assert.ok(deletes.every((c) => c.payload.chat_id === CLIENT));
+  const ids = deletes.flatMap((c) => c.payload.message_ids);
+  assert.ok(ids.includes(commandId) && ids.includes(1), 'удаляем от команды до первого сообщения');
+  assert.equal(new Set(ids).size, commandId);
+  assert.ok(deletes.every((c) => c.payload.message_ids.length <= 100));
+  assert.match(sentTo(CLIENT).at(-1).payload.text, /Чат очищен/);
   assert.ok((await db.clearedAt(CLIENT)) > 0);
-  calls.length = 0;
-  await cmd(555);
-  assert.match(sentTo(555)[0].payload.text, /и так пустая/);
+});
+
+test('/clear: если пачка не удаляется, пробует по одному и останавливается на старых', async () => {
+  const bot3 = new Bot(process.env.BOT_TOKEN, { botInfo: bot.botInfo });
+  const log = [];
+  bot3.api.config.use(async (prev, method, payload) => {
+    log.push({ method, payload });
+    if (method === 'deleteMessages') return { ok: false, error_code: 400, description: 'Bad Request: message can\'t be deleted' };
+    // по одному удаляются только последние 5 сообщений, остальные «старше 48 часов»
+    if (method === 'deleteMessage') {
+      return payload.message_id > 495 ? { ok: true, result: true } : { ok: false, error_code: 400, description: 'Bad Request: message can\'t be deleted' };
+    }
+    return { ok: true, result: { message_id: 1, date: 0, chat: { id: payload.chat_id, type: 'private' } } };
+  });
+  registerBot(bot3, db, createChat(db, bot3.api, openMedia({ dataDir: dir })));
+  await bot3.handleUpdate({
+    update_id: ++updateId,
+    message: { message_id: 500, date: 0, chat: { id: CLIENT, type: 'private' }, from: from(CLIENT), text: '/clear', entities: [{ type: 'bot_command', offset: 0, length: 6 }] },
+  });
+  const singles = log.filter((c) => c.method === 'deleteMessage').map((c) => c.payload.message_id);
+  assert.equal(singles.length, 200, 'первая пачка частично удалилась, вторая — ничего, дальше не идём');
+  assert.ok(log.some((c) => c.method === 'sendMessage' && /Чат очищен/.test(c.payload.text)));
 });

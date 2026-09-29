@@ -9,7 +9,7 @@ const MAX_TEXT = 3500;
 
 const CLIENT_COMMANDS = [
   { command: 'start', description: 'Открыть SOVSIDE' },
-  { command: 'clear', description: 'Очистить переписку в приложении' },
+  { command: 'clear', description: 'Очистить чат' },
   { command: 'id', description: 'Мой Telegram ID' },
 ];
 const ADMIN_COMMANDS = [
@@ -17,7 +17,7 @@ const ADMIN_COMMANDS = [
   { command: 'news', description: 'Рассылка всем клиентам' },
   { command: 'cancel', description: 'Отменить рассылку' },
   { command: 'mode', description: 'Переключиться: админ / клиент' },
-  { command: 'clear', description: 'Очистить мою переписку в приложении' },
+  { command: 'clear', description: 'Очистить чат' },
   { command: 'id', description: 'Мой Telegram ID' },
 ];
 
@@ -66,10 +66,14 @@ export function registerBot(bot, db, chat) {
 
   bot.command('id', (ctx) => ctx.reply(`Твой ID: <code>${ctx.from.id}</code>`, { parse_mode: 'HTML' }));
 
-  // Очищает переписку в приложении у того, кто вызвал. У продавца история остаётся.
+  // Очищает чат с ботом в Telegram и переписку в приложении у того, кто вызвал.
+  // У продавца история клиента в приложении остаётся.
   bot.command('clear', async (ctx) => {
-    const had = await db.clearForClient(ctx.from.id);
-    await ctx.reply(had ? 'Переписка в приложении очищена. Активные заказы остались на месте.' : 'Переписка и так пустая.');
+    await db.clearForClient(ctx.from.id);
+    await clearTelegramChat(ctx.api, ctx.chat.id, ctx.message.message_id);
+    await ctx.reply('Чат очищен. Сообщения старше 48 часов Telegram удалить не даёт.', {
+      reply_markup: chat.appButton('Открыть SOVSIDE'),
+    });
   });
 
   // Админ переключается между режимом админа и обычного клиента
@@ -138,6 +142,28 @@ export function registerBot(bot, db, chat) {
   });
 
   return bot;
+}
+
+// В личке с ботом номера сообщений идут подряд, поэтому удаляем назад от команды /clear.
+// Telegram разрешает боту удалять сообщения не старше 48 часов, остальные остаются.
+const CLEAR_DEPTH = 1000;
+
+async function clearTelegramChat(api, chatId, lastId) {
+  for (let top = lastId; top > 0 && top > lastId - CLEAR_DEPTH; top -= 100) {
+    const ids = [];
+    for (let id = top; id > Math.max(0, top - 100); id--) ids.push(id);
+    try {
+      await api.deleteMessages(chatId, ids);
+    } catch {
+      // Пачка не удалилась целиком: пробуем по одному. Если не удалилось ничего — дальше только старше, выходим.
+      let deleted = 0;
+      for (let i = 0; i < ids.length; i += 10) {
+        const results = await Promise.all(ids.slice(i, i + 10).map((id) => api.deleteMessage(chatId, id).then(() => 1, () => 0)));
+        deleted += results.reduce((a, b) => a + b, 0);
+      }
+      if (!deleted) return;
+    }
+  }
 }
 
 // Кнопка меню, команды и (на Vercel) вебхук. Вызывается при деплое и локальном запуске.
