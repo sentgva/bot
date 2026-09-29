@@ -30,7 +30,7 @@ export const links = {
 // url — откроется по нажатию, card — номер карты, по нажатию копируется.
 export const payment = [
   { id: 'funpay', title: 'FunPay', sub: 'Профиль продавца', url: 'https://funpay.com/users/6024775/', icon: 'assets/pay/funpay.svg' },
-  { id: 'sber', title: 'Сбербанк', sub: 'Роман', card: '2202209229054753', icon: 'assets/pay/sber.png' },
+  { id: 'sber', title: 'Сбербанк', sub: 'Роман', card: '2202209229054753', icon: 'assets/pay/sber.png?v=2' },
 ];
 
 export const steps = [
