@@ -255,3 +255,49 @@ test('/clear: клиент очищает свою переписку, у адм
   assert.ok(fresh.every((m) => m.text !== 'старое сообщение' && m.kind !== 'order'));
   assert.ok(fresh.some((m) => m.text === 'новое'));
 });
+
+test('бан и мут: что может клиент и что видит админ', async () => {
+  const eve = { id: 500, first_name: 'Eve', username: 'eve' };
+  await call(eve, 'chat', { method: 'POST', body: { text: 'привет' } });
+  const restrict = (body, who = admin) => call(who, 'admin/users/500/restrict', { method: 'POST', body });
+
+  // клиент не может ограничивать, админа ограничить нельзя
+  assert.equal((await call(alice, 'admin/users/500/restrict', { method: 'POST', body: { action: 'ban' } })).status, 403);
+  assert.equal((await call(admin, `admin/users/${ADMIN}/restrict`, { method: 'POST', body: { action: 'ban' } })).status, 400);
+
+  // мут: писать нельзя, заказывать можно
+  const muted = await restrict({ action: 'mute', duration: '1h' });
+  assert.equal(muted.data.restrict.muted, true);
+  assert.ok(muted.data.restrict.mutedUntil > Date.now());
+  const blocked = await call(eve, 'chat', { method: 'POST', body: { text: 'спам' } });
+  assert.equal(blocked.status, 403);
+  assert.match(blocked.data.error, /можно будет после/);
+  assert.equal((await call(eve, 'orders', { method: 'POST', body: { items: [{ id: 'ot-logo' }] } })).status, 200);
+  assert.equal((await call(eve, 'me')).data.restrict.muted, true);
+  await restrict({ action: 'unmute' });
+  assert.equal((await call(eve, 'chat', { method: 'POST', body: { text: 'снова могу' } })).status, 200);
+
+  // бан: ни чата, ни заказов; админ видит метку
+  await restrict({ action: 'ban' });
+  assert.equal((await call(eve, 'chat', { method: 'POST', body: { text: 'а сейчас?' } })).status, 403);
+  assert.equal((await call(eve, 'chat')).status, 403);
+  assert.equal((await call(eve, 'orders', { method: 'POST', body: { items: [{ id: 'ot-logo' }] } })).status, 403);
+  const threads = (await call(admin, 'admin/threads')).data.threads;
+  assert.equal(threads.find((t) => t.user.id === 500).restrict.banned, true);
+  assert.equal((await call(admin, 'chat?user=500')).data.peerRestrict.banned, true);
+  await restrict({ action: 'unban' });
+  assert.equal((await call(eve, 'chat')).status, 200);
+
+  assert.equal((await restrict({ action: 'mute', duration: 'century' })).status, 400);
+});
+
+test('панель заказов: все заказы с клиентами и счётчики', async () => {
+  assert.equal((await call(alice, 'admin/orders')).status, 403);
+  const { data } = await call(admin, 'admin/orders');
+  assert.ok(data.orders.length >= 3);
+  assert.equal(data.counts.all, data.orders.length);
+  assert.equal(data.counts.new + data.counts.work + data.counts.done + data.counts.cancel, data.counts.all);
+  assert.ok(data.orders.every((o) => o.user && o.user.id && o.statusLabel && o.total));
+  assert.ok(data.orders[0].id > data.orders.at(-1).id, 'новые сверху');
+  assert.equal((await call(admin, 'me')).data.newOrders, data.counts.new);
+});

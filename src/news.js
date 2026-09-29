@@ -15,8 +15,11 @@ const people = (n) => {
 };
 
 export function registerNews(bot, db) {
-  // Все, кто запускал бота, включая других админов. Автору рассылки копия не нужна.
-  const recipients = async (senderId) => (await db.userIds()).filter((id) => id !== Number(senderId));
+  // Все, кто запускал бота, включая других админов. Автору копия не нужна, забаненным не шлём.
+  const recipients = async (senderId) => {
+    const banned = await db.bannedIds();
+    return (await db.userIds()).filter((id) => id !== Number(senderId) && !banned.has(id));
+  };
 
   async function askConfirm(ctx, messageId) {
     const count = (await recipients(ctx.from.id)).length;

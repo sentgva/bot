@@ -27,10 +27,10 @@ registerBot(bot, db, chat);
 const calls = [];
 let messageId = 1000;
 bot.api.config.use(async (prev, method, payload) => {
-  calls.push({ method, payload });
   const result = method.startsWith('send')
     ? { message_id: ++messageId, date: 0, chat: { id: payload.chat_id, type: 'private' }, photo: [{ file_id: 'cover' }] }
     : true;
+  calls.push({ method, payload, result });
   return { ok: true, result };
 });
 
@@ -290,4 +290,51 @@ test('/clear: если пачка не удаляется, пробует по �
   const singles = log.filter((c) => c.method === 'deleteMessage').map((c) => c.payload.message_id);
   assert.equal(singles.length, 200, 'первая пачка частично удалилась, вторая — ничего, дальше не идём');
   assert.ok(log.some((c) => c.method === 'sendMessage' && /Чат очищен/.test(c.payload.text)));
+});
+
+test('бан и мут реплаем в боте, забаненным не приходит рассылка', async () => {
+  const cmd = (userId, text, replyTo) =>
+    message(userId, {
+      text,
+      entities: [{ type: 'bot_command', offset: 0, length: text.split(' ')[0].length }],
+      ...(replyTo && { reply_to_message: { message_id: replyTo, date: 0, chat: { id: userId, type: 'private' } } }),
+    });
+
+  // клиент 300 пишет, админ получает уведомление
+  calls.length = 0;
+  await message(300, { text: 'реклама казино' });
+  const note = sentTo(ADMIN)[0].result.message_id; // уведомление у админа, на него и отвечаем
+
+  calls.length = 0;
+  await cmd(ADMIN, '/ban');
+  assert.match(sentTo(ADMIN)[0].payload.text, /Ответь командой/);
+
+  await cmd(ADMIN, '/mute 2', note);
+  assert.equal((await db.restriction(300)).muted, true);
+  calls.length = 0;
+  await message(300, { text: 'ещё раз' });
+  assert.match(sentTo(300)[0].payload.text, /можно будет после/);
+  assert.equal(sentTo(ADMIN).length, 0, 'админу не пересылается');
+
+  await cmd(ADMIN, '/unmute', note);
+  await cmd(ADMIN, '/ban', note);
+  assert.equal((await db.restriction(300)).banned, true);
+  calls.length = 0;
+  await message(300, { text: 'я забанен?' });
+  assert.match(sentTo(300)[0].payload.text, /Доступ закрыт/);
+
+  // рассылка забаненному не уходит
+  calls.length = 0;
+  await message(ADMIN, { text: '/news акция', entities: [{ type: 'bot_command', offset: 0, length: 5 }] });
+  const go = sentTo(ADMIN).at(-1).payload.reply_markup.inline_keyboard[0][0].callback_data;
+  await bot.handleUpdate({ update_id: ++updateId, callback_query: { id: 'n', from: from(ADMIN), chat_instance: 'x', data: go, message: { message_id: 1, date: 0, chat: { id: ADMIN, type: 'private' } } } });
+  for (let i = 0; i < 100 && !calls.some((c) => c.method === 'editMessageText' && /Рассылка отправлена/.test(c.payload.text)); i++) await tick();
+  const targets = calls.filter((c) => c.method === 'copyMessage').map((c) => c.payload.chat_id);
+  assert.ok(targets.length > 0 && !targets.includes(300));
+
+  await cmd(ADMIN, '/unban', note);
+  assert.equal((await db.restriction(300)).banned, false);
+  calls.length = 0;
+  await cmd(ADMIN, '/ban', 999999);
+  assert.match(sentTo(ADMIN)[0].payload.text, /Ответь командой/);
 });

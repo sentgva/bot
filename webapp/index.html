@@ -95,6 +95,24 @@
         </div>
       </section>
 
+      <!-- Панель заказов (админ) -->
+      <section class="page" data-page="orders">
+        <div class="page-inner">
+          <header class="page-head">
+            <p class="eyebrow">Админ</p>
+            <h2 class="title">Заказы</h2>
+          </header>
+          <div class="pipe" id="pipe">
+            <button type="button" data-f="new"><b>0</b><span>Новые</span></button>
+            <button type="button" data-f="work"><b>0</b><span>В работе</span></button>
+            <button type="button" data-f="done"><b>0</b><span>Готовы</span></button>
+            <button type="button" data-f="cancel"><b>0</b><span>Отменены</span></button>
+          </div>
+          <p class="olabel" id="olabel"></p>
+          <div class="olist" id="olist"></div>
+        </div>
+      </section>
+
       <!-- Чат -->
       <section class="page page-chat" data-page="chat">
         <div class="view view-inbox" id="inbox" hidden>
@@ -121,6 +139,9 @@
               <span id="chatSub"></span>
             </div>
             <div class="mode-slot" id="modeSlotChat"></div>
+            <button class="icon-btn peer-menu" id="peerMenu" type="button" aria-label="Бан и мут" hidden>
+              <svg viewBox="0 0 24 24"><path d="M5 12h.01M12 12h.01M19 12h.01" stroke-width="3"/></svg>
+            </button>
           </header>
 
           <div class="msgs" id="msgs"></div>
@@ -152,8 +173,8 @@
         <div class="view view-gate" id="gate" hidden>
           <div class="gate">
             <img src="assets/butterfly.webp" alt="">
-            <b>Чат работает внутри Telegram</b>
-            <p>Открой приложение через бота, чтобы написать мне.</p>
+            <b id="gateTitle">Чат работает внутри Telegram</b>
+            <p id="gateText">Открой приложение через бота, чтобы написать мне.</p>
             <button class="btn btn-primary" type="button" id="openBot">Открыть бота</button>
           </div>
         </div>
@@ -167,7 +188,8 @@
       </button>
       <button class="tab" type="button" data-tab="order">
         <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
-        <span>Заказ</span>
+        <span id="orderTabLabel">Заказ</span>
+        <i class="badge" id="obadge" hidden></i>
       </button>
       <button class="tab" type="button" data-tab="chat">
         <svg viewBox="0 0 24 24"><path d="M4.5 5.5h15a1 1 0 011 1v9.5a1 1 0 01-1 1H10l-4.5 3.5V17h-1a1 1 0 01-1-1V6.5a1 1 0 011-1z"/></svg>
@@ -198,6 +220,15 @@
     <i class="mode-thumb"></i>
     <button type="button" data-mode="client">Клиент</button>
     <button type="button" data-mode="admin">Админ</button>
+  </div>
+
+  <!-- Нижняя шторка с действиями -->
+  <div class="sheet" id="sheet">
+    <div class="sheet-panel">
+      <p class="sheet-title" id="sheetTitle"></p>
+      <div class="sheet-actions" id="sheetActions"></div>
+      <button class="sheet-cancel" type="button" id="sheetCancel">Отмена</button>
+    </div>
   </div>
 
   <div class="viewer" id="viewer"><img alt=""></div>

@@ -3,6 +3,7 @@ import { InputFile } from 'grammy';
 import { config } from './config.js';
 import { STATUS } from './orders.js';
 import { registerNews } from './news.js';
+import { BANNED_TEXT, MUTE_FOR, muteUntil, mutedText, restrictLabel } from './restrict.js';
 
 const COVER = path.resolve(import.meta.dirname, '../webapp/assets/cover.jpg');
 const MAX_TEXT = 3500;
@@ -52,7 +53,8 @@ export function registerBot(bot, db, chat) {
         'Сообщения и заказы клиентов приходят сюда. Ответь реплаем, и ответ уйдёт клиенту. ' +
         'Все переписки и статусы заказов в приложении.\n\n' +
         'Рассылка всем клиентам: /news\n' +
-        'Посмотреть всё глазами клиента: /mode'
+        'Посмотреть всё глазами клиента: /mode\n' +
+        'Бан и мут: ответь на сообщение клиента командой /ban, /mute 24 (часы), /unban или /unmute'
       : '<b>SOVSIDE</b> · моды для GTA5RP и Majestic RP\n\n' +
         'Ганпаки, одежда, редуксы. В приложении прайс, заказ и чат со мной.';
     const cover = coverFileId || (config.webAppUrl ? `${config.webAppUrl}/assets/cover.jpg` : new InputFile(COVER));
@@ -74,6 +76,33 @@ export function registerBot(bot, db, chat) {
     await ctx.reply('Чат очищен. Сообщения старше 48 часов Telegram удалить не даёт.', {
       reply_markup: chat.appButton('Открыть SOVSIDE'),
     });
+  });
+
+  // Бан и мут реплаем на уведомление о сообщении или заказе клиента
+  const restrictCommand = (name, apply) =>
+    bot.command(name, async (ctx, next) => {
+      if (!(await db.actsAsAdmin(ctx.from.id))) return next();
+      const reply = ctx.message.reply_to_message;
+      const clientId = reply && (await db.getRelay(ctx.chat.id, reply.message_id));
+      if (!clientId) return ctx.reply(`Ответь командой /${name} на сообщение или заказ клиента.`);
+      if (await db.isAdmin(clientId)) return ctx.reply('Админа нельзя забанить или замутить.');
+      const done = await apply(clientId, ctx.match.trim());
+      const u = await db.getUser(clientId);
+      const who = u?.username ? `@${u.username}` : u?.firstName || `ID ${clientId}`;
+      const now = restrictLabel(await db.restriction(clientId));
+      await ctx.reply(`${who}: ${done}${now ? ` (сейчас: ${now})` : ''}.`);
+    });
+
+  restrictCommand('ban', async (id) => (await db.setBan(id, true), 'забанен'));
+  restrictCommand('unban', async (id) => (await db.setBan(id, false), 'разбанен'));
+  restrictCommand('unmute', async (id) => (await db.setMute(id, null), 'мут снят'));
+  restrictCommand('mute', async (id, arg) => {
+    // /mute — на сутки, /mute 3 — на 3 часа, /mute навсегда
+    const forever = /^(навсегда|forever|0)$/i.test(arg);
+    const hours = Number(arg);
+    const until = forever ? 0 : Date.now() + (hours > 0 ? Math.min(hours, 24 * 365) : 24) * 3600e3;
+    await db.setMute(id, until);
+    return forever ? `в муте ${MUTE_FOR.forever.label}` : 'в муте';
   });
 
   // Админ переключается между режимом админа и обычного клиента
@@ -118,6 +147,13 @@ export function registerBot(bot, db, chat) {
           reply_markup: chat.appButton('Все чаты', '?tab=chat'),
         });
       }
+    }
+
+    // бан и мут проверяем до скачивания фото; на админов (даже в режиме клиента) они не действуют
+    if (!clientId && !(await db.isAdmin(ctx.from.id))) {
+      const r = await db.restriction(ctx.from.id);
+      if (r.banned) return ctx.reply(BANNED_TEXT);
+      if (r.muted) return ctx.reply(mutedText(r));
     }
 
     let text = (msg.text ?? msg.caption ?? '').trim().slice(0, MAX_TEXT);

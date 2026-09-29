@@ -86,6 +86,11 @@ const SQL = {
   HGETALL: (k) => ({ text: 'select f, v from kv where k = $1', params: [k], map: (r) => r.flatMap((x) => [x.f, x.v]) }),
   HVALS: (k) => ({ text: 'select v from kv where k = $1', params: [k], map: (r) => r.map((x) => x.v) }),
   HKEYS: (k) => ({ text: 'select f from kv where k = $1', params: [k], map: (r) => r.map((x) => x.f) }),
+  HDEL: (k, ...fields) => ({
+    text: 'delete from kv where k = $1 and f = any($2::text[]) returning 1',
+    params: [k, fields],
+    map: (r) => r.length,
+  }),
   HMGET: (k, ...fields) => ({
     text: 'select f, v from kv where k = $1 and f = any($2::text[])',
     params: [k, fields],

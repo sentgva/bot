@@ -6,6 +6,7 @@ import { verifyInitData } from './auth.js';
 import { about, links, steps, catalog, since, payment } from './content.js';
 import { discordStats } from './discord.js';
 import { STATUS, buildOrder, totalLabel } from './orders.js';
+import { BANNED_TEXT, MUTE_FOR, muteUntil, mutedText } from './restrict.js';
 
 const WEB_DIR = path.resolve(import.meta.dirname, '../webapp');
 const MAX_TEXT = 3500;
@@ -96,9 +97,15 @@ export function createServer({ db, chat, bot, media, webhook = false, serveStati
     req.user = await db.upsertUser(data.user);
     req.canAdmin = await db.isAdmin(data.user.id);
     req.admin = req.canAdmin && (await db.getMode(data.user.id)) !== 'client';
+    // бан и мут на админов не действуют
+    req.restrict = req.canAdmin ? { banned: false, muted: false, mutedUntil: null } : await db.restriction(data.user.id);
     res.set('Cache-Control', 'no-store');
     next();
   });
+
+  const notBanned = (req) => {
+    if (req.restrict.banned) throw fail(403, BANNED_TEXT);
+  };
 
   const adminOnly = (req, res, next) => (req.admin ? next() : next(fail(403, 'Нет доступа')));
 
@@ -114,7 +121,9 @@ export function createServer({ db, chat, bot, media, webhook = false, serveStati
     user: publicUser(req.user),
     isAdmin: req.admin,
     canAdmin: req.canAdmin,
+    restrict: req.restrict,
     unread: req.admin ? await db.totalUnreadAdmin() : await db.unread(req.user.id, 'client'),
+    newOrders: req.admin ? (await db.allOrders()).filter((o) => o.status === 'new').length : 0,
   });
 
   api.get('/me', async (req, res) => res.json(await me(req)));
@@ -130,22 +139,24 @@ export function createServer({ db, chat, bot, media, webhook = false, serveStati
 
   // Опрос чата. v — версия чата у клиента: если не изменилась, отвечаем сразу.
   api.get('/chat', async (req, res) => {
+    if (!req.admin) notBanned(req);
     const userId = await threadOf(req, req.query.user);
     const side = req.admin ? 'admin' : 'client';
     const v = await db.touch(userId, side);
     if (req.query.v !== undefined && Number(req.query.v) === v) return res.json({ v, same: true });
 
-    const [all, orders, peer, cleared] = await Promise.all([
+    const [all, orders, peer, cleared, peerRestrict] = await Promise.all([
       db.messages(userId, Number(req.query.after) || 0),
       db.ordersOf(userId),
       req.admin ? db.getUser(userId) : null,
       req.admin ? 0 : db.clearedAt(userId),
+      req.admin ? db.restriction(userId) : null,
       db.markRead(userId, side),
     ]);
     // После /clear клиент не видит старую историю, кроме карточек заказов, которые ещё в работе
     const active = new Set(orders.filter((o) => o.status === 'new' || o.status === 'work').map((o) => o.id));
     const messages = all.filter((m) => m.id > cleared || (m.kind === 'order' && active.has(m.orderId)));
-    res.json({ v, cleared, messages, orders: orders.map(publicOrder), peer: publicUser(peer) });
+    res.json({ v, cleared, messages, orders: orders.map(publicOrder), peer: publicUser(peer), peerRestrict });
   });
 
   api.post('/chat', async (req, res) => {
@@ -153,6 +164,10 @@ export function createServer({ db, chat, bot, media, webhook = false, serveStati
     const text = String(req.body?.text ?? '').trim();
     if (text.length > MAX_TEXT) throw fail(400, 'Слишком длинное сообщение');
     if (!text && !req.body?.image) throw fail(400, 'Пустое сообщение');
+    if (!req.admin) {
+      notBanned(req);
+      if (req.restrict.muted) throw fail(403, mutedText(req.restrict));
+    }
     if (!(await db.hit('msg', req.user.id, 30, 60))) throw fail(429, 'Слишком часто, подожди немного');
 
     let image = null;
@@ -167,6 +182,7 @@ export function createServer({ db, chat, bot, media, webhook = false, serveStati
   });
 
   api.post('/orders', async (req, res) => {
+    notBanned(req);
     let order;
     try {
       order = buildOrder(req.body?.items, req.body?.comment);
@@ -178,10 +194,11 @@ export function createServer({ db, chat, bot, media, webhook = false, serveStati
   });
 
   api.get('/admin/threads', adminOnly, async (req, res) => {
-    const threads = await db.threads();
+    const [threads, restrictions] = await Promise.all([db.threads(), db.restrictions()]);
     res.json({
       threads: threads.map((t) => ({
         user: publicUser(t.user),
+        restrict: restrictions[t.user.id] || null,
         last: t.last,
         unread: t.unread,
         updatedAt: t.updatedAt,
@@ -193,6 +210,35 @@ export function createServer({ db, chat, bot, media, webhook = false, serveStati
   api.post('/admin/orders/:id', adminOnly, async (req, res) => {
     const order = await chat.setStatus(Number(req.params.id), String(req.body?.status));
     res.json({ order: publicOrder(order) });
+  });
+
+  // Панель заказов: все заказы с клиентами и счётчики по статусам
+  api.get('/admin/orders', adminOnly, async (req, res) => {
+    const [orders, restrictions] = await Promise.all([db.allOrders(), db.restrictions()]);
+    const counts = { all: orders.length, new: 0, work: 0, done: 0, cancel: 0 };
+    for (const o of orders) counts[o.status]++;
+    res.json({
+      counts,
+      orders: orders.map((o) => ({
+        ...publicOrder(o),
+        user: publicUser(o.user),
+        restrict: restrictions[o.userId] || null,
+      })),
+    });
+  });
+
+  // Бан, мут и их снятие
+  api.post('/admin/users/:id/restrict', adminOnly, async (req, res) => {
+    const id = Number(req.params.id);
+    if (!Number.isSafeInteger(id) || !(await db.getUser(id))) throw fail(404, 'Клиент не найден');
+    if (await db.isAdmin(id)) throw fail(400, 'Админа нельзя забанить или замутить');
+    const { action, duration } = req.body || {};
+    if (action === 'ban') await db.setBan(id, true);
+    else if (action === 'unban') await db.setBan(id, false);
+    else if (action === 'mute' && MUTE_FOR[duration]) await db.setMute(id, muteUntil(duration));
+    else if (action === 'unmute') await db.setMute(id, null);
+    else throw fail(400, 'Неизвестное действие');
+    res.json({ restrict: await db.restriction(id) });
   });
 
   api.use((req, res) => res.status(404).json({ error: 'Не найдено' }));

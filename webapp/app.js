@@ -48,6 +48,9 @@
     me: null,
     isAdmin: false,
     canAdmin: false,
+    restrict: null,
+    sheet: false,
+    ofilter: null,
     cart: new Map(),
     items: new Map(),
     threads: [],
@@ -652,7 +655,7 @@
     chat.cleared = data.cleared || 0;
     chat.v = data.v;
 
-    if (data.peer) setPeer(data.peer);
+    if (data.peer) setPeer(data.peer, data.peerRestrict);
     updateOrders(data.orders);
     const fresh = data.messages.filter((m) => !chat.ids.has(m.id));
     for (const m of data.messages) chat.lastId = Math.max(chat.lastId, m.id);
@@ -694,6 +697,7 @@
         autosize();
       }
       toast(err.message, true);
+      lastMeAt = 0; // возможно, дали мут или бан — обновим профиль
     } finally {
       chat.sending--;
       schedule(300);
@@ -736,16 +740,205 @@
     }
   }
 
-  function setPeer(u) {
+  const restrictLabel = (r) => {
+    if (!r) return '';
+    if (r.banned) return 'забанен';
+    if (!r.muted) return '';
+    if (!r.mutedUntil) return 'мут навсегда';
+    return `мут до ${new Date(r.mutedUntil).toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}`;
+  };
+
+  function setPeer(u, restrict = chat.peerRestrict) {
+    chat.peer = u;
+    chat.peerRestrict = restrict || null;
     $('#chatTitle').textContent = displayName(u);
     const sub = $('#chatSub');
+    const label = restrictLabel(restrict);
     sub.replaceChildren(
       u.username
         ? h('a', { href: `https://t.me/${u.username}`, onclick: (e) => { e.preventDefault(); openLink(`https://t.me/${u.username}`); } }, `@${u.username}`)
         : `ID ${u.id}`,
-      ' · клиент',
+      label ? ' · ' : ' · клиент',
+      ...(label ? [h('i', { class: 'rtag-inline', text: label })] : []),
     );
     $('#chatAvatar').replaceChildren(initials(u));
+    $('#peerMenu').hidden = false;
+  }
+
+  /* нижняя шторка с действиями */
+
+  let sheetResolve = null;
+  function openSheet(title, actions) {
+    if (sheetResolve) sheetResolve(null);
+    return new Promise((resolve) => {
+      sheetResolve = resolve;
+      $('#sheetTitle').textContent = title;
+      $('#sheetActions').replaceChildren(
+        ...actions.map((a) =>
+          a.sep
+            ? h('p', { class: 'sheet-sep', text: a.sep })
+            : h('button', {
+                type: 'button',
+                class: `sheet-btn${a.danger ? ' is-danger' : ''}${a.current ? ' is-current' : ''}`,
+                disabled: a.current || null,
+                onclick: () => closeSheet(a.key),
+              }, h('span', { text: a.label }), a.current ? svg(ICON.check) : null),
+        ),
+      );
+      $('#sheet').classList.add('is-on');
+      state.sheet = true;
+      updateBack();
+      haptic.tap();
+    });
+  }
+
+  function closeSheet(key = null) {
+    $('#sheet').classList.remove('is-on');
+    state.sheet = false;
+    updateBack();
+    const resolve = sheetResolve;
+    sheetResolve = null;
+    if (resolve) resolve(key);
+  }
+
+  /* бан и мут */
+
+  async function restrictSheet(user, r) {
+    const actions = [];
+    if (r?.banned) actions.push({ key: 'unban', label: 'Разбанить' });
+    if (r?.muted) actions.push({ key: 'unmute', label: 'Снять мут' });
+    if (!r?.banned && !r?.muted) {
+      actions.push(
+        { sep: 'Мут — не сможет писать в чат' },
+        { key: 'mute:1h', label: 'На 1 час' },
+        { key: 'mute:1d', label: 'На сутки' },
+        { key: 'mute:7d', label: 'На 7 дней' },
+        { key: 'mute:forever', label: 'Навсегда' },
+      );
+    }
+    if (!r?.banned) actions.push({ sep: 'Бан — не сможет писать и заказывать' }, { key: 'ban', label: 'Забанить', danger: true });
+
+    const key = await openSheet(`${displayName(user)}${restrictLabel(r) ? ` · ${restrictLabel(r)}` : ''}`, actions);
+    if (!key) return null;
+    const [action, duration] = key.split(':');
+    try {
+      const res = await api(`admin/users/${user.id}/restrict`, { method: 'POST', body: { action, duration } });
+      haptic.ok();
+      toast({ ban: 'Забанен', unban: 'Разбанен', unmute: 'Мут снят' }[action] || `Мут ${restrictLabel(res.restrict).replace(/^мут /, '')}`);
+      return res.restrict;
+    } catch (err) {
+      toast(err.message, true);
+      return null;
+    }
+  }
+
+  // У клиента: мут закрывает поле ввода, бан — весь чат
+  function applyRestrict() {
+    const r = state.restrict || {};
+    const locked = !state.isAdmin && Boolean(r.muted);
+    $('#composer').classList.toggle('is-locked', locked);
+    const input = $('#msgInput');
+    input.disabled = locked;
+    input.placeholder = locked
+      ? r.mutedUntil
+        ? `Писать можно после ${new Date(r.mutedUntil).toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}`
+        : 'Писать в чат нельзя'
+      : 'Сообщение';
+    $('#fileInput').disabled = locked;
+    if (!state.isAdmin && r.banned && state.tab === 'chat') enterChat();
+  }
+
+  function showGate(title, text, withButton) {
+    $('#gateTitle').textContent = title;
+    $('#gateText').textContent = text;
+    $('#openBot').hidden = !withButton;
+    showView('gate');
+  }
+
+  /* панель заказов */
+
+  const STEPS = ['new', 'work', 'done'];
+  const FILTER_LABEL = { new: 'Новые', work: 'В работе', done: 'Готовые', cancel: 'Отменённые' };
+
+  function orderRow(o) {
+    const step = STEPS.indexOf(o.status);
+    const items = o.items.map((i) => i.title + (i.unit ? ` × ${i.qty}` : ''));
+    const itemsText = items.slice(0, 2).join(' · ') + (items.length > 2 ? ` · ещё ${items.length - 2}` : '');
+    return h('button', { class: 'orow', type: 'button', onclick: () => orderActions(o) },
+      h('span', { class: 'orow-top' },
+        h('b', { text: `#${o.id}` }),
+        h('span', { class: 'orow-who', text: displayName(o.user) + (o.user.username ? ` · @${o.user.username}` : '') }),
+        o.restrict ? h('span', { class: 'rtag', text: o.restrict.banned ? 'бан' : 'мут' }) : null,
+        h('time', { text: shortDate(o.createdAt) }),
+      ),
+      h('span', { class: 'orow-items', text: itemsText }),
+      h('span', { class: 'orow-bottom' },
+        h('span', { class: `oprog${o.status === 'cancel' ? ' is-cancel' : ''}` }, STEPS.map((s, i) => h('i', { class: i <= step ? 'on' : '' }))),
+        h('span', { class: 'orow-total', text: o.total }),
+        h('span', { class: `chip s-${o.status}`, text: o.statusLabel }),
+      ),
+    );
+  }
+
+  async function orderActions(o) {
+    const key = await openSheet(`Заказ #${o.id} · ${displayName(o.user)}`, [
+      { key: 'chat', label: 'Открыть чат с клиентом' },
+      { sep: 'Статус' },
+      { key: 'st:new', label: 'Новый', current: o.status === 'new' },
+      { key: 'st:work', label: 'В работе', current: o.status === 'work' },
+      { key: 'st:done', label: 'Готов', current: o.status === 'done' },
+      { key: 'st:cancel', label: 'Отменён', current: o.status === 'cancel' },
+      { sep: 'Клиент' },
+      { key: 'client', label: o.restrict ? `Ограничения · ${restrictLabel(o.restrict)}` : 'Бан или мут' },
+    ]);
+    if (!key) return;
+    if (key === 'chat') {
+      go('chat');
+      return openThread(o.user.id, o.user);
+    }
+    if (key === 'client') {
+      if (await restrictSheet(o.user, o.restrict)) loadOrders().catch(() => {});
+      return;
+    }
+    try {
+      await api(`admin/orders/${o.id}`, { method: 'POST', body: { status: key.slice(3) } });
+      haptic.ok();
+      toast(`Заказ #${o.id}: ${{ new: 'новый', work: 'в работе', done: 'готов', cancel: 'отменён' }[key.slice(3)]}`);
+      loadOrders().catch(() => {});
+    } catch (err) {
+      toast(err.message, true);
+    }
+  }
+
+  function setOrderBadge(n) {
+    const b = $('#obadge');
+    b.hidden = !n;
+    if (n) b.textContent = n > 99 ? '99+' : String(n);
+  }
+
+  async function loadOrders() {
+    const { counts, orders } = await api('admin/orders');
+    setOrderBadge(counts.new);
+    for (const b of $$('#pipe button')) {
+      $('b', b).textContent = counts[b.dataset.f];
+      b.classList.toggle('is-on', state.ofilter === b.dataset.f);
+    }
+    const list = state.ofilter ? orders.filter((o) => o.status === state.ofilter) : orders;
+    $('#olabel').replaceChildren(
+      h('span', { text: state.ofilter ? `${FILTER_LABEL[state.ofilter]}: ${list.length}` : `Все заказы: ${orders.length}` }),
+      ...(state.ofilter ? [h('button', { type: 'button', class: 'link', onclick: () => setOrderFilter(null) }, 'показать все')] : []),
+    );
+    $('#olist').replaceChildren(
+      ...(list.length
+        ? list.map(orderRow)
+        : [h('div', { class: 'empty' }, h('img', { src: 'assets/butterfly.webp', alt: '' }), h('b', { text: state.ofilter ? 'Здесь пусто' : 'Заказов пока нет' }), h('p', { text: state.ofilter ? 'В этом статусе заказов нет.' : 'Новые заказы появятся здесь.' }))]),
+    );
+  }
+
+  function setOrderFilter(f) {
+    state.ofilter = state.ofilter === f ? null : f;
+    haptic.select();
+    loadOrders().catch((err) => toast(err.message, true));
   }
 
   function setSovsideHeader() {
@@ -753,6 +946,7 @@
     $('#chatSub').replaceChildren();
     $('#chatAvatar').replaceChildren(h('img', { src: 'assets/butterfly.webp', alt: '' }));
     $('#chatBack').hidden = true;
+    $('#peerMenu').hidden = true;
   }
 
   /* режим: админ может смотреть и пользоваться всем как обычный клиент */
@@ -776,13 +970,18 @@
     state.me = me.user;
     state.isAdmin = me.isAdmin;
     state.canAdmin = me.canAdmin;
+    state.restrict = me.restrict || null;
     setBadge(me.unread);
+    setOrderBadge(me.isAdmin ? me.newOrders : 0);
     $('#chatTabLabel').textContent = me.isAdmin ? 'Клиенты' : 'Чат';
+    $('#orderTabLabel').textContent = me.isAdmin ? 'Заказы' : 'Заказ';
     renderModeSwitch();
+    applyRestrict();
     if (changed) {
       resetChat(null);
       setSovsideHeader();
       if (state.tab === 'chat') enterChat();
+      if (state.tab === 'order' || state.tab === 'orders') go('order');
       updateBack();
     }
   }
@@ -822,10 +1021,14 @@
         const last = t.last;
         let preview = last.text || (last.image ? 'Фото' : '');
         if (last.from === 'admin') preview = `Вы: ${preview}`;
-        return h('button', { class: 'thread', type: 'button', onclick: () => { haptic.tap(); openThread(t.user.id, t.user); } },
+        return h('button', { class: 'thread', type: 'button', onclick: () => { haptic.tap(); openThread(t.user.id, t.user, t.restrict); } },
           h('span', { class: 'avatar', text: initials(t.user) }),
           h('span', { class: 'thread-body' },
-            h('span', { class: 'thread-top' }, h('b', { text: displayName(t.user) }), h('time', { text: shortDate(t.updatedAt) })),
+            h('span', { class: 'thread-top' },
+              h('b', { text: displayName(t.user) }),
+              t.restrict ? h('span', { class: 'rtag', text: t.restrict.banned ? 'бан' : 'мут' }) : null,
+              h('time', { text: shortDate(t.updatedAt) }),
+            ),
             h('span', { class: 'thread-bottom' },
               h('span', { class: 'thread-prev', text: preview }),
               t.order && h('span', { class: `chip s-${t.order.status}`, text: `#${t.order.id} ${t.order.statusLabel}` }),
@@ -853,10 +1056,10 @@
     updateBack();
   }
 
-  function openThread(userId, user) {
+  function openThread(userId, user, restrict = null) {
     resetChat(userId);
     lastMeAt = 0; // после прочтения обновим счётчик на вкладке
-    if (user) setPeer(user);
+    if (user) setPeer(user, restrict);
     $('#chatBack').hidden = false;
     showView('thread');
     schedule(0);
@@ -870,8 +1073,9 @@
   }
 
   function enterChat() {
-    if (!inTelegram) return showView('gate');
+    if (!inTelegram) return showGate('Чат работает внутри Telegram', 'Открой приложение через бота, чтобы написать мне.', true);
     if (!state.me) return meReady.then(() => state.me && state.tab === 'chat' && enterChat());
+    if (!state.isAdmin && state.restrict?.banned) return showGate('Доступ закрыт', 'Писать и оформлять заказы нельзя.', false);
     if (state.isAdmin) {
       showView(chat.userId ? 'thread' : 'inbox');
     } else {
@@ -893,14 +1097,20 @@
   }
 
   function go(tab, anchor) {
+    // вторая вкладка: у клиента оформление заказа, у админа панель заказов
+    if (tab === 'order' && state.isAdmin) tab = 'orders';
+    if (tab === 'orders' && !state.isAdmin) tab = 'order';
     const page = $(`.page[data-page="${tab}"]`);
     if (tab !== state.tab) {
       $(`.page[data-page="${state.tab}"]`).classList.remove('is-active');
       page.classList.add('is-active');
-      for (const t of $$('.tab')) t.classList.toggle('is-active', t.dataset.tab === tab);
+      for (const t of $$('.tab')) t.classList.toggle('is-active', t.dataset.tab === (tab === 'orders' ? 'order' : tab));
       state.tab = tab;
       if (tab === 'chat') enterChat();
-      else schedule(15000);
+      else if (tab === 'orders') {
+        loadOrders().catch((err) => toast(err.message, true));
+        schedule(8000);
+      } else schedule(15000);
       updateBack();
     } else if (!anchor && tab !== 'chat') {
       page.scrollTo({ top: 0, behavior: 'smooth' });
@@ -925,12 +1135,13 @@
 
   function updateBack() {
     if (!tg || !ver('6.1')) return;
-    const need = state.viewer || (state.tab === 'chat' && state.isAdmin && Boolean(chat.userId));
+    const need = state.viewer || state.sheet || (state.tab === 'chat' && state.isAdmin && Boolean(chat.userId));
     if (need) tg.BackButton.show();
     else tg.BackButton.hide();
   }
 
   function back() {
+    if (state.sheet) return closeSheet();
     if (state.viewer) return closeViewer();
     if (state.tab === 'chat' && state.isAdmin && chat.userId) return closeThread();
   }
@@ -955,12 +1166,14 @@
       } else if (state.tab === 'chat' && chat.userId) {
         await poll();
         next = 2500;
+      } else if (state.tab === 'orders') {
+        await loadOrders();
+        next = 8000;
       }
-      const inInbox = state.tab === 'chat' && state.isAdmin && !chat.userId;
-      const inOwnChat = state.tab === 'chat' && !state.isAdmin;
-      if (!inInbox && !inOwnChat && Date.now() - lastMeAt > 14000) {
+      // раз в ~15 секунд сверяем профиль: счётчики, режим (мог смениться в боте), бан и мут
+      if (Date.now() - lastMeAt > 14000) {
         lastMeAt = Date.now();
-        setBadge((await api('me')).unread);
+        applyMe(await api('me'));
       }
     } catch {
       next = 6000;
@@ -986,6 +1199,14 @@
   }
 
   $('#submitOrder').addEventListener('click', submitOrder);
+  $('#sheet').addEventListener('click', (e) => { if (e.target === e.currentTarget) closeSheet(); });
+  $('#sheetCancel').addEventListener('click', () => closeSheet());
+  for (const b of $$('#pipe button')) b.addEventListener('click', () => setOrderFilter(b.dataset.f));
+  $('#peerMenu').addEventListener('click', async () => {
+    if (!chat.peer) return;
+    const r = await restrictSheet(chat.peer, chat.peerRestrict);
+    if (r) setPeer(chat.peer, r);
+  });
   for (const b of $$('#modeSwitch button')) b.addEventListener('click', () => switchMode(b.dataset.mode));
   $('#chatBack').addEventListener('click', back);
   $('#viewer').addEventListener('click', closeViewer);
@@ -1068,7 +1289,7 @@
 
     await Promise.all([introDone, infoReady]);
     lastMeAt = Date.now();
-    schedule(state.tab === 'chat' ? 0 : 15000);
+    schedule(state.tab === 'chat' ? 0 : state.tab === 'orders' ? 8000 : 15000);
   }
 
   boot();

@@ -14,6 +14,13 @@ const UNREAD = { admin: 't:ua', client: 't:uc' };
 
 const J = (v) => JSON.stringify(v);
 const P = (s) => (s == null ? null : JSON.parse(s));
+// Мут хранится как срок в мс (0 — навсегда); истёкший мут не действует
+const toRestriction = (ban, mute) => {
+  const until = mute === null ? null : Number(mute);
+  const muted = until !== null && (until === 0 || until > Date.now());
+  return { banned: ban !== null, muted, mutedUntil: muted ? until : null };
+};
+
 const pairs = (flat) => {
   const out = {};
   for (let i = 0; i < flat.length; i += 2) out[flat[i]] = flat[i + 1];
@@ -75,6 +82,38 @@ export function openDb(store, { prefix = 'sv' } = {}) {
         ['HGET', K('t', 'ver'), String(userId)],
       ]);
       return Number(ver) || 0;
+    },
+
+    // Ограничения клиента. Бан: не может писать, заказывать и не получает рассылки.
+    // Мут: не может писать в чат до срока (0 — навсегда), заказывать может.
+    async restriction(userId) {
+      const [ban, mute] = await store.pipe([
+        ['HGET', K('ban'), String(userId)],
+        ['HGET', K('mute'), String(userId)],
+      ]);
+      return toRestriction(ban, mute);
+    },
+    async restrictions() {
+      const [bans, mutes] = (await store.pipe([['HGETALL', K('ban')], ['HGETALL', K('mute')]])).map(pairs);
+      const out = {};
+      for (const id of new Set([...Object.keys(bans), ...Object.keys(mutes)])) {
+        const r = toRestriction(bans[id] ?? null, mutes[id] ?? null);
+        if (r.banned || r.muted) out[id] = r;
+      }
+      return out;
+    },
+    bannedIds: async () => new Set((await store.cmd('HKEYS', K('ban'))).map(Number)),
+    setBan: (userId, on) =>
+      on ? store.cmd('HSET', K('ban'), String(userId), Date.now()) : store.cmd('HDEL', K('ban'), String(userId)),
+    setMute: (userId, until) =>
+      until === null ? store.cmd('HDEL', K('mute'), String(userId)) : store.cmd('HSET', K('mute'), String(userId), until),
+
+    async allOrders() {
+      const orders = (await store.cmd('HVALS', K('orders'))).map(P).sort((a, b) => b.id - a.id);
+      const ids = [...new Set(orders.map((o) => String(o.userId)))];
+      const people = ids.length ? await store.cmd('HMGET', K('users'), ...ids) : [];
+      const byId = new Map(ids.map((id, i) => [Number(id), P(people[i]) || { id: Number(id) }]));
+      return orders.map((o) => ({ ...o, user: byId.get(o.userId) }));
     },
 
     // /clear: клиент скрывает у себя всё, что было до этого момента. У админа история остаётся.

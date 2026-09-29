@@ -28,6 +28,8 @@ for (const [name, store] of stores) {
     assert.deepEqual(Object.fromEntries([[all[0], all[1]], [all[2], all[3]]]), { a: '6', b: '2' });
     assert.deepEqual((await store.cmd('HVALS', `${p}h`)).sort(), ['2', '6']);
     assert.deepEqual((await store.cmd('HKEYS', `${p}h`)).sort(), ['a', 'b']);
+    assert.equal(await store.cmd('HDEL', `${p}h`, 'b', 'zz'), 1);
+    assert.deepEqual(await store.cmd('HKEYS', `${p}h`), ['a']);
 
     await store.cmd('SET', `${p}del`, '1');
     assert.equal(await store.cmd('DEL', `${p}del`, `${p}nope`), 1);
