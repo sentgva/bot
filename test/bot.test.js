@@ -156,15 +156,17 @@ test('/news: рассылка всем клиентам, один раз', async
   assert.match(sentTo(CLIENT)[0].payload.text, /Такой команды нет/);
   assert.equal(calls.filter((c) => c.method === 'copyMessage').length, 0);
 
-  // админ: /news → сообщение → подтверждение
+  // админ: /news → сообщение → подтверждение; второй админ тоже получает рассылку
   await message(101, { text: 'я второй клиент' });
+  await message(202, { text: 'я второй админ' });
+  await db.addAdmin(202);
   calls.length = 0;
   await cmd(ADMIN, '/news');
   assert.match(sentTo(ADMIN)[0].payload.text, /Пришли одним сообщением/);
   calls.length = 0;
   await message(ADMIN, { text: 'Скидка 20% до пятницы' });
   const confirm = sentTo(ADMIN)[0];
-  assert.match(confirm.payload.text, /Отправить это сообщение 2 людям/);
+  assert.match(confirm.payload.text, /Отправить это сообщение 3 людям/);
   const go = confirm.payload.reply_markup.inline_keyboard[0][0].callback_data;
   assert.match(go, /^news:\d+:go$/);
 
@@ -176,8 +178,8 @@ test('/news: рассылка всем клиентам, один раз', async
   calls.length = 0;
   await press(ADMIN, go);
   const copies = () => calls.filter((c) => c.method === 'copyMessage');
-  await waitFor(() => calls.some((c) => c.method === 'editMessageText' && /Рассылка отправлена: 2 из 2/.test(c.payload.text)));
-  assert.deepEqual(copies().map((c) => c.payload.chat_id).sort(), [CLIENT, 101]);
+  await waitFor(() => calls.some((c) => c.method === 'editMessageText' && /Рассылка отправлена: 3 из 3/.test(c.payload.text)));
+  assert.deepEqual(copies().map((c) => c.payload.chat_id).sort((a, b) => a - b), [CLIENT, 101, 202]);
   assert.ok(copies().every((c) => c.payload.from_chat_id === ADMIN));
 
   // повторное нажатие (или повтор апдейта от Telegram) ничего не шлёт
@@ -248,4 +250,15 @@ test('/mode: админ пишет боту как клиент, потом во
   calls.length = 0;
   await cmd(ADMIN, '/start');
   assert.match(sentTo(ADMIN)[0].payload.caption, /режим админа/);
+});
+
+test('/clear очищает переписку у того, кто вызвал', async () => {
+  const cmd = (userId) => message(userId, { text: '/clear', entities: [{ type: 'bot_command', offset: 0, length: 6 }] });
+  calls.length = 0;
+  await cmd(CLIENT);
+  assert.match(sentTo(CLIENT)[0].payload.text, /очищена/);
+  assert.ok((await db.clearedAt(CLIENT)) > 0);
+  calls.length = 0;
+  await cmd(555);
+  assert.match(sentTo(555)[0].payload.text, /и так пустая/);
 });

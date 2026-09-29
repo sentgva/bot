@@ -476,6 +476,7 @@
     epoch: 0,
     lastId: 0,
     v: null,
+    cleared: null,
     ids: new Set(),
     orders: new Map(),
     prev: null,
@@ -492,6 +493,7 @@
     chat.epoch++;
     chat.lastId = 0;
     chat.v = null;
+    chat.cleared = null;
     chat.ids.clear();
     chat.orders.clear();
     chat.prev = null;
@@ -642,6 +644,12 @@
     if (state.isAdmin) q.set('user', chat.userId);
     const data = await api(`chat?${q}`);
     if (epoch !== chat.epoch || data.same) return;
+    // переписку очистили (/clear в боте), пока приложение было открыто — перерисовываем с нуля
+    if (chat.cleared !== null && data.cleared !== chat.cleared) {
+      resetChat(chat.userId);
+      return poll();
+    }
+    chat.cleared = data.cleared || 0;
     chat.v = data.v;
 
     if (data.peer) setPeer(data.peer);

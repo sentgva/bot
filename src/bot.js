@@ -9,6 +9,7 @@ const MAX_TEXT = 3500;
 
 const CLIENT_COMMANDS = [
   { command: 'start', description: 'Открыть SOVSIDE' },
+  { command: 'clear', description: 'Очистить переписку в приложении' },
   { command: 'id', description: 'Мой Telegram ID' },
 ];
 const ADMIN_COMMANDS = [
@@ -16,6 +17,7 @@ const ADMIN_COMMANDS = [
   { command: 'news', description: 'Рассылка всем клиентам' },
   { command: 'cancel', description: 'Отменить рассылку' },
   { command: 'mode', description: 'Переключиться: админ / клиент' },
+  { command: 'clear', description: 'Очистить мою переписку в приложении' },
   { command: 'id', description: 'Мой Telegram ID' },
 ];
 
@@ -63,6 +65,12 @@ export function registerBot(bot, db, chat) {
   });
 
   bot.command('id', (ctx) => ctx.reply(`Твой ID: <code>${ctx.from.id}</code>`, { parse_mode: 'HTML' }));
+
+  // Очищает переписку в приложении у того, кто вызвал. У продавца история остаётся.
+  bot.command('clear', async (ctx) => {
+    const had = await db.clearForClient(ctx.from.id);
+    await ctx.reply(had ? 'Переписка в приложении очищена. Активные заказы остались на месте.' : 'Переписка и так пустая.');
+  });
 
   // Админ переключается между режимом админа и обычного клиента
   bot.command('mode', async (ctx, next) => {

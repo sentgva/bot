@@ -15,13 +15,11 @@ const people = (n) => {
 };
 
 export function registerNews(bot, db) {
-  const recipients = async () => {
-    const admins = await db.adminIds();
-    return (await db.userIds()).filter((id) => !admins.has(id));
-  };
+  // Все, кто запускал бота, включая других админов. Автору рассылки копия не нужна.
+  const recipients = async (senderId) => (await db.userIds()).filter((id) => id !== Number(senderId));
 
   async function askConfirm(ctx, messageId) {
-    const count = (await recipients()).length;
+    const count = (await recipients(ctx.from.id)).length;
     if (!count) return ctx.reply('Пока некому отправлять: кроме тебя бота никто не запускал.');
     const id = await db.saveNewsDraft({ chatId: ctx.chat.id, messageId });
     await ctx.reply(`Отправить это сообщение ${people(count)}?`, {
@@ -77,7 +75,7 @@ export function registerNews(bot, db) {
       return ctx.editMessageText('Рассылка отменена.').catch(() => {});
     }
 
-    const users = await recipients();
+    const users = await recipients(ctx.from.id);
     await ctx.answerCallbackQuery({ text: 'Рассылка запущена' });
     await ctx.editMessageText(`Отправляю… 0 из ${users.length}`).catch(() => {});
     const status = { chatId: ctx.chat.id, messageId: ctx.callbackQuery.message.message_id };

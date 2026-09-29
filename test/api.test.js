@@ -231,3 +231,27 @@ test('админ переключается в режим клиента и об
   assert.equal(back.data.isAdmin, true);
   assert.equal((await call(admin, 'admin/threads')).status, 200);
 });
+
+test('/clear: клиент очищает свою переписку, у админа история остаётся', async () => {
+  const dave = { id: 400, first_name: 'Dave' };
+  await call(dave, 'chat', { method: 'POST', body: { text: 'старое сообщение' } });
+  const { data } = await call(dave, 'orders', { method: 'POST', body: { items: [{ id: 'ot-logo' }] } });
+  const before = await call(dave, 'chat');
+
+  assert.equal(await db.clearForClient(dave.id), true);
+
+  const after = await call(dave, 'chat', {});
+  assert.notEqual(after.data.cleared, before.data.cleared);
+  assert.deepEqual(after.data.messages.map((m) => m.kind), ['order'], 'осталась только карточка активного заказа');
+  assert.equal(after.data.messages[0].orderId, data.order.id);
+
+  const asAdmin = await call(admin, `chat?user=${dave.id}`);
+  assert.ok(asAdmin.data.messages.some((m) => m.text === 'старое сообщение'), 'у админа история на месте');
+
+  // после отмены заказа его карточка тоже скрывается, новые сообщения видны
+  await call(admin, `admin/orders/${data.order.id}`, { method: 'POST', body: { status: 'cancel' } });
+  await call(dave, 'chat', { method: 'POST', body: { text: 'новое' } });
+  const fresh = (await call(dave, 'chat')).data.messages;
+  assert.ok(fresh.every((m) => m.text !== 'старое сообщение' && m.kind !== 'order'));
+  assert.ok(fresh.some((m) => m.text === 'новое'));
+});

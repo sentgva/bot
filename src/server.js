@@ -135,13 +135,17 @@ export function createServer({ db, chat, bot, media, webhook = false, serveStati
     const v = await db.touch(userId, side);
     if (req.query.v !== undefined && Number(req.query.v) === v) return res.json({ v, same: true });
 
-    const [messages, orders, peer] = await Promise.all([
+    const [all, orders, peer, cleared] = await Promise.all([
       db.messages(userId, Number(req.query.after) || 0),
       db.ordersOf(userId),
       req.admin ? db.getUser(userId) : null,
+      req.admin ? 0 : db.clearedAt(userId),
       db.markRead(userId, side),
     ]);
-    res.json({ v, messages, orders: orders.map(publicOrder), peer: publicUser(peer) });
+    // После /clear клиент не видит старую историю, кроме карточек заказов, которые ещё в работе
+    const active = new Set(orders.filter((o) => o.status === 'new' || o.status === 'work').map((o) => o.id));
+    const messages = all.filter((m) => m.id > cleared || (m.kind === 'order' && active.has(m.orderId)));
+    res.json({ v, cleared, messages, orders: orders.map(publicOrder), peer: publicUser(peer) });
   });
 
   api.post('/chat', async (req, res) => {

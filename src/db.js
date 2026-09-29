@@ -77,6 +77,19 @@ export function openDb(store, { prefix = 'sv' } = {}) {
       return Number(ver) || 0;
     },
 
+    // /clear: клиент скрывает у себя всё, что было до этого момента. У админа история остаётся.
+    async clearForClient(userId) {
+      const u = String(userId);
+      const last = P(await store.cmd('HGET', K('t', 'last'), u));
+      await store.pipe([
+        ['HSET', K('t', 'cleared'), u, last?.id || 0],
+        ['HSET', K(UNREAD.client), u, 0],
+        ['HINCRBY', K('t', 'ver'), u, 1],
+      ]);
+      return Boolean(last);
+    },
+    clearedAt: async (userId) => Number(await store.cmd('HGET', K('t', 'cleared'), String(userId))) || 0,
+
     markRead: (userId, side) => store.cmd('HSET', K(UNREAD[side]), String(userId), 0),
 
     isWatching: async (userId, side) => (await store.cmd('EXISTS', K('seen', side, userId))) > 0,
