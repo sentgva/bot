@@ -3,7 +3,7 @@ import express from 'express';
 import { webhookCallback } from 'grammy';
 import { config } from './config.js';
 import { verifyInitData } from './auth.js';
-import { about, links, steps, catalog, since } from './content.js';
+import { about, links, steps, catalog, since, payment } from './content.js';
 import { discordStats } from './discord.js';
 import { STATUS, buildOrder, totalLabel } from './orders.js';
 
@@ -77,6 +77,7 @@ export function createServer({ db, chat, bot, media, webhook = false, serveStati
       about,
       steps,
       catalog,
+      payment,
       links: { ...links, telegram: config.telegramLink || null },
       bot: config.botUsername || null,
       stats: {

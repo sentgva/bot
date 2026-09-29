@@ -26,6 +26,13 @@ export const links = {
   ticket: `${GUILD}/1377890729988456468`,
 };
 
+// Куда платить. Показывается на вкладке «Заказ» и в активных заказах в чате.
+// url — откроется по нажатию, card — номер карты, по нажатию копируется.
+export const payment = [
+  { id: 'funpay', title: 'FunPay', sub: 'Профиль продавца', url: 'https://funpay.com/users/6024775/', icon: 'assets/pay/funpay.svg' },
+  { id: 'sber', title: 'Сбербанк', sub: 'Роман', card: '2202209229054753', icon: 'assets/pay/sber.png' },
+];
+
 export const steps = [
   { title: 'Выбираешь услугу', text: 'Во вкладке «Заказ». Можно сразу несколько.' },
   { title: 'Обсуждаем в чате', text: 'Референсы, цвета, сроки и цену за сложные задачи.' },

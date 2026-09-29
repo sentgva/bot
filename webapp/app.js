@@ -39,6 +39,7 @@
     check: 'M5 12.5l4.5 4.5L19 7.5',
     arrow: 'M9 5l7 7-7 7',
     out: 'M8 16L16 8M9.5 8H16v6.5',
+    copy: 'M9 9h10v10H9zM15 9V5H5v10h4',
   };
 
   const state = {
@@ -287,6 +288,7 @@
     }
     $('[data-stat=third]').textContent = info.stats.orders > 0 ? '0' : info.stats.since.slice(0, 4);
     renderCatalog(info.catalog);
+    renderPayment(info.payment);
   }
 
   function countUp(el, value) {
@@ -310,6 +312,65 @@
     const third = $('[data-stat=third]');
     if (s.orders > 0) countUp(third, s.orders);
     else third.textContent = s.since.slice(0, 4);
+  }
+
+  /* ---------- оплата ---------- */
+
+  const cardFormat = (n) => n.replace(/(\d{4})(?=\d)/g, '$1 ');
+
+  async function copyText(text) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      const ta = h('textarea', { readonly: true });
+      ta.value = text;
+      ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+      document.body.append(ta);
+      ta.select();
+      ta.setSelectionRange(0, text.length);
+      let ok = false;
+      try { ok = document.execCommand('copy'); } catch {}
+      ta.remove();
+      return ok;
+    }
+  }
+
+  function payRows(list) {
+    return list.map((p) =>
+      h('button', {
+        class: 'pay-row',
+        type: 'button',
+        onclick: async (e) => {
+          const row = e.currentTarget;
+          haptic.tap();
+          if (!p.card) return openLink(p.url);
+          if (await copyText(p.card)) {
+            haptic.ok();
+            toast('Номер карты скопирован');
+            row.classList.add('is-copied');
+            setTimeout(() => row.classList.remove('is-copied'), 1800);
+          } else {
+            toast(cardFormat(p.card));
+          }
+        },
+      },
+        h('img', { class: 'pay-ico', src: p.icon, alt: '' }),
+        h('span', { class: 'pay-body' },
+          h('b', { text: p.card ? `${p.title} · ${p.sub}` : p.title }),
+          h('span', { class: p.card ? 'pay-card' : '', text: p.card ? cardFormat(p.card) : p.sub }),
+        ),
+        h('span', { class: 'pay-act' }, p.card ? [svg(ICON.copy, 'i-copy'), svg(ICON.check, 'i-done')] : svg(ICON.out)),
+      ),
+    );
+  }
+
+  function renderPayment(list) {
+    if (!list || !list.length) return;
+    $('#payList').replaceChildren(...payRows(list));
+    $('#payBlock').hidden = false;
+    // заказы в чате могли отрисоваться раньше, чем пришли реквизиты
+    for (const o of chat.orders.values()) refreshOrderCard(o);
   }
 
   /* ---------- заказ ---------- */
@@ -454,6 +515,11 @@
       h('div', { class: 'oc-total' }, h('span', { text: 'Итого' }), h('b', { text: o.total })),
       o.comment && h('p', { class: 'oc-comment', text: o.comment }),
     );
+    // Клиенту в активном заказе показываем, куда платить
+    const payment = state.info && state.info.payment;
+    if (!state.isAdmin && payment && payment.length && (o.status === 'new' || o.status === 'work')) {
+      card.append(h('div', { class: 'oc-pay' }, h('span', { class: 'oc-pay-label', text: 'Оплата' }), h('div', { class: 'pay' }, payRows(payment))));
+    }
     if (state.isAdmin) {
       const seg = h('div', { class: 'seg' });
       for (const [status, label] of [['new', 'Новый'], ['work', 'В работе'], ['done', 'Готов'], ['cancel', 'Отмена']]) {
@@ -481,13 +547,15 @@
     }
   }
 
+  function refreshOrderCard(o) {
+    for (const card of $$(`.order-card[data-order="${o.id}"]`)) card.replaceWith(orderCard(o));
+  }
+
   function updateOrders(list) {
     for (const o of list) {
       const prev = chat.orders.get(o.id);
       chat.orders.set(o.id, o);
-      if (prev && prev.status !== o.status) {
-        for (const card of $$(`.order-card[data-order="${o.id}"]`)) card.replaceWith(orderCard(o));
-      }
+      if (prev && prev.status !== o.status) refreshOrderCard(o);
     }
   }
 

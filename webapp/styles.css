@@ -445,6 +445,57 @@ textarea::placeholder { color: var(--dim); }
 
 .alt { margin: 18px 0 0; color: var(--muted); font-size: 13px; }
 
+/* оплата */
+.pay {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--bg-1);
+  overflow: hidden;
+}
+.pay-row {
+  display: grid;
+  grid-template-columns: 32px 1fr 20px;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 0;
+  background: none;
+  text-align: left;
+  transition: background-color 0.2s var(--ease);
+}
+.pay-row + .pay-row { border-top: 1px solid var(--line); }
+.pay-row:active { background: var(--bg-2); }
+.pay-ico {
+  display: block;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  object-fit: cover;
+}
+.pay-body { min-width: 0; }
+.pay-body b { display: block; font-size: 15px; font-weight: 700; line-height: 1.3; }
+.pay-body span { display: block; margin-top: 2px; color: var(--muted); font-size: 13px; line-height: 1.35; }
+.pay-body .pay-card { font-family: var(--mono); font-size: 13.5px; letter-spacing: 0.04em; color: var(--soft); }
+.pay-act { position: relative; width: 20px; height: 20px; color: var(--dim); }
+.pay-act svg { position: absolute; inset: 0; width: 20px; height: 20px; transition: opacity 0.25s, transform 0.35s var(--ease), color 0.25s; }
+.pay-act .i-done { opacity: 0; transform: scale(0.4); color: var(--text); stroke-width: 2.2; }
+.pay-row.is-copied .i-copy { opacity: 0; transform: scale(0.4); }
+.pay-row.is-copied .i-done { opacity: 1; transform: none; }
+
+.oc-pay { margin-top: 14px; }
+.oc-pay-label {
+  display: block;
+  font: 500 10.5px/1 var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.oc-pay .pay { margin-top: 10px; border-radius: 14px; background: var(--bg); }
+.oc-pay .pay-row { grid-template-columns: 28px 1fr 18px; gap: 11px; padding: 10px 12px; }
+.oc-pay .pay-ico { width: 28px; height: 28px; border-radius: 8px; }
+.oc-pay .pay-act, .oc-pay .pay-act svg { width: 18px; height: 18px; }
+
 .cart {
   position: sticky;
   bottom: 0;
@@ -869,6 +920,7 @@ textarea::placeholder { color: var(--dim); }
   left: 50%;
   bottom: calc(86px + var(--safe-b));
   z-index: 70;
+  width: max-content;
   max-width: calc(100% - 32px);
   padding: 11px 16px;
   border-radius: 12px;
