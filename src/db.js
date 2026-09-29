@@ -163,6 +163,11 @@ export function openDb(store, { prefix = 'sv' } = {}) {
       return admins.ids;
     },
     isAdmin: async (id) => (await db.adminIds()).has(Number(id)),
+    // Админ может временно работать как обычный клиент: 'admin' | 'client'
+    getMode: async (id) => (await store.cmd('HGET', K('mode'), String(id))) || 'admin',
+    setMode: (id, mode) => store.cmd('HSET', K('mode'), String(id), mode === 'client' ? 'client' : 'admin'),
+    // Права админа и при этом не в режиме клиента
+    actsAsAdmin: async (id) => (await db.isAdmin(id)) && (await db.getMode(id)) !== 'client',
     async addAdmin(id) {
       await store.cmd('SADD', K('admins'), id);
       admins = { at: 0, ids: null };

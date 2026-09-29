@@ -99,9 +99,12 @@
       <section class="page page-chat" data-page="chat">
         <div class="view view-inbox" id="inbox" hidden>
           <div class="page-inner">
-            <header class="page-head">
-              <p class="eyebrow">Админ</p>
-              <h2 class="title">Клиенты</h2>
+            <header class="page-head page-head-row">
+              <div>
+                <p class="eyebrow">Админ</p>
+                <h2 class="title">Клиенты</h2>
+              </div>
+              <div class="mode-slot" id="modeSlotInbox"></div>
             </header>
             <div class="threads" id="threads"></div>
           </div>
@@ -117,6 +120,7 @@
               <b id="chatTitle">SOVSIDE</b>
               <span id="chatSub"></span>
             </div>
+            <div class="mode-slot" id="modeSlotChat"></div>
           </header>
 
           <div class="msgs" id="msgs"></div>
@@ -187,6 +191,13 @@
       <p class="intro-sub">mods · gunpacks · clothes · redux</p>
     </div>
     <p class="intro-skip">нажми, чтобы пропустить</p>
+  </div>
+
+  <!-- Переключатель для админа: переносится в шапку нужного экрана -->
+  <div class="mode" id="modeSwitch" hidden>
+    <i class="mode-thumb"></i>
+    <button type="button" data-mode="client">Клиент</button>
+    <button type="button" data-mode="admin">Админ</button>
   </div>
 
   <div class="viewer" id="viewer"><img alt=""></div>

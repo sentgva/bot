@@ -15,6 +15,7 @@ const ADMIN_COMMANDS = [
   { command: 'start', description: 'Открыть SOVSIDE' },
   { command: 'news', description: 'Рассылка всем клиентам' },
   { command: 'cancel', description: 'Отменить рассылку' },
+  { command: 'mode', description: 'Переключиться: админ / клиент' },
   { command: 'id', description: 'Мой Telegram ID' },
 ];
 
@@ -43,12 +44,13 @@ export function registerBot(bot, db, chat) {
       return ctx.reply('Готово, теперь ты админ. Сообщения и заказы клиентов будут приходить сюда. Нажми /start.');
     }
 
-    const admin = await db.isAdmin(ctx.from.id);
+    const admin = await db.actsAsAdmin(ctx.from.id);
     const caption = admin
       ? '<b>SOVSIDE</b> · режим админа\n\n' +
         'Сообщения и заказы клиентов приходят сюда. Ответь реплаем, и ответ уйдёт клиенту. ' +
         'Все переписки и статусы заказов в приложении.\n\n' +
-        'Рассылка всем клиентам: /news'
+        'Рассылка всем клиентам: /news\n' +
+        'Посмотреть всё глазами клиента: /mode'
       : '<b>SOVSIDE</b> · моды для GTA5RP и Majestic RP\n\n' +
         'Ганпаки, одежда, редуксы. В приложении прайс, заказ и чат со мной.';
     const cover = coverFileId || (config.webAppUrl ? `${config.webAppUrl}/assets/cover.jpg` : new InputFile(COVER));
@@ -61,6 +63,19 @@ export function registerBot(bot, db, chat) {
   });
 
   bot.command('id', (ctx) => ctx.reply(`Твой ID: <code>${ctx.from.id}</code>`, { parse_mode: 'HTML' }));
+
+  // Админ переключается между режимом админа и обычного клиента
+  bot.command('mode', async (ctx, next) => {
+    if (!(await db.isAdmin(ctx.from.id))) return next();
+    const mode = (await db.getMode(ctx.from.id)) === 'client' ? 'admin' : 'client';
+    await db.setMode(ctx.from.id, mode);
+    await ctx.reply(
+      mode === 'client'
+        ? 'Режим клиента: бот и приложение работают с тобой как с обычным покупателем. ' +
+            'Уведомления о заказах клиентов продолжат приходить.\n\nВернуться в админку: /mode'
+        : 'Режим админа включён.',
+    );
+  });
 
   registerNews(bot, db);
 
@@ -83,7 +98,7 @@ export function registerBot(bot, db, chat) {
 
     // Админ отвечает клиенту реплаем на пересланное ботом сообщение
     let clientId = null;
-    if (await db.isAdmin(ctx.from.id)) {
+    if (await db.actsAsAdmin(ctx.from.id)) {
       const reply = msg.reply_to_message;
       clientId = reply && (await db.getRelay(ctx.chat.id, reply.message_id));
       if (!clientId) {

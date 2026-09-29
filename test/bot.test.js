@@ -214,3 +214,38 @@ test('/news текст: сразу черновик с форматирован�
   await message(ADMIN, { text: 'после отмены' });
   assert.match(sentTo(ADMIN)[0].payload.text, /реплаем/);
 });
+
+test('/mode: админ пишет боту как клиент, потом возвращается', async () => {
+  const cmd = (userId, text) => message(userId, { text, entities: [{ type: 'bot_command', offset: 0, length: text.length }] });
+
+  calls.length = 0;
+  await cmd(CLIENT, '/mode');
+  assert.match(sentTo(CLIENT)[0].payload.text, /Такой команды нет/);
+
+  calls.length = 0;
+  await cmd(ADMIN, '/mode');
+  assert.match(sentTo(ADMIN)[0].payload.text, /Режим клиента/);
+  assert.equal(await db.actsAsAdmin(ADMIN), false);
+  assert.equal(await db.isAdmin(ADMIN), true);
+
+  // сообщение уходит в его собственный чат как от клиента, а не «ответь реплаем»
+  calls.length = 0;
+  await message(ADMIN, { text: 'хочу заказ' });
+  assert.equal(sentTo(ADMIN).length, 0);
+  assert.equal((await db.messages(ADMIN)).at(-1).text, 'хочу заказ');
+  assert.equal((await db.messages(ADMIN)).at(-1).from, 'client');
+
+  // /start показывает клиентский экран, /news недоступна
+  calls.length = 0;
+  await cmd(ADMIN, '/start');
+  assert.doesNotMatch(sentTo(ADMIN)[0].payload.caption, /режим админа/);
+  calls.length = 0;
+  await cmd(ADMIN, '/news');
+  assert.match(sentTo(ADMIN)[0].payload.text, /Такой команды нет/);
+
+  await cmd(ADMIN, '/mode');
+  assert.equal(await db.actsAsAdmin(ADMIN), true);
+  calls.length = 0;
+  await cmd(ADMIN, '/start');
+  assert.match(sentTo(ADMIN)[0].payload.caption, /режим админа/);
+});

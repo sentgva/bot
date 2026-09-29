@@ -347,6 +347,47 @@ svg { fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round
 /* ---------- заказ ---------- */
 
 .page-head { margin-bottom: 8px; }
+.page-head-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+
+/* переключатель админ / клиент */
+.mode-slot { flex: none; }
+.chat-head .mode-slot { margin-left: auto; }
+.mode {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--bg-1);
+  animation: fadeUp 0.4s var(--ease) both;
+}
+.mode-thumb {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 3px;
+  width: calc(50% - 3px);
+  border-radius: 8px;
+  background: var(--paper);
+  transition: transform 0.45s var(--ease);
+}
+.mode[data-mode='admin'] .mode-thumb { transform: translateX(100%); }
+.mode button {
+  position: relative;
+  z-index: 1;
+  min-width: 66px;
+  height: 28px;
+  padding: 0 10px;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font: 600 10px/1 var(--mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: color 0.35s var(--ease);
+}
+.mode button.is-on { color: var(--ink); }
 
 .cat { margin-top: 28px; }
 .cat-head {

@@ -47,6 +47,7 @@
     info: null,
     me: null,
     isAdmin: false,
+    canAdmin: false,
     cart: new Map(),
     items: new Map(),
     threads: [],
@@ -739,6 +740,64 @@
     $('#chatAvatar').replaceChildren(initials(u));
   }
 
+  function setSovsideHeader() {
+    $('#chatTitle').textContent = 'SOVSIDE';
+    $('#chatSub').replaceChildren();
+    $('#chatAvatar').replaceChildren(h('img', { src: 'assets/butterfly.webp', alt: '' }));
+    $('#chatBack').hidden = true;
+  }
+
+  /* режим: админ может смотреть и пользоваться всем как обычный клиент */
+
+  function renderModeSwitch() {
+    const sw = $('#modeSwitch');
+    if (!state.canAdmin) {
+      sw.hidden = true;
+      return;
+    }
+    const mode = state.isAdmin ? 'admin' : 'client';
+    sw.dataset.mode = mode;
+    for (const b of $$('button', sw)) b.classList.toggle('is-on', b.dataset.mode === mode);
+    const slot = $(state.isAdmin ? '#modeSlotInbox' : '#modeSlotChat');
+    if (sw.parentElement !== slot) slot.append(sw);
+    sw.hidden = false;
+  }
+
+  function applyMe(me) {
+    const changed = Boolean(state.me) && state.isAdmin !== me.isAdmin;
+    state.me = me.user;
+    state.isAdmin = me.isAdmin;
+    state.canAdmin = me.canAdmin;
+    setBadge(me.unread);
+    $('#chatTabLabel').textContent = me.isAdmin ? 'Клиенты' : 'Чат';
+    renderModeSwitch();
+    if (changed) {
+      resetChat(null);
+      setSovsideHeader();
+      if (state.tab === 'chat') enterChat();
+      updateBack();
+    }
+  }
+
+  let switching = false;
+  async function switchMode(mode) {
+    if (switching || (mode === 'admin') === state.isAdmin) return;
+    switching = true;
+    haptic.select();
+    const sw = $('#modeSwitch');
+    sw.dataset.mode = mode; // ползунок едет сразу, не дожидаясь сервера
+    for (const b of $$('button', sw)) b.classList.toggle('is-on', b.dataset.mode === mode);
+    try {
+      applyMe(await api('mode', { method: 'POST', body: { mode } }));
+      toast(mode === 'admin' ? 'Режим админа' : 'Режим клиента');
+    } catch (err) {
+      toast(err.message, true);
+      renderModeSwitch();
+    } finally {
+      switching = false;
+    }
+  }
+
   /* админ: список клиентов */
 
   async function loadThreads() {
@@ -808,7 +867,10 @@
     if (state.isAdmin) {
       showView(chat.userId ? 'thread' : 'inbox');
     } else {
-      if (chat.userId !== state.me.id) resetChat(state.me.id);
+      if (chat.userId !== state.me.id) {
+        resetChat(state.me.id);
+        setSovsideHeader();
+      }
       showView('thread');
     }
     schedule(0);
@@ -916,6 +978,7 @@
   }
 
   $('#submitOrder').addEventListener('click', submitOrder);
+  for (const b of $$('#modeSwitch button')) b.addEventListener('click', () => switchMode(b.dataset.mode));
   $('#chatBack').addEventListener('click', back);
   $('#viewer').addEventListener('click', closeViewer);
   $('#openBot').addEventListener('click', () => {
@@ -978,12 +1041,7 @@
     const infoReady = api('info').then(renderInfo).catch((err) => toast(err.message, true));
     meReady = inTelegram
       ? api('me')
-          .then((me) => {
-            state.me = me.user;
-            state.isAdmin = me.isAdmin;
-            setBadge(me.unread);
-            if (me.isAdmin) $('#chatTabLabel').textContent = 'Клиенты';
-          })
+          .then(applyMe)
           .catch((err) => toast(err.message, true))
       : Promise.resolve();
 

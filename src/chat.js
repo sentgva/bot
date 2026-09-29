@@ -38,8 +38,10 @@ export function createChat(db, api, media) {
 
   // Шлём всем админам и запоминаем, какому клиенту принадлежит уведомление,
   // чтобы ответ реплаем в боте ушёл этому клиенту.
+  // Уведомления идут всем админам в любом режиме, кроме самого автора (админ в режиме клиента)
   async function toAdmins(userId, build) {
     for (const adminId of await db.adminIds()) {
+      if (adminId === Number(userId)) continue;
       try {
         const sent = await send(adminId, build());
         await db.setRelay(adminId, sent.message_id, userId);

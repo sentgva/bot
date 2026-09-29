@@ -31,7 +31,7 @@ export function registerNews(bot, db) {
   }
 
   bot.command('news', async (ctx, next) => {
-    if (!(await db.isAdmin(ctx.from.id))) return next();
+    if (!(await db.actsAsAdmin(ctx.from.id))) return next();
 
     // «/news текст» — сразу черновик: бот повторяет текст с форматированием, его и разошлём
     const text = ctx.match.trim();
@@ -52,7 +52,7 @@ export function registerNews(bot, db) {
   });
 
   bot.command('cancel', async (ctx, next) => {
-    if (!(await db.isAdmin(ctx.from.id))) return next();
+    if (!(await db.actsAsAdmin(ctx.from.id))) return next();
     await db.clearNewsAwait(ctx.from.id);
     await ctx.reply('Рассылка отменена.');
   });
@@ -60,7 +60,7 @@ export function registerNews(bot, db) {
   // Сообщение после /news становится черновиком рассылки
   bot.on('message', async (ctx, next) => {
     if (ctx.message.text?.startsWith('/')) return next();
-    if (!(await db.isAdmin(ctx.from.id)) || !(await db.isNewsAwait(ctx.from.id))) return next();
+    if (!(await db.actsAsAdmin(ctx.from.id)) || !(await db.isNewsAwait(ctx.from.id))) return next();
     await db.clearNewsAwait(ctx.from.id);
     await askConfirm(ctx, ctx.message.message_id);
   });

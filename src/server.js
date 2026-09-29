@@ -94,7 +94,8 @@ export function createServer({ db, chat, bot, media, webhook = false, serveStati
     const data = verifyInitData(req.get('X-Init-Data'), config.botToken);
     if (!data) throw fail(401, 'Открой приложение через Telegram');
     req.user = await db.upsertUser(data.user);
-    req.admin = await db.isAdmin(data.user.id);
+    req.canAdmin = await db.isAdmin(data.user.id);
+    req.admin = req.canAdmin && (await db.getMode(data.user.id)) !== 'client';
     res.set('Cache-Control', 'no-store');
     next();
   });
@@ -109,12 +110,22 @@ export function createServer({ db, chat, bot, media, webhook = false, serveStati
     return id;
   };
 
-  api.get('/me', async (req, res) => {
-    res.json({
-      user: publicUser(req.user),
-      isAdmin: req.admin,
-      unread: req.admin ? await db.totalUnreadAdmin() : await db.unread(req.user.id, 'client'),
-    });
+  const me = async (req) => ({
+    user: publicUser(req.user),
+    isAdmin: req.admin,
+    canAdmin: req.canAdmin,
+    unread: req.admin ? await db.totalUnreadAdmin() : await db.unread(req.user.id, 'client'),
+  });
+
+  api.get('/me', async (req, res) => res.json(await me(req)));
+
+  // Переключение админа между режимом админа и клиента
+  api.post('/mode', async (req, res) => {
+    if (!req.canAdmin) throw fail(403, 'Нет доступа');
+    const mode = req.body?.mode === 'client' ? 'client' : 'admin';
+    await db.setMode(req.user.id, mode);
+    req.admin = mode === 'admin';
+    res.json(await me(req));
   });
 
   // Опрос чата. v — версия чата у клиента: если не изменилась, отвечаем сразу.

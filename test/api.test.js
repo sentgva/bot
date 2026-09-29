@@ -209,3 +209,25 @@ test('вебхук Telegram принимает только запросы с с
   assert.equal((await post({ 'X-Telegram-Bot-Api-Secret-Token': config.webhookSecret })).status, 200);
   assert.equal((await db.messages(555))[0].text, 'через вебхук');
 });
+
+test('админ переключается в режим клиента и обратно', async () => {
+  assert.equal((await call(alice, 'mode', { method: 'POST', body: { mode: 'client' } })).status, 403);
+
+  const asClient = await call(admin, 'mode', { method: 'POST', body: { mode: 'client' } });
+  assert.equal(asClient.data.isAdmin, false);
+  assert.equal(asClient.data.canAdmin, true);
+  assert.equal((await call(admin, 'me')).data.isAdmin, false);
+  assert.equal((await call(admin, 'admin/threads')).status, 403);
+
+  // в режиме клиента у админа свой чат, а не чужой
+  sent.length = 0;
+  await call(admin, 'chat', { method: 'POST', body: { text: 'я как клиент', user: alice.id } });
+  assert.ok((await call(admin, 'chat')).data.messages.some((m) => m.text === 'я как клиент'));
+  assert.ok((await call(alice, 'chat')).data.messages.every((m) => m.text !== 'я как клиент'));
+  await tick();
+  assert.ok(!sent.some((s) => s.chatId === ADMIN), 'самому себе уведомление не шлём');
+
+  const back = await call(admin, 'mode', { method: 'POST', body: { mode: 'admin' } });
+  assert.equal(back.data.isAdmin, true);
+  assert.equal((await call(admin, 'admin/threads')).status, 200);
+});
