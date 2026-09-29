@@ -266,7 +266,11 @@ test('/clear удаляет сообщения в чате с ботом и оч
   assert.ok(ids.includes(commandId) && ids.includes(1), 'удаляем от команды до первого сообщения');
   assert.equal(new Set(ids).size, commandId);
   assert.ok(deletes.every((c) => c.payload.message_ids.length <= 100));
-  assert.match(sentTo(CLIENT).at(-1).payload.text, /Чат очищен/);
+  // после очистки — обычное приветствие, как на /start
+  const welcome = sentTo(CLIENT).at(-1);
+  assert.equal(welcome.method, 'sendPhoto');
+  assert.match(welcome.payload.caption, /SOVSIDE/);
+  assert.ok(welcome.payload.reply_markup.inline_keyboard[0][0].web_app);
   assert.ok((await db.clearedAt(CLIENT)) > 0);
 });
 
@@ -289,7 +293,7 @@ test('/clear: если пачка не удаляется, пробует по �
   });
   const singles = log.filter((c) => c.method === 'deleteMessage').map((c) => c.payload.message_id);
   assert.equal(singles.length, 200, 'первая пачка частично удалилась, вторая — ничего, дальше не идём');
-  assert.ok(log.some((c) => c.method === 'sendMessage' && /Чат очищен/.test(c.payload.text)));
+  assert.ok(log.some((c) => c.method === 'sendPhoto' && /SOVSIDE/.test(c.payload.caption)));
 });
 
 test('бан и мут реплаем в боте, забаненным не приходит рассылка', async () => {

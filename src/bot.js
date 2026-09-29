@@ -26,27 +26,20 @@ const ADMIN_COMMANDS = [
 export const setAdminCommands = (api, chatId) =>
   api.setMyCommands(ADMIN_COMMANDS, { scope: { type: 'chat', chat_id: chatId } });
 
-export function registerBot(bot, db, chat) {
+const NO_AVATARS = { touch() {} };
+
+export function registerBot(bot, db, chat, avatars = NO_AVATARS) {
   let coverFileId = null;
 
   // Только личные сообщения
   bot.use(async (ctx, next) => {
     if (ctx.chat && ctx.chat.type !== 'private') return;
-    if (ctx.from && !ctx.from.is_bot) await db.upsertUser(ctx.from);
+    if (ctx.from && !ctx.from.is_bot) avatars.touch(await db.upsertUser(ctx.from));
     await next();
   });
 
-  bot.command('start', async (ctx) => {
-    // Секретная ссылка t.me/<бот>?start=admin-… делает первого открывшего админом
-    if (ctx.match === config.adminClaim) {
-      const admins = await db.adminIds();
-      if (admins.has(ctx.from.id)) return ctx.reply('Ты уже админ.');
-      if (admins.size) return ctx.reply('Админ уже назначен. Чтобы добавить ещё одного, впиши его ID в ADMIN_ID.');
-      await db.addAdmin(ctx.from.id);
-      await setAdminCommands(ctx.api, ctx.from.id).catch(() => {});
-      return ctx.reply('Готово, теперь ты админ. Сообщения и заказы клиентов будут приходить сюда. Нажми /start.');
-    }
-
+  // Приветствие: обложка, описание и кнопка приложения. Его же видно после /clear.
+  async function welcome(ctx) {
     const admin = await db.actsAsAdmin(ctx.from.id);
     const caption = admin
       ? '<b>SOVSIDE</b> · режим админа\n\n' +
@@ -64,18 +57,29 @@ export function registerBot(bot, db, chat) {
       reply_markup: chat.appButton('Открыть SOVSIDE'),
     });
     coverFileId ??= sent.photo?.at(-1)?.file_id ?? null;
+  }
+
+  bot.command('start', async (ctx) => {
+    // Секретная ссылка t.me/<бот>?start=admin-… делает первого открывшего админом
+    if (ctx.match === config.adminClaim) {
+      const admins = await db.adminIds();
+      if (admins.has(ctx.from.id)) return ctx.reply('Ты уже админ.');
+      if (admins.size) return ctx.reply('Админ уже назначен. Чтобы добавить ещё одного, впиши его ID в ADMIN_ID.');
+      await db.addAdmin(ctx.from.id);
+      await setAdminCommands(ctx.api, ctx.from.id).catch(() => {});
+      return ctx.reply('Готово, теперь ты админ. Сообщения и заказы клиентов будут приходить сюда. Нажми /start.');
+    }
+    await welcome(ctx);
   });
 
   bot.command('id', (ctx) => ctx.reply(`Твой ID: <code>${ctx.from.id}</code>`, { parse_mode: 'HTML' }));
 
-  // Очищает чат с ботом в Telegram и переписку в приложении у того, кто вызвал.
-  // У продавца история клиента в приложении остаётся.
+  // Очищает чат с ботом в Telegram и переписку в приложении у того, кто вызвал,
+  // и присылает обычное приветствие — чат выглядит как новый. У продавца история клиента остаётся.
   bot.command('clear', async (ctx) => {
     await db.clearForClient(ctx.from.id);
     await clearTelegramChat(ctx.api, ctx.chat.id, ctx.message.message_id);
-    await ctx.reply('Чат очищен. Сообщения старше 48 часов Telegram удалить не даёт.', {
-      reply_markup: chat.appButton('Открыть SOVSIDE'),
-    });
+    await welcome(ctx);
   });
 
   // Бан и мут реплаем на уведомление о сообщении или заказе клиента

@@ -40,7 +40,9 @@ export function openDb(store, { prefix = 'sv' } = {}) {
       const id = String(u.id);
       const prevJson = users.get(id) ?? (await store.cmd('HGET', K('users'), id));
       const prev = P(prevJson);
+      // поля, которые Telegram не присылает (например, аватарка), сохраняются
       const next = {
+        ...prev,
         id: u.id,
         firstName: u.first_name || '',
         lastName: u.last_name || '',
@@ -54,6 +56,17 @@ export function openDb(store, { prefix = 'sv' } = {}) {
     },
 
     getUser: async (id) => P(await store.cmd('HGET', K('users'), String(id))),
+
+    // Дописать поля пользователю (читаем из базы, а не из кэша: другая копия сервера могла обновить)
+    async updateUser(id, patch) {
+      const key = String(id);
+      const prev = P(await store.cmd('HGET', K('users'), key));
+      if (!prev) return null;
+      const json = J({ ...prev, ...patch });
+      await store.cmd('HSET', K('users'), key, json);
+      users.set(key, json);
+      return P(json);
+    },
 
     // from: 'client' | 'admin' | 'system'; kind у системных: 'order' | 'status'
     async addMessage(userId, { from, text = '', image = null, orderId = null, kind = null }, unreadFor = OTHER_SIDE[from]) {

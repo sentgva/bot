@@ -606,6 +606,20 @@ textarea::placeholder { color: var(--dim); }
   font: 700 15px/1 var(--font);
 }
 .avatar img { width: 28px; }
+.avatar img.ph, .oava img { width: 100%; height: 100%; object-fit: cover; }
+.oava {
+  flex: none;
+  align-self: center;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--bg-3);
+  font: 700 8.5px/1 var(--font);
+  color: var(--soft);
+}
 .chat-who { min-width: 0; }
 .chat-who b { display: block; font-size: 15px; font-weight: 800; line-height: 1.3; }
 .chat-who span:empty { display: none; }

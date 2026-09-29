@@ -121,6 +121,14 @@
     return s.slice(0, 2).toUpperCase();
   };
 
+  // Аватарка из Telegram, если есть, иначе инициалы (и если фото не загрузилось)
+  function avatarInner(u) {
+    if (!u || !u.photo) return document.createTextNode(initials(u));
+    const img = h('img', { class: 'ph', src: u.photo, alt: '', loading: 'lazy', decoding: 'async' });
+    img.addEventListener('error', () => img.replaceWith(initials(u)), { once: true });
+    return img;
+  }
+
   const time = (ts) => new Date(ts).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
   const dayKey = (ts) => new Date(ts).toDateString();
   function dayLabel(ts) {
@@ -761,7 +769,7 @@
       label ? ' · ' : ' · клиент',
       ...(label ? [h('i', { class: 'rtag-inline', text: label })] : []),
     );
-    $('#chatAvatar').replaceChildren(initials(u));
+    $('#chatAvatar').replaceChildren(avatarInner(u));
     $('#peerMenu').hidden = false;
   }
 
@@ -867,6 +875,7 @@
     return h('button', { class: 'orow', type: 'button', onclick: () => orderActions(o) },
       h('span', { class: 'orow-top' },
         h('b', { text: `#${o.id}` }),
+        h('span', { class: 'oava' }, avatarInner(o.user)),
         h('span', { class: 'orow-who', text: displayName(o.user) + (o.user.username ? ` · @${o.user.username}` : '') }),
         o.restrict ? h('span', { class: 'rtag', text: o.restrict.banned ? 'бан' : 'мут' }) : null,
         h('time', { text: shortDate(o.createdAt) }),
@@ -1022,7 +1031,7 @@
         let preview = last.text || (last.image ? 'Фото' : '');
         if (last.from === 'admin') preview = `Вы: ${preview}`;
         return h('button', { class: 'thread', type: 'button', onclick: () => { haptic.tap(); openThread(t.user.id, t.user, t.restrict); } },
-          h('span', { class: 'avatar', text: initials(t.user) }),
+          h('span', { class: 'avatar' }, avatarInner(t.user)),
           h('span', { class: 'thread-body' },
             h('span', { class: 'thread-top' },
               h('b', { text: displayName(t.user) }),

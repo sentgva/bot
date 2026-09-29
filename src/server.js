@@ -40,10 +40,15 @@ const publicOrder = (o) => ({
 });
 
 const publicUser = (u) =>
-  u && { id: u.id, firstName: u.firstName, lastName: u.lastName, username: u.username };
+  u && { id: u.id, firstName: u.firstName, lastName: u.lastName, username: u.username, photo: u.photo || null };
+
+// Аватарки подтягиваем в фоне, по нескольку за запрос, чтобы не завалить Telegram
+const touchAvatars = (avatars, users) => {
+  for (const u of users.filter((x) => x && !x.photoAt).slice(0, 5)) avatars.touch(u);
+};
 
 // static: раздавать ли Mini App самим сервером (на Vercel это делает CDN)
-export function createServer({ db, chat, bot, media, webhook = false, serveStatic = true }) {
+export function createServer({ db, chat, bot, media, avatars = { touch() {} }, webhook = false, serveStatic = true }) {
   const app = express();
   app.disable('x-powered-by');
   app.set('trust proxy', true);
@@ -95,6 +100,7 @@ export function createServer({ db, chat, bot, media, webhook = false, serveStati
     const data = verifyInitData(req.get('X-Init-Data'), config.botToken);
     if (!data) throw fail(401, 'Открой приложение через Telegram');
     req.user = await db.upsertUser(data.user);
+    avatars.touch(req.user);
     req.canAdmin = await db.isAdmin(data.user.id);
     req.admin = req.canAdmin && (await db.getMode(data.user.id)) !== 'client';
     // бан и мут на админов не действуют
@@ -195,6 +201,7 @@ export function createServer({ db, chat, bot, media, webhook = false, serveStati
 
   api.get('/admin/threads', adminOnly, async (req, res) => {
     const [threads, restrictions] = await Promise.all([db.threads(), db.restrictions()]);
+    touchAvatars(avatars, threads.map((t) => t.user));
     res.json({
       threads: threads.map((t) => ({
         user: publicUser(t.user),
@@ -215,6 +222,7 @@ export function createServer({ db, chat, bot, media, webhook = false, serveStati
   // Панель заказов: все заказы с клиентами и счётчики по статусам
   api.get('/admin/orders', adminOnly, async (req, res) => {
     const [orders, restrictions] = await Promise.all([db.allOrders(), db.restrictions()]);
+    touchAvatars(avatars, orders.map((o) => o.user));
     const counts = { all: orders.length, new: 0, work: 0, done: 0, cancel: 0 };
     for (const o of orders) counts[o.status]++;
     res.json({
