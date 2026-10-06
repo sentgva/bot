@@ -1,4 +1,4 @@
-// Telegram: Mini App апгрейдера.
+// Telegram: Mini App LuxeDrop (открывается на главной).
 //   • Проверка initData — подписанных Telegram данных об игроке, которые Mini App получает при запуске.
 //     Подделать их без токена бота нельзя: https://core.telegram.org/bots/webapps#validating-data-received-via-the-mini-app
 //   • Вебхук бота: на /start отвечаем кнопкой «Открыть апгрейдер».
@@ -9,7 +9,7 @@ import { config } from './config.js';
 
 export const MAX_AGE_SEC = 24 * 3600; // initData старше суток не принимаем
 
-export const webAppUrl = () => `${config.siteUrl}/upgrade/`;
+export const webAppUrl = () => `${config.siteUrl}/`;
 
 // Секрет вебхука выводим из токена: отдельная переменная не нужна, а подделать запрос без токена нельзя
 export const webhookSecret = () => crypto.createHash('sha256').update(`webhook:${config.tgBotToken}`).digest('hex').slice(0, 48);
@@ -86,7 +86,7 @@ export async function tgApi(method, body, fetchImpl = fetch) {
   return data.result;
 }
 
-const openButton = (text = '🎯 Открыть апгрейдер') => ({ inline_keyboard: [[{ text, web_app: { url: webAppUrl() } }]] });
+const openButton = (text = '🎯 Открыть LuxeDrop') => ({ inline_keyboard: [[{ text, web_app: { url: webAppUrl() } }]] });
 
 // Обработка входящего сообщения боту. Отвечаем на любое сообщение в личке кнопкой Mini App.
 export async function handleUpdate(update, fetchImpl = fetch) {
@@ -95,8 +95,8 @@ export async function handleUpdate(update, fetchImpl = fetch) {
   const isStart = typeof msg.text === 'string' && msg.text.startsWith('/start');
   const text = isStart
     ? `Привет, ${msg.from?.first_name || 'игрок'}! Это LuxeDrop — апгрейд скинов CS2.\n\n`
-      + '• Шанс до 80%, каждый бросок можно проверить\n• Пополнение звёздами ⭐ — баланс в LuxeCoin (1 LC = 1 ₽)\n• Вывод в USDT за 2 минуты, на карту — в среднем за 15\n\nЖми кнопку ниже — апгрейдер откроется прямо в Telegram.'
-    : 'Апгрейдер открывается кнопкой ниже 👇\nВопросы — в поддержку: @luxedrop_support'; // ЗАМЕНИТЬ: контакт поддержки
+      + '• Ставь немного — выигрывай много: шанс до 80%\n• Пополнение звёздами ⭐ — баланс в LuxeCoin (1 LC = 1 ₽)\n• Вывод в USDT за 2 минуты, на карту — в среднем за 15\n\nЖми кнопку ниже — LuxeDrop откроется прямо в Telegram.'
+    : 'LuxeDrop открывается кнопкой ниже 👇\nВопросы — в поддержку: @luxedrop_support'; // ЗАМЕНИТЬ: контакт поддержки
   await tgApi('sendMessage', { chat_id: msg.chat.id, text, reply_markup: openButton() }, fetchImpl);
   return { ok: true };
 }

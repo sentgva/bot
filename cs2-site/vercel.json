@@ -13,6 +13,18 @@
       "maxDuration": 60
     }
   },
+  "redirects": [
+    {
+      "source": "/fair",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/fair/",
+      "destination": "/",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/api/(.*)",

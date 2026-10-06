@@ -1,4 +1,4 @@
-// Настройка бота LuxeDrop для Mini App апгрейдера: вебхук, кнопка меню «Апгрейд», команды.
+// Настройка бота LuxeDrop: вебхук, кнопка меню «LuxeDrop» (открывает главную), команды.
 // Запускается при продакшен-сборке на Vercel (buildCommand) или вручную: npm run telegram
 // Нужны TG_BOT_TOKEN и SITE_URL (https).
 import { config } from '../lib/config.js';
@@ -11,9 +11,9 @@ if (!config.siteUrl.startsWith('https://')) { console.log('SITE_URL должен
 
 try {
   await tgApi('setWebhook', { url: `${config.siteUrl}/api/telegram/webhook`, secret_token: webhookSecret(), allowed_updates: ['message', 'pre_checkout_query'], drop_pending_updates: true }); // pre_checkout_query — для оплаты звёздами
-  await tgApi('setChatMenuButton', { menu_button: { type: 'web_app', text: 'Апгрейд', web_app: { url: webAppUrl() } } });
+  await tgApi('setChatMenuButton', { menu_button: { type: 'web_app', text: 'LuxeDrop', web_app: { url: webAppUrl() } } });
   await tgApi('setMyCommands', { commands: [{ command: 'start', description: 'Открыть апгрейдер LuxeDrop' }] });
-  await tgApi('setMyDescription', { description: 'Апгрейд скинов CS2 прямо в Telegram: шанс до 80% с проверкой каждого броска, вывод в USDT за 2 минуты и на карту.' });
+  await tgApi('setMyDescription', { description: 'Апгрейд скинов CS2 прямо в Telegram: ставь немного — выигрывай много. Шанс до 80%, пополнение звёздами, вывод в USDT за 2 минуты и на карту.' });
   console.log(`Бот настроен: Mini App → ${webAppUrl()}`);
 } catch (err) {
   // Ошибка настройки бота не должна ломать деплой сайта

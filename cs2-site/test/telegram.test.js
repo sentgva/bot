@@ -85,7 +85,7 @@ test('вебхук бота: без секрета — отказ; /start — к
   await handleUpdate({ message: { chat: { id: 5, type: 'private' }, from: { first_name: 'Артём' }, text: '/start' } }, fakeFetch);
   assert.match(sent.url, /\/sendMessage$/);
   assert.equal(sent.body.chat_id, 5);
-  assert.equal(sent.body.reply_markup.inline_keyboard[0][0].web_app.url, `${base}/upgrade/`);
+  assert.equal(sent.body.reply_markup.inline_keyboard[0][0].web_app.url, `${base}/`);
   const group = await handleUpdate({ message: { chat: { id: -1, type: 'group' }, text: '/start' } }, fakeFetch);
   assert.equal(group.skipped, true, 'в группах бот молчит');
 });

@@ -76,6 +76,7 @@ function applyTheme() {
 function renderTabs() {
   const here = location.pathname;
   const tabs = [
+    ['/', 'i-sparkles', 'Главная'],
     ['/upgrade/', 'i-trending-up', 'Апгрейд'],
     ['/market/', 'i-shopping-cart', 'Маркет'],
     ['/profile/', 'i-wallet', 'Профиль'],
@@ -84,15 +85,15 @@ function renderTabs() {
   nav.className = 'tg-tabs';
   nav.setAttribute('aria-label', 'Разделы');
   nav.innerHTML = tabs.map(([href, ico, label]) =>
-    `<a href="${href}"${here.startsWith(href) ? ' aria-current="page"' : ''}>${icon(ico)}<span>${label}</span></a>`).join('');
+    `<a href="${href}"${(href === '/' ? here === '/' : here.startsWith(href)) ? ' aria-current="page"' : ''}>${icon(ico)}<span>${label}</span></a>`).join('');
   document.body.append(nav);
 }
 
 function setupBackButton() {
-  const home = location.pathname.startsWith('/upgrade/');
+  const home = location.pathname === '/';
   if (home) { tg.BackButton.hide(); return; }
   tg.BackButton.show();
-  tg.BackButton.onClick(() => { if (history.length > 1) history.back(); else location.href = '/upgrade/'; });
+  tg.BackButton.onClick(() => { if (history.length > 1) history.back(); else location.href = '/'; });
 }
 
 // На странице апгрейдера кнопка «Апгрейдить» — нативная кнопка Telegram внизу

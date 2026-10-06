@@ -6,7 +6,7 @@
 import { $, api, session, toastError } from './core.js';
 
 const params = new URLSearchParams(location.search);
-const next = /^\/(?!\/)/.test(params.get('next') || '') ? params.get('next') : '/profile/';
+const next = /^\/(?!\/)/.test(params.get('next') || '') ? params.get('next') : '/';
 const text = $('[data-login-text]');
 
 function decodeResult(hash) {

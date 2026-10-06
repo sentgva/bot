@@ -44,7 +44,6 @@
         <ul>
           <li><a href="/upgrade/">Апгрейд</a></li>
           <li><a href="/market/">Маркет</a></li>
-          <li><a href="/fair/">Честность</a></li>
           <li class="nav-theme">
             <button class="btn btn-ghost" type="button" data-theme-toggle aria-label="Сменить тему">
               <svg class="icon i-sun" aria-hidden="true"><use href="/assets/icons.svg#i-sun"/></svg>
@@ -205,7 +204,6 @@
 
         <!-- Апгрейды -->
         <section role="tabpanel" id="panel-upgrades" aria-labelledby="tab-upgrades" tabindex="0" hidden>
-          <p class="muted mb-4">Чтобы проверить бросок, смени сид в настройках — старый раскроется, и у каждого броска появится кнопка «Проверить».</p>
           <div class="list" data-upgrades></div>
         </section>
 
@@ -222,27 +220,6 @@
               </div>
               <button class="btn btn-primary" type="submit" data-loading="Сохраняем…">Сохранить</button>
             </form>
-
-            <div class="card form">
-              <h2 class="h3">Честная игра</h2>
-              <div class="field">
-                <span class="legend">Хэш текущего серверного сида</span>
-                <p class="mono small" data-seed-hash></p>
-                <p class="hint">Бросков с этим сидом: <span data-seed-nonce>0</span></p>
-              </div>
-              <form class="field" id="client-seed-form" novalidate>
-                <label for="client-seed">Клиентский сид</label>
-                <div class="row">
-                  <input class="input grow-1" id="client-seed" name="clientSeed" type="text" maxlength="32" autocomplete="off" spellcheck="false" aria-describedby="client-seed-error">
-                  <button class="btn btn-secondary" type="submit" data-loading="…">Сохранить</button>
-                </div>
-                <p class="error" id="client-seed-error" aria-live="polite"></p>
-              </form>
-              <div>
-                <button class="btn btn-secondary" type="button" data-rotate data-loading="Меняем…"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-refresh-cw"/></svg>Сменить серверный сид</button>
-                <div data-revealed class="mt-4" aria-live="polite"></div>
-              </div>
-            </div>
           </div>
           <div class="row mt-6">
             <button class="btn btn-ghost" type="button" data-logout><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-log-out"/></svg>Выйти из аккаунта</button>
@@ -275,7 +252,6 @@
           <ul class="footer-links">
             <li><a href="/upgrade/">Апгрейдер</a></li>
             <li><a href="/market/">Маркет скинов</a></li>
-            <li><a href="/fair/">Проверка честности</a></li>
           </ul>
         </nav>
         <nav aria-label="Помощь">

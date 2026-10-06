@@ -389,14 +389,11 @@ loaders.upgrades = async () => {
   const list = await api('/api/me/upgrades').catch(() => []);
   $('[data-upgrades]').innerHTML = list.length
     ? list.map((u) => {
-      const verify = u.server_seed
-        ? `<a class="btn btn-secondary btn-sm" href="/fair/?${new URLSearchParams({ server: u.server_seed, client: u.client_seed, nonce: u.nonce, chance: u.chance_ppm })}">Проверить</a>`
-        : '<span class="small muted">Сид ещё не раскрыт</span>';
       return `<div class="list-item">
         <span class="badge ${u.won ? 'badge-success' : ''}">${u.won ? 'Победа' : 'Мимо'}</span>
         <div class="grow"><p><b>${esc(u.target_hash_name)}</b></p>
-        <p class="small muted">${dateTime(u.created_at)} · ставка ${lc(u.input_value)} · шанс ${pct(u.chance_ppm)} · бросок ${u.roll.toLocaleString('ru-RU')} · nonce ${u.nonce}</p></div>
-        <span class="amount">${lc(u.target_price)}</span>${verify}
+        <p class="small muted">${dateTime(u.created_at)} · ставка ${lc(u.input_value)} · шанс ${pct(u.chance_ppm)}</p></div>
+        <span class="amount">${lc(u.target_price)}</span>
       </div>`;
     }).join('')
     : emptyState({ iconName: 'i-trending-up', title: 'Апгрейдов ещё не было', action: '<a class="btn btn-primary btn-sm" href="/upgrade/">Открыть апгрейдер</a>' });
@@ -421,36 +418,6 @@ loaders.settings = () => {
     });
   });
 
-  renderSeeds();
-  const seedForm = $('#client-seed-form');
-  const sv = liveValidate(seedForm, { clientSeed: (val) => (/^[\w-]{1,32}$/.test(val) ? '' : 'Латиница, цифры, - и _, до 32 символов') });
-  seedForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    if (!sv.validateAll()) return;
-    await withLoading(seedForm.querySelector('[type="submit"]'), async () => {
-      try {
-        const r = await api('/api/me', { method: 'PATCH', body: { clientSeed: seedForm.elements.clientSeed.value } });
-        user = r.user;
-        renderSeeds();
-        toast('Клиентский сид сохранён', 'success');
-      } catch (err) { toastError(err); }
-    });
-  });
-
-  $('[data-rotate]').addEventListener('click', async (e) => {
-    const ok = await confirmDialog({ title: 'Сменить серверный сид?', html: '<p>Текущий сид раскроется — по нему можно будет проверить все прошлые броски. Новый сид начнёт счёт бросков с нуля.</p>', confirm: 'Сменить' });
-    if (!ok) return;
-    await withLoading(e.currentTarget, async () => {
-      try {
-        const r = await api('/api/me/seed/rotate', { method: 'POST' });
-        user.fair = { ...user.fair, serverSeedHash: r.serverSeedHash, nonce: 0 };
-        renderSeeds();
-        $('[data-revealed]').innerHTML = `<div class="callout">${icon('i-circle-check')}<div><p><b>Старый сид раскрыт</b> (бросков: ${r.revealed.lastNonce})</p>
-          <p class="mono small mt-2">${esc(r.revealed.serverSeed)}</p><p class="small mt-2">Теперь у прошлых апгрейдов появилась кнопка «Проверить».</p></div></div>`;
-        loaded.delete('upgrades');
-      } catch (err) { toastError(err); }
-    });
-  });
 
   $('[data-logout]').addEventListener('click', async () => {
     await api('/api/auth/logout', { method: 'POST' }).catch(() => {});
@@ -458,12 +425,6 @@ loaders.settings = () => {
     location.href = '/';
   });
 };
-
-function renderSeeds() {
-  $('[data-seed-hash]').textContent = user.fair.serverSeedHash;
-  $('[data-seed-nonce]').textContent = String(user.fair.nonce);
-  $('#client-seed').value = user.fair.clientSeed;
-}
 
 // ── Старт ──────────────────────────────────────────────────
 

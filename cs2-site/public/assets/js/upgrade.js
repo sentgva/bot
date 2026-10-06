@@ -35,7 +35,6 @@ const el = {
   go: $('[data-go]'), goMini: $('[data-go-mini]'), chanceMini: $('[data-chance-mini]'), why: $('[data-why]'), result: $('[data-result]'),
   targets: $('[data-targets]'), more: $('[data-targets-more]'), q: $('#target-q'), multFilter: $('[data-mult-filter]'),
   feed: $('[data-feed]'),
-  fairHash: $('[data-fair-hash]'), fairClient: $('[data-fair-client]'), fairNonce: $('[data-fair-nonce]'),
 };
 
 // ── Расчёт ─────────────────────────────────────────────────
@@ -263,7 +262,6 @@ async function go() {
     const r = await withLoading(el.go, () => api('/api/upgrade', { method: 'POST', body }));
     await spinTo(r.roll);
     state.user.balance = r.balance;
-    state.user.fair.nonce = r.fair.nonce + 1;
     setBalance(r.balance);
     showResult(r);
     state.selected.clear();
@@ -278,7 +276,6 @@ async function go() {
   } finally {
     state.spinning = false;
     renderInput();
-    renderFair();
     render();
   }
 }
@@ -310,14 +307,7 @@ function showResult(r) {
 el.go.addEventListener('click', go);
 el.goMini.addEventListener('click', go);
 
-// ── Честность и лента ──────────────────────────────────────
-
-function renderFair() {
-  const f = state.user?.fair;
-  el.fairHash.textContent = f ? f.serverSeedHash : 'появится после входа';
-  el.fairClient.textContent = f ? f.clientSeed : '—';
-  el.fairNonce.textContent = f ? String(f.nonce) : '0';
-}
+// ── Лента ──────────────────────────────────────────────────
 
 async function loadFeed() {
   try {
@@ -351,7 +341,6 @@ state.user = s.user;
 if (s.config) state.cfg = s.config.upgrade;
 await loadOwned();
 renderInput();
-renderFair();
 render();
 loadTargets(true);
 loadFeed();
