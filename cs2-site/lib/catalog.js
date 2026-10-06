@@ -149,7 +149,7 @@ export async function seedDemoItems() {
   const { count } = await db.one('select count(*)::int as count from items');
   if (count > 0) return 0;
   const seed = JSON.parse(fs.readFileSync(new URL('../db/seed-items.json', import.meta.url), 'utf8'));
-  const rows = seed.map((s) => ({ ...splitHashName(s.hashName), hashName: s.hashName, weapon: s.weapon, rarity: s.rarity, rarityColor: null, image: null, stattrak: s.hashName.includes('StatTrak'), price: s.price, quantity: 10 }));
+  const rows = seed.map((s) => ({ ...splitHashName(s.hashName), hashName: s.hashName, weapon: s.weapon, rarity: s.rarity, rarityColor: s.rarityColor ?? null, image: s.image ?? null, stattrak: s.hashName.includes('StatTrak'), price: s.price, quantity: 10 }));
   await upsertItems(db, rows);
   return rows.length;
 }

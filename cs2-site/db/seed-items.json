@@ -3,240 +3,320 @@
   "hashName": "P250 | Sand Dune (Field-Tested)",
   "weapon": "P250",
   "rarity": "consumer",
-  "price": 800
+  "price": 800,
+  "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyLhzMOwwjFU0OGvZqBSLfWXB3Kdj78n4rY-SX-wxhty4WzUwoqud32RPFUnDMR5RuRb4UXrmtznMOLrtgLAy9USoBHo4ag",
+  "rarityColor": "#b0c3d9"
  },
  {
   "hashName": "MP9 | Storm (Minimal Wear)",
   "weapon": "MP9",
   "rarity": "consumer",
-  "price": 900
+  "price": 900,
+  "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL8js_f7i1k_OaheqlrMv-dGlicyOl-pK8_S3zjxRh_5mmGn9epIymQPQBxDpQlFuUJ5xa6kt2yZLjkswLY2ooT02yg2WH9Y1dp",
+  "rarityColor": "#b0c3d9"
  },
  {
   "hashName": "Nova | Predator (Field-Tested)",
   "weapon": "Nova",
   "rarity": "industrial",
-  "price": 1400
+  "price": 1400,
+  "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL_kYDhwjFL0OirarZsI_GeMWqVxedjva9rHC_nlxx24jnXmY2pJ3qVZw51C5V4EeQJthbtx9K2MruztgOMj4NB02yg2XPmt0BC",
+  "rarityColor": "#b0c3d9"
  },
  {
   "hashName": "Glock-18 | High Beam (Factory New)",
   "weapon": "Glock-18",
   "rarity": "milspec",
-  "price": 3500
+  "price": 3500,
+  "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL2kpnj9h1a7s24bbZ5KfecMWWc1OtJvOhuRz39zU5yt2vQntn9dC3Dbw8iDJQhF-IJ5xDqkdSxMr6251aMiI5BynqtiTQJsHhqpMNExQ",
+  "rarityColor": "#5e98d9"
  },
  {
   "hashName": "USP-S | Ticket to Hell (Field-Tested)",
   "weapon": "USP-S",
   "rarity": "restricted",
-  "price": 12000
+  "price": 12000,
+  "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyLkjYbf7itX6vytbbZSI-WsG3SA_vp5j-lsQyWMmBgjuiiI1I6qdH6fbgAoApFyRrJf4xnumoDnM-7j41Pbgt8TyCT72CxK6SttsrscEf1y0Tw_DYE",
+  "rarityColor": "#8847ff"
  },
  {
   "hashName": "M4A1-S | Night Terror (Field-Tested)",
   "weapon": "M4A1-S",
   "rarity": "milspec",
-  "price": 6500
+  "price": 6500,
+  "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL8ypexwjFS4_ega6F_H_eAMWrEwL9lj-hnXCa-mxQmjDCAnobsLGXEPAchWcN4ReIM4Rjpk9CxN762tQXa395DyH732ylA6ilosupRWKUt5OSJ2NcRB1VD",
+  "rarityColor": "#8847ff"
  },
  {
   "hashName": "MAC-10 | Neon Rider (Field-Tested)",
   "weapon": "MAC-10",
   "rarity": "classified",
-  "price": 29000
+  "price": 29000,
+  "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL8n5WxrR1Y-s2jaac8cM-dC2ie0-dytfNWQiy3nAgq_W-An9yvIi2WbgZzA5RwF-QL5BDumoC0NL_kswCK2YIQmymt2y0Y5nl1o7FV43jaksE",
+  "rarityColor": "#eb4b4b"
  },
  {
   "hashName": "P90 | Asiimov (Field-Tested)",
   "weapon": "P90",
   "rarity": "covert",
-  "price": 52000
+  "price": 52000,
+  "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyLhx8bf_jdk_6v-JaV-KfmeAXGvzOtyufRkAXzgwUlwsmSGyo6ocinEPwZzC5J1F-EIsUXrwdbkNeqz7wPaj4wXnH7gznQeoepd94c",
+  "rarityColor": "#eb4b4b"
  },
  {
   "hashName": "Desert Eagle | Mecha Industries (Field-Tested)",
   "weapon": "Desert Eagle",
   "rarity": "restricted",
-  "price": 41000
+  "price": 41000,
+  "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL1m5fn8Sdk6OGRbKFsJ_yWMWqVwuZ3j-xsSyCmmFNxtzvUnouqdi_EZgB2X5d5ELUNuhDqxoazYu634QPX3oxAnyj_jnlP8G81tF-I545Z",
+  "rarityColor": "#d32ce6"
  },
  {
   "hashName": "AK-47 | Slate (Field-Tested)",
   "weapon": "AK-47",
   "rarity": "restricted",
-  "price": 38000
+  "price": 38000,
+  "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyLwlcK3wiVI0POlPPNSMOKcCGKD0ud5vuBlcCS2kRQyvnOGw4r_d3OWZ1MnCpBwR-Rc5hbumtCzP-Kw7wSIiYsRnHr2i35MvS1s_a9cBkIkkRA2",
+  "rarityColor": "#8847ff"
  },
  {
   "hashName": "AK-47 | Redline (Field-Tested)",
   "weapon": "AK-47",
   "rarity": "classified",
-  "price": 125000
+  "price": 125000,
+  "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyLwlcK3wiFO0POlPPNSI_-RHGavzOtyufRkASq2lkxx4W-HnNyqJC3FZwYoC5p0Q7FfthW6wdWxPu-371Pdit5HnyXgznQeHYY5wyA",
+  "rarityColor": "#d32ce6"
  },
  {
   "hashName": "AK-47 | Redline (Minimal Wear)",
   "weapon": "AK-47",
   "rarity": "classified",
-  "price": 295000
+  "price": 295000,
+  "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyLwlcK3wiFO0POlPPNSI_-RHGavzedxuPUnFniykEtzsWWBzoyuIiifaAchDZUjTOZe4RC_w4buM-6z7wzbgokUyzK-0H08hRGDMA",
+  "rarityColor": "#d32ce6"
  },
  {
   "hashName": "M4A4 | Desolate Space (Field-Tested)",
   "weapon": "M4A4",
   "rarity": "classified",
-  "price": 115000
+  "price": 115000,
+  "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL8ypexwiFO0P_6afBSJPWAAWuR1etJo_FoTCyMmBgjuiiI1I6rJS_FbAcnDMN3QrUC5Be5kdDmNe7g4g3Y3Y1CniT-3ygb7Xxo6-wcEf1y4gM2YB4",
+  "rarityColor": "#d32ce6"
  },
  {
   "hashName": "USP-S | Kill Confirmed (Field-Tested)",
   "weapon": "USP-S",
   "rarity": "covert",
-  "price": 260000
+  "price": 260000,
+  "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyLkjYbf7itX6vytbbZSI-WsG3SA_uV_vO1WTCa9kxQ1vjiBpYL8JSLSMxghCMEjEeNe5hHpw9zhYuOz5VfcitpBmyqt3X9O6itrsesFUfYmrKzTkUifZqPQtnZK",
+  "rarityColor": "#eb4b4b"
  },
  {
   "hashName": "Glock-18 | Water Elemental (Minimal Wear)",
   "weapon": "Glock-18",
   "rarity": "classified",
-  "price": 62000
+  "price": 62000,
+  "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL2kpnj9h1Y-s2pZKtuK72fB3aFxP11te99cCW6khUz_TjVyompc3-QOFR2DJQkFOMJtBbqk9LlY-7n5QLZjtkTxCWqhixPv311o7FVIf8eASQ",
+  "rarityColor": "#d32ce6"
  },
  {
   "hashName": "AWP | Atheris (Field-Tested)",
   "weapon": "AWP",
   "rarity": "restricted",
-  "price": 24000
+  "price": 24000,
+  "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyLwiYbf_jdk7uW-V7JkMPWBMWqVxedjva85Girklhl2sWuAmYusICqWbQJxCcclRe4C4Ba5ldOyYeri7gKLg95E02yg2f7FnVOo",
+  "rarityColor": "#8847ff"
  },
  {
   "hashName": "AWP | Neo-Noir (Field-Tested)",
   "weapon": "AWP",
   "rarity": "covert",
-  "price": 220000
+  "price": 220000,
+  "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyLwiYbf_jdk7uW-V6poL_6cB3WvzOtyufRkAS3rwE4h5D-Am939eXrGa1d1DJMlRe8Dshi-ltPvNbjr5AfWiIhHyX3gznQey5gGLwk",
+  "rarityColor": "#eb4b4b"
  },
  {
   "hashName": "AWP | Asiimov (Field-Tested)",
   "weapon": "AWP",
   "rarity": "covert",
-  "price": 980000
+  "price": 980000,
+  "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyLwiYbf_jdk7uW-V6V-Kf2cGFidxOp_pewnF3nhxEt0sGnSzN76dH3GOg9xC8FyEORftRe-x9PuYurq71bW3d8UnjK-0H0YSTpMGQ",
+  "rarityColor": "#eb4b4b"
  },
  {
   "hashName": "AWP | Hyper Beast (Field-Tested)",
   "weapon": "AWP",
   "rarity": "covert",
-  "price": 330000
+  "price": 330000,
+  "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyLwiYbf_jdk7uW-V6x0MPWBMWWVwP1ij-xsSyCmmFMj62Tcwt-gJC_BbwNyDZokQu8I4BK6wdazMuq35AbW3YIWmy_4h3tO8G81tKCz9TDP",
+  "rarityColor": "#eb4b4b"
  },
  {
   "hashName": "M4A1-S | Printstream (Field-Tested)",
   "weapon": "M4A1-S",
   "rarity": "covert",
-  "price": 1150000
+  "price": 1150000,
+  "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL8ypexwjFS4_ega6F_H_OGMWrEwL9lj_F7Rienhgk1tjyIpYL8JSLSMxghAsBwQeMN5BHtlIblZuLr4Q3biNkRmH_5iX5Muypj47pWA6EsqPaGkUifZp-rQ1Ym",
+  "rarityColor": "#eb4b4b"
  },
  {
   "hashName": "AK-47 | Vulcan (Field-Tested)",
   "weapon": "AK-47",
   "rarity": "covert",
-  "price": 1450000
+  "price": 1450000,
+  "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyLwlcK3wiFO0POlPPNSMuWRDGKC_uNztOh8QmeylBh1426Gz437JyrEOA5zD5N0Q-MOsEG4moe2Yrjr5w2Pid8Rnir3kGoXuUSY1H7U",
+  "rarityColor": "#eb4b4b"
  },
  {
   "hashName": "Desert Eagle | Printstream (Field-Tested)",
   "weapon": "Desert Eagle",
   "rarity": "covert",
-  "price": 540000
+  "price": 540000,
+  "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL1m5fn8Sdk7OeRbKFsJ8-DHG6e1f1iouRoQha-kBkupjDLz9_6c3mWPFBxX8N0EOMIsULpmtHjPuvq41bc2dhAzy3_2ngfvHpt5_FCD_RJLjxjaQ",
+  "rarityColor": "#eb4b4b"
  },
  {
   "hashName": "StatTrak™ AK-47 | Redline (Field-Tested)",
   "weapon": "AK-47",
   "rarity": "classified",
-  "price": 410000
+  "price": 410000,
+  "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyLwlcK3wiFO0POlPPNSI_-RHGavzOtyufRkASq2lkxx4W-HnNyqJC3FZwYoC5p0Q7FfthW6wdWxPu-371Pdit5HnyXgznQeHYY5wyA",
+  "rarityColor": "#d32ce6"
  },
  {
   "hashName": "StatTrak™ USP-S | Cortex (Field-Tested)",
   "weapon": "USP-S",
   "rarity": "classified",
-  "price": 78000
+  "price": 78000,
+  "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyLkjYbf7itX6vytbbZSI-WsG3SA_u1jpN5kSi26gBBp4D7TwoqsJC6faQUiWcchQrECu0Kwk4K2P-zltVHbj44RnyT2jH8b5zErvbgF1pSM3w",
+  "rarityColor": "#d32ce6"
  },
  {
   "hashName": "AK-47 | Fire Serpent (Field-Tested)",
   "weapon": "AK-47",
   "rarity": "covert",
-  "price": 7200000
+  "price": 7200000,
+  "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyLwlcK3wiFO0PSneqF-JeKDC2mE_u995LZWTTuygxIYvjiBk5r0bymVZwIoWZJ1QLEDs0O6ktayZr6ztFeIjYxAyyX-jH8b5y5vt-wDB_Y7uvqAHvjgL6w",
+  "rarityColor": "#eb4b4b"
  },
  {
   "hashName": "M4A4 | Howl (Field-Tested)",
   "weapon": "M4A4",
   "rarity": "gold",
-  "price": 32000000
+  "price": 32000000,
+  "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL8ypexwiFO0P_6afVSKP-EAm6extF7teVgWiT9wh5_5zyAwo6oeSrDawUkCMN0QbEM5BO-wNazMe3qsgHZg4wQyy-t2jQJsHi3nDJ37A",
+  "rarityColor": "#e4ae39"
  },
  {
   "hashName": "AWP | Dragon Lore (Field-Tested)",
   "weapon": "AWP",
   "rarity": "covert",
-  "price": 78000000
+  "price": 78000000,
+  "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyLwiYbf_jdk4veqYaF7IfysCnWRxuF4j-B-Xxa-kBkupjDLw96pcX6TZg5yCZJ5TbNZtxjtwNS2NemztgDbidoQyH-sjCga6no-6_FCD_QEyQmfGQ",
+  "rarityColor": "#eb4b4b"
  },
  {
   "hashName": "★ Karambit | Doppler (Factory New)",
   "weapon": "Karambit",
   "rarity": "gold",
-  "price": 9800000
+  "price": 9800000,
+  "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL6kJ_m-B1Q7uCvZaZkNM-SA1iDwP5muOh7Sha-lA8lvziMgIr9HifOOV5kFMRxFuEM5hi_xNXhMbmx5VCMjd9MyCv6jigc6n064ucLAvZ3_6bViV3fcepqpLtspE0",
+  "rarityColor": "#eb4b4b"
  },
  {
   "hashName": "★ Butterfly Knife | Fade (Factory New)",
   "weapon": "Butterfly Knife",
   "rarity": "gold",
-  "price": 21000000
+  "price": 21000000,
+  "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL6kJ_m-B1Z-ua6bbZrLOmsD2avx-9ytd5lRi67gVNwsDvSwtqqc3iXZg4kCZYjReYLtRbum9XgYuvm5wbWjtgUzCn3iSsf8G81tFEeH9rw",
+  "rarityColor": "#eb4b4b"
  },
  {
   "hashName": "★ Flip Knife | Slaughter (Minimal Wear)",
   "weapon": "Flip Knife",
   "rarity": "gold",
-  "price": 3100000
+  "price": 3100000,
+  "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL6kJ_m-B1d4_u-V6VgH-qWDHWR_uJ_t-l9AXrrl0905Gjcm4uqcSmWblNzD8Z2QrZbtkK5ldTmY-rqtAba399BzyjgznQejSHMqZo",
+  "rarityColor": "#eb4b4b"
  },
  {
   "hashName": "★ Gut Knife | Tiger Tooth (Factory New)",
   "weapon": "Gut Knife",
   "rarity": "gold",
-  "price": 1250000
+  "price": 1250000,
+  "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL6kJ_m-B1c-uaRaapSNPmUC3Wvzvx3vuZscCW6khUz_WyGyIv7I3nBOlchDZV3RO8JsEa7wYXnNr_n4AeI39pNyX_22yxO6id1o7FVdgPDjag",
+  "rarityColor": "#eb4b4b"
  },
  {
   "hashName": "★ Shadow Daggers | Marble Fade (Factory New)",
   "weapon": "Shadow Daggers",
   "rarity": "gold",
-  "price": 1650000
+  "price": 1650000,
+  "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL6kJ_m-B1L-uGmV6VgH_2SHGWcxNFwseVscCW6khUz_T_dyI2tJXrFbQN2X5MjTLUCtEa5kYXnYuPh5QGLjowUxXitjixA7nl1o7FVu7_YRqU",
+  "rarityColor": "#eb4b4b"
  },
  {
   "hashName": "★ Sport Gloves | Vice (Field-Tested)",
   "weapon": "Sport Gloves",
   "rarity": "gold",
-  "price": 24000000
+  "price": 24000000,
+  "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Tk5UvzWCL2kpn2-DFk_OKherB0H_KfG2Kv0ed4u95kSi26gBBp6jvcyY34J3jGZw51CJt1R-Beuxfqk4fhPu7n5VTY2tpHn3343y5P6DErvbh5izSzPA",
+  "rarityColor": "#eb4b4b"
  },
  {
   "hashName": "★ Driver Gloves | Imperial Plaid (Field-Tested)",
   "weapon": "Driver Gloves",
   "rarity": "gold",
-  "price": 2200000
+  "price": 2200000,
+  "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5T441rsfhr9kYDl7h1I4_utY5t9LPGaCliA1PxmvORWQiy3nAgq_W-GyNeodinEPQUjA8NyTedfuhS6mtyxZbuw4AHbjtlCm3-tjXgdu3l1o7FVEM6nJkI",
+  "rarityColor": "#eb4b4b"
  },
  {
   "hashName": "Five-SeveN | Monkey Business (Field-Tested)",
   "weapon": "Five-SeveN",
   "rarity": "classified",
-  "price": 31000
+  "price": 31000,
+  "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL3l4Dl7idN6vyRa7FSJvmFC3SV1-t4j-NoQSi9lCIqtjmMj4K3InqVOlNzDsF0Redf4US4moLgMOnn4QzZg9hFxSX8iiJK5n0_6-cGAr1lpPNC5QABiQ",
+  "rarityColor": "#d32ce6"
  },
  {
   "hashName": "Tec-9 | Fuel Injector (Field-Tested)",
   "weapon": "Tec-9",
   "rarity": "covert",
-  "price": 34000
+  "price": 34000,
+  "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyLlm5W5wiVI0Oara_1SM-WDC3WTye9kt-RtcCS2kRQyvnPQnoz7JXPFb1ciXMMmE7JfsEPqkIHhNuvjtQWIg4JEmX392HhN7C46_a9cBhuml-Bv",
+  "rarityColor": "#d32ce6"
  },
  {
   "hashName": "SSG 08 | Dragonfire (Field-Tested)",
   "weapon": "SSG 08",
   "rarity": "covert",
-  "price": 145000
+  "price": 145000,
+  "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyLijZGwpR1Y-s29e6M9eM-XHGaXzuBwufNscDqwmg0ijDCAnobsLGXDbwd1WcB4RuJe4EHuw9CyNu6wtlDYjIhHmyT4iypP7Xo9sL4LAKUj5OSJ2GN45L3A",
+  "rarityColor": "#eb4b4b"
  },
  {
   "hashName": "UMP-45 | Primal Saber (Field-Tested)",
   "weapon": "UMP-45",
   "rarity": "classified",
-  "price": 26000
+  "price": 26000,
+  "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyLkk4a0qB1Y-s27ZbQ5dc-DHG6dwOJlseNsXRa-kBkupjDLw9mocHnCPQFyC5EmQONf4RHskdC2N7jl7wzWjN1Azn_8inxPuyo45vFCD_R9XZFnGQ",
+  "rarityColor": "#d32ce6"
  },
  {
   "hashName": "Galil AR | Chatterbox (Field-Tested)",
   "weapon": "Galil AR",
   "rarity": "covert",
-  "price": 72000
+  "price": 72000,
+  "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL2n5rp8SNJ0PG7V6NsLPmfMWaS0-9lue5ncCS2kRQyvnPXnIn7eSrEZ1AnD5NxTeII4ESwxN3jN7zl5QHXjdhAnyuo2y9Nv3xs_a9cBuAhdjfO",
+  "rarityColor": "#eb4b4b"
  },
  {
   "hashName": "FAMAS | Roll Cage (Field-Tested)",
   "weapon": "FAMAS",
   "rarity": "classified",
-  "price": 33000
+  "price": 33000,
+  "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL3n5vh7h1c_M2oaalsM8-BD2uc2NF7teVgWiT9wRsk4WiHy4qgdHmSagQgCJtyFOYDskXtlIDmYbjg7gyNi4pAxH-ojTQJsHirr78Opg",
+  "rarityColor": "#eb4b4b"
  }
 ]
