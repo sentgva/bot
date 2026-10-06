@@ -5,7 +5,6 @@
   "buildCommand": "node scripts/migrate.js && node scripts/telegram-setup.js",
   "outputDirectory": "public",
   "cleanUrls": true,
-  "trailingSlash": true,
   "regions": [
     "fra1"
   ],
