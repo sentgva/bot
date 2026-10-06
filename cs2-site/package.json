@@ -10,7 +10,8 @@
     "test": "node --test test/*.test.js",
     "migrate": "node scripts/migrate.js",
     "partials": "node scripts/partials.js",
-    "prices": "node scripts/prices.js"
+    "prices": "node scripts/prices.js",
+    "telegram": "node scripts/telegram-setup.js --force"
   },
   "engines": {
     "node": ">=20.12"

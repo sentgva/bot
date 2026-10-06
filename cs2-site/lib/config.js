@@ -24,9 +24,10 @@ export const config = {
   // market.csgo.com: покупка скина и отправка игроку на трейд-ссылку
   marketApiKey: env.MARKET_API_KEY || '',
 
-  // Уведомления админу в Telegram
+  // Telegram: бот LuxeDrop — Mini App апгрейдера и уведомления админу
   tgBotToken: env.TG_BOT_TOKEN || '',
   tgAdminChatId: env.TG_ADMIN_CHAT_ID || '',
+  adminTgIds: (env.ADMIN_TG_IDS || '').split(',').map((s) => s.trim()).filter(Boolean),
 
   // Цены: валюта Skinport и курс, если валюта не рубли
   priceCurrency: env.PRICE_CURRENCY || 'RUB',

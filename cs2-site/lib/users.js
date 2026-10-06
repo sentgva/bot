@@ -18,6 +18,20 @@ export async function upsertSteamUser({ steamId, name, avatar }) {
   );
 }
 
+// Вход из Telegram Mini App: аккаунт привязан к Telegram ID, Steam не обязателен
+export async function upsertTelegramUser(tg) {
+  const db = await getDb();
+  const name = [tg.first_name, tg.last_name].filter(Boolean).join(' ').slice(0, 64) || tg.username || `Игрок ${String(tg.id).slice(-5)}`;
+  return db.one(
+    `insert into users (telegram_id, tg_username, name, avatar, server_seed, client_seed)
+     values ($1, $2, $3, $4, $5, $6)
+     on conflict (telegram_id) do update set tg_username = excluded.tg_username, name = excluded.name,
+       avatar = coalesce(excluded.avatar, users.avatar), last_seen_at = now()
+     returning *`,
+    [String(tg.id), tg.username || null, name, typeof tg.photo_url === 'string' && tg.photo_url.startsWith('https://') ? tg.photo_url : null, newServerSeed(), newClientSeed()],
+  );
+}
+
 export async function getUser(id) {
   if (!id) return null;
   const db = await getDb();
@@ -28,11 +42,12 @@ export async function getUser(id) {
 export const publicUser = (u) => ({
   id: u.id,
   steamId: u.steam_id,
+  telegram: u.telegram_id ? { id: u.telegram_id, username: u.tg_username } : null,
   name: u.name,
   avatar: u.avatar,
   balance: u.balance,
   tradeUrl: u.trade_url,
-  isAdmin: isAdmin(u.steam_id),
+  isAdmin: isAdmin(u),
   fair: { serverSeedHash: hashSeed(u.server_seed), clientSeed: u.client_seed, nonce: u.nonce },
 });
 

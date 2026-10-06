@@ -168,3 +168,9 @@ create table if not exists meta (
   key   text primary key,
   value jsonb not null
 );
+
+-- Telegram Mini App: игрок входит через Telegram, Steam тогда не обязателен
+alter table users alter column steam_id drop not null;
+alter table users add column if not exists telegram_id text;
+alter table users add column if not exists tg_username text;
+create unique index if not exists users_telegram_idx on users (telegram_id);

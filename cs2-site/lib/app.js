@@ -8,7 +8,8 @@ import {
 } from './http.js';
 import { endSession, sessionUserId, startSession } from './session.js';
 import { getProfile, isAdmin, loginUrl, verifyLogin } from './steam.js';
-import { getUser, ledgerOf, publicUser, rotateSeed, setClientSeed, setTradeUrl, upsertSteamUser } from './users.js';
+import { getUser, ledgerOf, publicUser, rotateSeed, setClientSeed, setTradeUrl, upsertSteamUser, upsertTelegramUser } from './users.js';
+import { handleUpdate, verifyInitData, webhookSecret } from './telegram.js';
 import { listItems, pricesAreStale, syncCatalog } from './catalog.js';
 import { buyItem, buyPrice, finishSkinWithdrawal, listOwned, listSkinWithdrawals, pollSkinWithdrawals, sellItems, withdrawItem } from './inventory.js';
 import { listUpgrades, recentWins, runUpgrade } from './upgrade.js';
@@ -40,7 +41,7 @@ async function requireUser(req) {
 
 async function requireAdmin(req) {
   const u = await requireUser(req);
-  if (!isAdmin(u.steam_id)) fail(403, 'Нет доступа');
+  if (!isAdmin(u)) fail(403, 'Нет доступа');
   return u;
 }
 
@@ -84,6 +85,25 @@ r.get('/api/auth/dev', async (req, res, { url }) => {
   redirect(res, safeNext(url.searchParams.get('next')));
 });
 
+// Вход из Telegram Mini App: initData подписаны Telegram ключом нашего бота
+r.post('/api/auth/telegram', async (req, res) => {
+  await rateLimit(`tg-login:${ipKey(req)}`, 30, 600);
+  const { initData } = await readJson(req);
+  const tg = verifyInitData(str(initData, 4096));
+  if (!tg) fail(401, 'Не получилось войти через Telegram. Закрой и снова открой приложение из бота');
+  const user = await upsertTelegramUser(tg);
+  if (user.is_banned) fail(403, 'Аккаунт заблокирован. Напиши в поддержку');
+  return { token: startSession(res, user.id), user: publicUser(user) };
+});
+
+// Вебхук бота: Telegram присылает секрет в заголовке, без него запрос отклоняем
+r.post('/api/telegram/webhook', async (req) => {
+  if (!config.tgBotToken || req.headers['x-telegram-bot-api-secret-token'] !== webhookSecret()) fail(401, 'unauthorized');
+  const update = await readJson(req);
+  await handleUpdate(update).catch((err) => console.error('telegram update:', err.message));
+  return { ok: true };
+});
+
 r.post('/api/auth/logout', async (req, res) => {
   endSession(res);
   return { ok: true };
@@ -110,9 +130,10 @@ r.patch('/api/me', async (req) => {
   if ('tradeUrl' in body) {
     const trade = parseTradeUrl(body.tradeUrl);
     if (!trade) fail(400, 'Проверь трейд-ссылку', { field: 'tradeUrl' });
-    // Трейд-ссылка должна принадлежать этому же аккаунту Steam
+    // Если вход был через Steam — трейд-ссылка должна быть от этого же аккаунта.
+    // У игроков из Telegram Steam не привязан: ссылку проверяем только по формату.
     const steamId = (76561197960265728n + BigInt(trade.partner)).toString();
-    if (steamId !== u.steam_id) fail(400, 'Это трейд-ссылка другого аккаунта Steam', { field: 'tradeUrl' });
+    if (u.steam_id && steamId !== u.steam_id) fail(400, 'Это трейд-ссылка другого аккаунта Steam', { field: 'tradeUrl' });
     await setTradeUrl(u.id, trade.url);
   }
   if ('clientSeed' in body) {
@@ -228,6 +249,7 @@ r.post('/api/webhooks/cryptopay', async (req) => {
 
 r.get('/api/steam-inventory', async (req, res, { url }) => {
   const u = await requireUser(req);
+  if (!u.steam_id) fail(400, 'Чтобы увидеть инвентарь Steam, войди на сайте через Steam. Без входа можно оставить заявку по трейд-ссылке');
   const refresh = url.searchParams.get('refresh') === '1';
   if (refresh) await rateLimit(`inv:${u.id}`, 6, 600);
   return steamInventoryWithPrices(u.steam_id, { refresh });
@@ -300,6 +322,7 @@ r.post('/api/admin/settings', async (req) => { await requireAdmin(req); return u
 // ── Точка входа ────────────────────────────────────────────
 
 const MUTATING = new Set(['POST', 'PATCH', 'PUT', 'DELETE']);
+const WEBHOOKS = new Set(['/api/webhooks/cryptopay', '/api/telegram/webhook']);
 
 export async function handler(req, res) {
   const url = new URL(req.url, config.siteUrl);
@@ -307,8 +330,8 @@ export async function handler(req, res) {
     const found = r.match(req.method, url.pathname);
     if (!found) fail(404, 'Не найдено');
     if (found === 'method') fail(405, 'Метод не поддерживается');
-    // Вебхук приходит с сервера Crypto Pay — у него своя проверка подписи
-    if (MUTATING.has(req.method) && url.pathname !== '/api/webhooks/cryptopay') assertSameOrigin(req);
+    // Вебхуки приходят с серверов Crypto Pay и Telegram — у них своя проверка подписи
+    if (MUTATING.has(req.method) && !WEBHOOKS.has(url.pathname)) assertSameOrigin(req);
     const result = await found.handler(req, res, { url, params: found.params });
     if (!res.writableEnded) sendJson(res, 200, result ?? { ok: true });
   } catch (err) {

@@ -1,6 +1,6 @@
 // Профиль: вкладки, инвентарь на сайте, пополнение и вывод, история, апгрейды, настройки.
 import {
-  $, $$, api, confirmDialog, dateTime, emptyState, esc, icon, loginUrl, pct, refreshSession, rub, session, setBalance,
+  $, $$, api, confirmDialog, dateTime, emptyState, esc, icon, loginUrl, pct, refreshSession, rub, session, setBalance, setToken,
   skinCard, toast, toastError, withLoading,
 } from './core.js';
 import { TRADE_URL, formatCard, isCard, isPhone, liveValidate, maskPhone } from './forms.js';
@@ -49,7 +49,7 @@ addEventListener('hashchange', () => openTab(location.hash.slice(1), { push: fal
 
 function renderHead() {
   $('[data-name]').textContent = user.name;
-  $('[data-steam-id]').textContent = user.steamId;
+  $('[data-account]').textContent = user.steamId ? `Steam ID: ${user.steamId}` : `Telegram: ${user.telegram?.username ? '@' + user.telegram.username : user.telegram?.id}`;
   $('[data-avatar]').innerHTML = user.avatar
     ? `<img class="avatar" src="${esc(user.avatar)}" alt="" width="72" height="72">`
     : `<span class="avatar avatar-fallback" aria-hidden="true">${esc(user.name.slice(0, 1).toUpperCase())}</span>`;
@@ -169,12 +169,14 @@ function renderDeposit() {
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       if (!v.validateAll()) return;
-      // Окно открываем сразу по клику, иначе Safari заблокирует его как всплывающее
-      const win = window.open('', '_blank');
+      // В Telegram счёт открываем средствами Telegram; на сайте — окно сразу по клику, иначе Safari его заблокирует
+      const tg = window.Telegram?.WebApp?.initData ? window.Telegram.WebApp : null;
+      const win = tg ? null : window.open('', '_blank');
       await withLoading(form.querySelector('[type="submit"]'), async () => {
         try {
           const r = await api('/api/deposit/crypto', { method: 'POST', body: { amount: form.elements.amount.value } });
-          if (win) { win.opener = null; win.location.href = r.url; } else location.href = r.url;
+          if (tg) { if (r.url.startsWith('https://t.me/')) tg.openTelegramLink(r.url); else tg.openLink(r.url); }
+          else if (win) { win.opener = null; win.location.href = r.url; } else location.href = r.url;
           toast('Счёт открыт в новой вкладке. После оплаты баланс обновится сам', 'info', { timeout: 8000 });
           pollBalance();
         } catch (err) { win?.close(); toastError(err); }
@@ -387,6 +389,7 @@ loaders.settings = () => {
 
   $('[data-logout]').addEventListener('click', async () => {
     await api('/api/auth/logout', { method: 'POST' }).catch(() => {});
+    setToken(null);
     location.href = '/';
   });
 };

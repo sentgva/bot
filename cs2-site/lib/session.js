@@ -30,14 +30,21 @@ export function decodeSession(token) {
   }
 }
 
+// Возвращает токен: его же Mini App передаёт в заголовке Authorization
 export function startSession(res, userId) {
-  setCookie(res, COOKIE, encodeSession({ uid: userId, exp: Date.now() + MAX_AGE * 1000 }), { maxAge: MAX_AGE });
+  const token = encodeSession({ uid: userId, exp: Date.now() + MAX_AGE * 1000 });
+  setCookie(res, COOKIE, token, { maxAge: MAX_AGE });
+  return token;
 }
 
 export function endSession(res) {
   setCookie(res, COOKIE, '', { maxAge: 0 });
 }
 
+// Сессия из cookie (сайт) или из заголовка Authorization: Bearer … (Telegram Mini App:
+// в Telegram Web приложение открывается во фрейме, и браузер не отдаёт туда cookie).
+// Заголовок не подставляется браузером сам, поэтому CSRF через него невозможен.
 export function sessionUserId(req) {
-  return decodeSession(parseCookies(req)[COOKIE])?.uid ?? null;
+  const bearer = /^Bearer (.+)$/.exec(req.headers.authorization || '')?.[1];
+  return decodeSession(bearer || parseCookies(req)[COOKIE])?.uid ?? null;
 }

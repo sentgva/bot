@@ -85,4 +85,6 @@ export async function fetchInventory(steamId, fetchImpl = fetch) {
     .filter(Boolean);
 }
 
-export const isAdmin = (steamId) => config.adminSteamIds.includes(String(steamId));
+// Админ — по Steam ID (ADMIN_STEAM_IDS) или по Telegram ID (ADMIN_TG_IDS)
+export const isAdmin = (u) => Boolean(u) && ((u.steam_id && config.adminSteamIds.includes(String(u.steam_id)))
+  || (u.telegram_id && config.adminTgIds.includes(String(u.telegram_id))));

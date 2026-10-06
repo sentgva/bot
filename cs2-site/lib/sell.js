@@ -65,7 +65,7 @@ export async function createSellRequest({ user, tradeUrl, method, contact, asset
   // Если игрок выбрал конкретные скины — фиксируем их и оценку выкупа
   let items = [];
   let estimate = 0;
-  if (user && assetIds.length) {
+  if (user?.steam_id && assetIds.length) {
     const inv = await steamInventoryWithPrices(user.steam_id);
     const chosen = new Set(assetIds.map(String));
     items = inv.items.filter((i) => chosen.has(i.assetId) && i.buyback).map((i) => ({ assetId: i.assetId, hashName: i.hashName, price: i.buyback }));
@@ -81,7 +81,7 @@ export async function createSellRequest({ user, tradeUrl, method, contact, asset
   await notifyAdmin([
     '🛒 Заявка на продажу скинов',
     `#${row.id}: ${SELL_METHODS[method]}${estimate ? `, оценка ${rub(estimate)} (${items.length} шт.)` : ''}`,
-    user ? `Игрок: ${user.name} (${user.steam_id})` : null,
+    user ? `Игрок: ${user.name} (${user.steam_id ? `Steam ${user.steam_id}` : `Telegram ${user.tg_username ? '@' + user.tg_username : user.telegram_id}`})` : null,
     normContact ? `Контакт: ${normContact}` : null,
     trade.url,
   ]);

@@ -36,13 +36,28 @@ export class ApiError extends Error {
   }
 }
 
+// Токен сессии для Telegram Mini App (там cookie могут быть недоступны). На обычном сайте его нет.
+let memoryToken = null;
+export function getToken() {
+  try { return sessionStorage.getItem('ld-token') || memoryToken; } catch { return memoryToken; }
+}
+export function setToken(token) {
+  memoryToken = token;
+  try { if (token) sessionStorage.setItem('ld-token', token); else sessionStorage.removeItem('ld-token'); } catch { /* приватный режим */ }
+}
+
 export async function api(path, { method = 'GET', body } = {}) {
   let res;
+  const token = getToken();
   try {
     res = await fetch(path, {
       method,
       credentials: 'same-origin',
-      headers: { 'X-Requested-With': 'luxedrop', ...(body !== undefined && { 'Content-Type': 'application/json' }) },
+      headers: {
+        'X-Requested-With': 'luxedrop',
+        ...(token && { Authorization: `Bearer ${token}` }),
+        ...(body !== undefined && { 'Content-Type': 'application/json' }),
+      },
       body: body !== undefined ? JSON.stringify(body) : undefined,
     });
   } catch {
@@ -53,9 +68,35 @@ export async function api(path, { method = 'GET', body } = {}) {
   return data;
 }
 
+// ── Telegram Mini App ──────────────────────────────────────
+// Сайт открыт из бота: Telegram передаёт данные запуска в адресе (#tgWebAppData=…).
+// Запоминаем это на время сессии, чтобы режим сохранялся при переходах между страницами.
+export function inTelegram() {
+  const launched = /tgWebAppData=/.test(location.hash);
+  try {
+    if (launched) sessionStorage.setItem('ld-tg', '1');
+    return launched || sessionStorage.getItem('ld-tg') === '1';
+  } catch {
+    return launched;
+  }
+}
+const tgModule = inTelegram() ? import('./tg.js').catch((err) => { console.error(err); return null; }) : null;
+const tgReady = tgModule?.then((m) => m?.init()).catch((err) => { console.error(err); return null; });
+
+async function loadMe() {
+  await tgReady;
+  const me = await api('/api/me').catch(() => ({ user: null, config: null }));
+  // Токен Mini App истёк — входим заново по данным запуска из Telegram
+  if (!me.user && tgModule) {
+    const tg = await tgModule;
+    if (await tg?.login()) return api('/api/me').catch(() => me);
+  }
+  return me;
+}
+
 // Сессия грузится один раз на страницу
 let sessionPromise;
-export const session = () => (sessionPromise ??= api('/api/me').catch(() => ({ user: null, config: null })));
+export const session = () => (sessionPromise ??= loadMe());
 export async function refreshSession() {
   sessionPromise = api('/api/me').catch(() => ({ user: null, config: null }));
   const s = await sessionPromise;

@@ -40,7 +40,7 @@ const inputValue = () => state.owned.filter((i) => state.selected.has(i.id)).red
 
 function calc() {
   const value = inputValue();
-  if (!value || !state.target) return { value, chance: 0, ok: false, reason: state.user ? 'Выбери скины или сумму слева и цель справа' : 'Войди через Steam, чтобы сделать ставку' };
+  if (!value || !state.target) return { value, chance: 0, ok: false, reason: state.user ? 'Выбери ставку и скин, который хочешь получить' : 'Войди через Steam, чтобы сделать ставку' };
   const raw = (value / state.target.price) * (1 - state.cfg.houseEdge);
   if (value < state.cfg.minValue) return { value, chance: raw, ok: false, reason: `Минимальная ставка — ${rub(state.cfg.minValue)}` };
   if (raw > state.cfg.maxChance) return { value, chance: raw, ok: false, reason: `Шанс выше ${Math.round(state.cfg.maxChance * 100)}% — выбери цель дороже` };
@@ -210,6 +210,9 @@ async function go() {
   state.spinning = true;
   el.result.innerHTML = '';
   render();
+  // На телефоне кольцо могло уйти за экран, пока игрок листал цели — показываем бросок
+  const ring = $('.ring-wrap').getBoundingClientRect();
+  if (ring.top < 0 || ring.bottom > innerHeight) $('.ring-wrap').scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'center' });
   try {
     const r = await withLoading(el.go, () => api('/api/upgrade', { method: 'POST', body }));
     await spinTo(r.roll);
