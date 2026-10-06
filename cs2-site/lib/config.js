@@ -14,9 +14,6 @@ export const config = {
   // Ключ шифрования номеров карт (32 байта в hex). Без него вывод на карту выключен.
   dataKey: env.DATA_KEY || '',
 
-  steamApiKey: env.STEAM_API_KEY || '',
-  adminSteamIds: (env.ADMIN_STEAM_IDS || '').split(',').map((s) => s.trim()).filter(Boolean),
-
   // Crypto Pay (@CryptoBot): пополнение и вывод в USDT/TON
   cryptoPayToken: env.CRYPTOPAY_TOKEN || '',
   cryptoPayTestnet: bool(env.CRYPTOPAY_TESTNET),
@@ -26,6 +23,7 @@ export const config = {
 
   // Telegram: бот LuxeDrop — Mini App апгрейдера и уведомления админу
   tgBotToken: env.TG_BOT_TOKEN || '',
+  tgBotUsername: (env.TG_BOT_USERNAME || '').replace(/^@/, ''),
   tgAdminChatId: env.TG_ADMIN_CHAT_ID || '',
   adminTgIds: (env.ADMIN_TG_IDS || '').split(',').map((s) => s.trim()).filter(Boolean),
 
@@ -38,7 +36,7 @@ export const config = {
 
   // Тестовое пополнение кнопкой (для стенда). В бою — выключить!
   demoTopup: bool(env.DEMO_TOPUP),
-  // Вход без Steam для локальной разработки (/api/auth/dev). В продакшене не работает никогда.
+  // Вход тестовым игроком для локальной разработки (/api/auth/dev). В продакшене не работает никогда.
   devLogin: !isProd && bool(env.DEV_LOGIN),
 };
 

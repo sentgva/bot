@@ -5,20 +5,9 @@
 import { getDb } from './db.js';
 import { fail } from './http.js';
 import { hashSeed, newClientSeed, newServerSeed } from './fair.js';
-import { isAdmin } from './steam.js';
+import { config } from './config.js';
 
-export async function upsertSteamUser({ steamId, name, avatar }) {
-  const db = await getDb();
-  return db.one(
-    `insert into users (steam_id, name, avatar, server_seed, client_seed)
-     values ($1, $2, $3, $4, $5)
-     on conflict (steam_id) do update set name = excluded.name, avatar = coalesce(excluded.avatar, users.avatar), last_seen_at = now()
-     returning *`,
-    [steamId, name, avatar, newServerSeed(), newClientSeed()],
-  );
-}
-
-// Вход из Telegram Mini App: аккаунт привязан к Telegram ID, Steam не обязателен
+// Вход через Telegram (Mini App или Telegram Login на сайте): аккаунт привязан к Telegram ID
 export async function upsertTelegramUser(tg) {
   const db = await getDb();
   const name = [tg.first_name, tg.last_name].filter(Boolean).join(' ').slice(0, 64) || tg.username || `Игрок ${String(tg.id).slice(-5)}`;
@@ -32,6 +21,9 @@ export async function upsertTelegramUser(tg) {
   );
 }
 
+// Админ — Telegram ID из ADMIN_TG_IDS
+export const isAdmin = (u) => Boolean(u?.telegram_id) && config.adminTgIds.includes(String(u.telegram_id));
+
 export async function getUser(id) {
   if (!id) return null;
   const db = await getDb();
@@ -41,7 +33,6 @@ export async function getUser(id) {
 // То, что видит сам игрок (серверный сид — только хэш!)
 export const publicUser = (u) => ({
   id: u.id,
-  steamId: u.steam_id,
   telegram: u.telegram_id ? { id: u.telegram_id, username: u.tg_username } : null,
   name: u.name,
   avatar: u.avatar,

@@ -3,5 +3,6 @@ Allow: /
 Disallow: /api/
 Disallow: /profile/
 Disallow: /admin/
+Disallow: /login/
 
 Sitemap: https://luxedrop.gg/sitemap.xml

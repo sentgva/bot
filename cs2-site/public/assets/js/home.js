@@ -1,7 +1,6 @@
-// Главная: калькулятор шанса, живые цифры, форма заявки, CTA для вошедших.
-import { $, api, pct, rub, session, skinImage } from './core.js';
+// Главная: калькулятор шанса, живые цифры, витрина маркета, лучший дроп, вход через Telegram.
+import { $, api, pct, rub, session, skinCard, skinImage } from './core.js';
 import { onLive } from './live.js';
-import { initSellForm } from './forms.js';
 
 const pctText = (x, digits = 1) => `${(x * 100).toFixed(digits).replace('.', ',').replace(/,0$/, '')}%`;
 
@@ -28,18 +27,23 @@ api('/api/stats').then((s) => {
   $('[data-stat="minWithdraw"]').textContent = rub(s.minWithdraw);
   if (s.paid) {
     // Когда выплат достаточно — показываем, сколько реально выплачено
-    $('[data-stat="buyback"]').textContent = rub(s.paid).replace(/,\d+/, '');
-    $('[data-stat-label="buyback"]').textContent = 'уже выплачено игрокам';
+    $('[data-stat="sell"]').textContent = rub(s.paid).replace(/,\d+/, '');
+    $('[data-stat-label="sell"]').textContent = 'уже выплачено игрокам';
     $('[data-paid-title]').textContent = `${rub(s.paid).replace(/,\d+/, '')} уже выплачено игрокам`;
   } else {
-    $('[data-stat="buyback"]').textContent = pctText(s.buybackRate, 0);
+    $('[data-stat="sell"]').textContent = pctText(s.siteSellRate, 0);
   }
   updateCalc();
 }).catch(() => { /* оставляем значения из разметки */ });
 
 session().then(({ user, config }) => {
   if (config) { edge = config.upgrade.houseEdge; maxChance = config.upgrade.maxChance; updateCalc(); }
-  // Вошедшему не нужно «Войти через Steam» — ведём сразу в апгрейдер
+  // Кнопка «Открыть в боте» — ссылка на нашего бота из настроек сервера
+  const bot = $('[data-cta-bot]');
+  if (config?.auth?.botUsername) bot.href = `https://t.me/${config.auth.botUsername}`;
+  else bot.hidden = true;
+  if (user) { const login = $('[data-cta-login]'); login.href = '/upgrade/'; login.lastElementChild.textContent = 'Открыть апгрейдер'; }
+  // Вошедшему не нужно «Войти» — ведём сразу в апгрейдер
   const primary = $('[data-hero-primary]');
   if (user && primary) {
     primary.href = '/upgrade/';
@@ -47,7 +51,13 @@ session().then(({ user, config }) => {
   }
 });
 
-initSellForm($('#sell-form'));
+// ── Витрина маркета: популярные скины ──────────────────────
+api('/api/items?sort=popular&min=50000&limit=10').then(({ items }) => {
+  $('[data-showcase]').innerHTML = items.map((i) => skinCard(i, {
+    price: i.buyPrice,
+    actions: '<a class="btn btn-secondary btn-sm" href="/market/">В маркет</a>',
+  })).join('');
+}).catch(() => { $('[data-showcase]').closest('section').hidden = true; });
 
 // ── Лучший дроп ────────────────────────────────────────────
 onLive(({ best }) => {

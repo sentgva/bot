@@ -44,6 +44,36 @@ export function signInitData(user, botToken, authDate = Math.floor(Date.now() / 
   return params.toString();
 }
 
+// Вход на сайте через Telegram Login (oauth.telegram.org). Данные подписаны ключом SHA-256(токен бота):
+// https://core.telegram.org/widgets/login#checking-authorization
+export function verifyLoginWidget(data, botToken = config.tgBotToken, { now = Date.now(), maxAge = MAX_AGE_SEC } = {}) {
+  if (!botToken || !data || typeof data !== 'object' || Array.isArray(data)) return null;
+  const { hash, ...fields } = data;
+  if (typeof hash !== 'string' || !/^[0-9a-f]{64}$/.test(hash)) return null;
+  const keys = Object.keys(fields).filter((k) => ['string', 'number'].includes(typeof fields[k]));
+  if (keys.length > 20) return null;
+  const checkString = keys.sort().map((k) => `${k}=${fields[k]}`).join('\n');
+  const secret = crypto.createHash('sha256').update(botToken).digest();
+  const expected = crypto.createHmac('sha256', secret).update(checkString).digest('hex');
+  if (!crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(expected))) return null;
+  const authDate = Number(fields.auth_date);
+  if (!authDate || now / 1000 - authDate > maxAge) return null;
+  const id = Number(fields.id);
+  if (!Number.isSafeInteger(id)) return null;
+  return { id, first_name: fields.first_name, last_name: fields.last_name, username: fields.username, photo_url: fields.photo_url };
+}
+
+// Для тестов: подписать данные так же, как Telegram Login
+export function signLoginWidget(user, botToken, authDate = Math.floor(Date.now() / 1000)) {
+  const fields = { ...user, auth_date: authDate };
+  const checkString = Object.keys(fields).sort().map((k) => `${k}=${fields[k]}`).join('\n');
+  const secret = crypto.createHash('sha256').update(botToken).digest();
+  return { ...fields, hash: crypto.createHmac('sha256', secret).update(checkString).digest('hex') };
+}
+
+// ID бота — часть токена до двоеточия; нужен странице входа (он не секретный)
+export const botId = () => (config.tgBotToken.includes(':') ? config.tgBotToken.split(':')[0] : null);
+
 export async function tgApi(method, body, fetchImpl = fetch) {
   const res = await fetchImpl(`https://api.telegram.org/bot${config.tgBotToken}/${method}`, {
     method: 'POST',

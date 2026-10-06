@@ -1,7 +1,6 @@
-// Формы: правила проверки (те же, что на сервере в lib/validate.js), маски, ошибки на лету,
-// защита от спама (honeypot + время заполнения) и общая форма заявки на продажу скинов.
+// Формы: правила проверки (те же, что на сервере в lib/validate.js), маски и ошибки на лету.
 
-import { $, $$, api, esc, icon, session, toastError, withLoading } from './core.js';
+import { esc, icon } from './core.js';
 
 export const TRADE_URL = /^https:\/\/steamcommunity\.com\/tradeoffer\/new\/\?partner=\d{1,10}&token=[\w-]{8}$/;
 
@@ -12,7 +11,6 @@ export function phoneDigits(v) {
   return d.slice(0, 11);
 }
 export const isPhone = (v) => /^79\d{9}$/.test(phoneDigits(v));
-export const isTelegram = (v) => /^@?[a-zA-Z][\w]{4,31}$/.test(String(v || '').trim().replace(/^https?:\/\/t\.me\//i, ''));
 
 export function formatPhone(v) {
   const d = phoneDigits(v);
@@ -40,17 +38,6 @@ export function isCard(v) {
 }
 export const formatCard = (v) => String(v || '').replace(/\D/g, '').slice(0, 19).replace(/(\d{4})(?=\d)/g, '$1 ');
 
-// Маска телефона, которая не мешает вводить ник Telegram в то же поле
-export function maskContact(input) {
-  input.addEventListener('input', () => {
-    const v = input.value;
-    if (/^[+\d(]/.test(v.trim()) && !/[a-zA-Z@_]/.test(v)) {
-      const pos = input.selectionStart === v.length;
-      input.value = formatPhone(v);
-      if (pos) input.setSelectionRange(input.value.length, input.value.length);
-    }
-  });
-}
 export const maskPhone = (input) => input.addEventListener('input', () => { input.value = formatPhone(input.value); });
 export const maskCard = (input) => input.addEventListener('input', () => { input.value = formatCard(input.value); });
 
@@ -114,75 +101,3 @@ export function liveValidate(form, rules) {
     },
   };
 }
-
-// ── Форма заявки на продажу (главная и /sell/) ─────────────
-
-export function initSellForm(form, { getAssetIds = () => [], onDone } = {}) {
-  if (!form) return;
-  const startedAt = Date.now();
-  const contact = form.elements.contact;
-  maskContact(contact);
-
-  // Для вошедших подставляем трейд-ссылку и даём выбрать «на баланс»
-  session().then(({ user }) => {
-    if (!user) return;
-    if (user.tradeUrl && !form.elements.tradeUrl.value) form.elements.tradeUrl.value = user.tradeUrl;
-    $$('[data-auth-only]', form).forEach((el) => { el.hidden = false; });
-    contact.required = false;
-    const label = form.querySelector('label[for="sell-contact"] .optional');
-    if (label) label.hidden = false;
-  });
-
-  const v = liveValidate(form, {
-    tradeUrl: (val) => (!val ? 'Вставь трейд-ссылку' : TRADE_URL.test(val.trim()) ? '' : 'Ссылка вида https://steamcommunity.com/tradeoffer/new/?partner=…&token=…'),
-    method: (val) => (val ? '' : 'Выбери, куда получить деньги'),
-    contact: (val) => {
-      if (!val && !contact.required) return '';
-      if (!val) return 'Укажи телефон или ник в Telegram — так мы быстро свяжемся';
-      return isPhone(val) || isTelegram(val) ? '' : 'Телефон в формате +7 (999) 123-45-67 или ник @username';
-    },
-    agree: (val) => (val ? '' : 'Нужно подтвердить возраст и согласие с условиями'),
-  });
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    if (!v.validateAll()) return;
-    const btn = form.querySelector('[type="submit"]');
-    await withLoading(btn, async () => {
-      try {
-        const res = await api('/api/sell-requests', {
-          method: 'POST',
-          body: {
-            tradeUrl: form.elements.tradeUrl.value.trim(),
-            method: form.elements.method.value,
-            contact: contact.value.trim(),
-            assetIds: getAssetIds(),
-            website: form.elements.website.value,
-            startedAt,
-          },
-        });
-        const success = form.parentElement.querySelector('[data-form-success]');
-        if (success) {
-          success.querySelector('[data-request-id]').textContent = res.id ? `#${res.id}` : '';
-          form.hidden = true;
-          success.hidden = false;
-          success.focus();
-        }
-        onDone?.(res);
-      } catch (err) {
-        if (!(err.data?.field && v.setServerError(err.data.field, err.message))) toastError(err);
-      }
-    });
-  });
-
-  // «Отправить ещё одну»
-  const again = form.parentElement.querySelector('[data-form-again]');
-  again?.addEventListener('click', () => {
-    form.reset();
-    $$('.touched', form).forEach((el) => { el.classList.remove('touched'); el.removeAttribute('aria-invalid'); });
-    form.hidden = false;
-    form.parentElement.querySelector('[data-form-success]').hidden = true;
-    form.elements.tradeUrl.focus();
-  });
-}
-

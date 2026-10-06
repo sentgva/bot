@@ -3,20 +3,17 @@
 import { waitUntil } from '@vercel/functions';
 import { config } from './config.js';
 import {
-  HttpError, assertSameOrigin, createRouter, fail, int, ipKey, parseCookies, rateLimit, readBody, readJson,
-  redirect, sendJson, setCookie, str,
+  HttpError, assertSameOrigin, createRouter, fail, int, ipKey, rateLimit, readBody, readJson, redirect, sendJson, str,
 } from './http.js';
 import { endSession, sessionUserId, startSession } from './session.js';
-import { getProfile, isAdmin, loginUrl, verifyLogin } from './steam.js';
-import { getUser, ledgerOf, publicUser, rotateSeed, setClientSeed, setTradeUrl, upsertSteamUser, upsertTelegramUser } from './users.js';
-import { handleUpdate, verifyInitData, webhookSecret } from './telegram.js';
+import { getUser, isAdmin, ledgerOf, publicUser, rotateSeed, setClientSeed, setTradeUrl, upsertTelegramUser } from './users.js';
+import { botId, handleUpdate, verifyInitData, verifyLoginWidget, webhookSecret } from './telegram.js';
 import { listItems, pricesAreStale, syncCatalog } from './catalog.js';
 import { buyItem, buyPrice, finishSkinWithdrawal, listOwned, listSkinWithdrawals, pollSkinWithdrawals, sellItems, withdrawItem } from './inventory.js';
 import { listUpgrades, recentWins, runUpgrade } from './upgrade.js';
 import {
   createCryptoDeposit, demoTopup, finishWithdraw, handleCryptoWebhook, listPayments, methodsInfo, requestWithdraw, sendCryptoCheck,
 } from './payments.js';
-import { createSellRequest, listSellRequests, steamInventoryWithPrices, updateSellRequest } from './sell.js';
 import { getStats } from './stats.js';
 import { getLive } from './live.js';
 import { getSettings, updateSettings } from './settings.js';
@@ -25,7 +22,6 @@ import { parseTradeUrl, rublesToKop } from './validate.js';
 import * as admin from './admin.js';
 
 const r = createRouter();
-const CALLBACK = '/api/auth/steam/callback';
 
 // ── Помощники ──────────────────────────────────────────────
 
@@ -36,7 +32,7 @@ async function currentUser(req) {
 
 async function requireUser(req) {
   const u = await currentUser(req);
-  if (!u) fail(401, 'Войди через Steam, чтобы продолжить');
+  if (!u) fail(401, 'Войди через Telegram, чтобы продолжить');
   return u;
 }
 
@@ -57,31 +53,25 @@ function refreshPricesInBackground() {
   );
 }
 
-// ── Вход через Steam ───────────────────────────────────────
+// ── Вход: только через Telegram ────────────────────────────
 
-r.get('/api/auth/steam', async (req, res, { url }) => {
-  await rateLimit(`login:${ipKey(req)}`, 20, 600);
-  setCookie(res, 'ld_next', safeNext(url.searchParams.get('next')), { maxAge: 600 });
-  redirect(res, loginUrl(config.siteUrl + CALLBACK));
-});
-
-r.get(CALLBACK, async (req, res, { url }) => {
-  const steamId = await verifyLogin(url.searchParams, config.siteUrl + CALLBACK).catch(() => null);
-  if (!steamId) return redirect(res, '/?login=failed');
-  const profile = await getProfile(steamId);
-  const user = await upsertSteamUser({ steamId, ...profile });
-  if (user.is_banned) return redirect(res, '/?login=banned');
+// Сайт: Telegram Login. Страница /login/ получает подписанные данные от oauth.telegram.org и пересылает сюда.
+r.post('/api/auth/telegram-widget', async (req, res) => {
+  await rateLimit(`tg-login:${ipKey(req)}`, 30, 600);
+  const { data } = await readJson(req);
+  const tg = verifyLoginWidget(data);
+  if (!tg) fail(401, 'Не получилось войти через Telegram. Попробуй ещё раз');
+  const user = await upsertTelegramUser(tg);
+  if (user.is_banned) fail(403, 'Аккаунт заблокирован. Напиши в поддержку');
   startSession(res, user.id);
-  const next = safeNext(parseCookies(req).ld_next);
-  setCookie(res, 'ld_next', '', { maxAge: 0 });
-  redirect(res, next);
+  return { user: publicUser(user) };
 });
 
-// Только локально (DEV_LOGIN=1): войти тестовым игроком без Steam
+// Только локально (DEV_LOGIN=1): войти тестовым игроком без Telegram
 r.get('/api/auth/dev', async (req, res, { url }) => {
   if (!config.devLogin) fail(404, 'Не найдено');
-  const steamId = /^\d{17}$/.test(url.searchParams.get('steamId') || '') ? url.searchParams.get('steamId') : '76561198000000001';
-  const user = await upsertSteamUser({ steamId, name: url.searchParams.get('name') || 'Тестовый игрок', avatar: null });
+  const id = int(url.searchParams.get('tgId')) || 100001;
+  const user = await upsertTelegramUser({ id, first_name: url.searchParams.get('name') || 'Тестовый игрок', username: `tester${id}` });
   startSession(res, user.id);
   redirect(res, safeNext(url.searchParams.get('next')));
 });
@@ -120,7 +110,9 @@ r.get('/api/me', async (req) => {
     config: {
       payments: methodsInfo(s),
       upgrade: { houseEdge: s.houseEdge, maxChance: s.maxChance, minChance: s.minChance, maxItems: s.maxUpgradeItems, minValue: s.minUpgradeValue },
-      market: { markup: s.marketMarkup, sellRate: s.siteSellRate, buybackRate: s.buybackRate },
+      market: { markup: s.marketMarkup, sellRate: s.siteSellRate },
+      // Для страницы входа: ID и имя бота LuxeDrop (не секретные), тестовый вход — только локально
+      auth: { telegramBotId: botId(), botUsername: config.tgBotUsername || null, devLogin: config.devLogin },
     },
   };
 });
@@ -131,10 +123,7 @@ r.patch('/api/me', async (req) => {
   if ('tradeUrl' in body) {
     const trade = parseTradeUrl(body.tradeUrl);
     if (!trade) fail(400, 'Проверь трейд-ссылку', { field: 'tradeUrl' });
-    // Если вход был через Steam — трейд-ссылка должна быть от этого же аккаунта.
-    // У игроков из Telegram Steam не привязан: ссылку проверяем только по формату.
-    const steamId = (76561197960265728n + BigInt(trade.partner)).toString();
-    if (u.steam_id && steamId !== u.steam_id) fail(400, 'Это трейд-ссылка другого аккаунта Steam', { field: 'tradeUrl' });
+    // Steam не привязан к аккаунту: трейд-ссылку проверяем по формату, скины уйдут на неё
     await setTradeUrl(u.id, trade.url);
   }
   if ('clientSeed' in body) {
@@ -153,7 +142,6 @@ r.post('/api/me/seed/rotate', async (req) => {
 r.get('/api/me/ledger', async (req) => ledgerOf((await requireUser(req)).id));
 r.get('/api/me/payments', async (req) => listPayments((await requireUser(req)).id));
 r.get('/api/me/upgrades', async (req) => listUpgrades((await requireUser(req)).id));
-r.get('/api/me/sell-requests', async (req) => listSellRequests((await requireUser(req)).id));
 r.get('/api/me/skin-withdrawals', async (req) => listSkinWithdrawals((await requireUser(req)).id));
 
 // ── Каталог и маркет ───────────────────────────────────────
@@ -246,31 +234,6 @@ r.post('/api/webhooks/cryptopay', async (req) => {
   return handleCryptoWebhook(raw, req.headers['crypto-pay-api-signature']);
 });
 
-// ── Продажа скинов из Steam ────────────────────────────────
-
-r.get('/api/steam-inventory', async (req, res, { url }) => {
-  const u = await requireUser(req);
-  if (!u.steam_id) fail(400, 'Чтобы увидеть инвентарь Steam, войди на сайте через Steam. Без входа можно оставить заявку по трейд-ссылке');
-  const refresh = url.searchParams.get('refresh') === '1';
-  if (refresh) await rateLimit(`inv:${u.id}`, 6, 600);
-  return steamInventoryWithPrices(u.steam_id, { refresh });
-});
-
-r.post('/api/sell-requests', async (req) => {
-  const b = await readJson(req);
-  // Ловушка для ботов: скрытое поле заполнено или форму отправили быстрее чем за 2 секунды
-  if (str(b.website) || (Number(b.startedAt) && Date.now() - Number(b.startedAt) < 2000)) return { id: 0, estimate: 0 };
-  await rateLimit(`sellreq:${ipKey(req)}`, 5, 3600);
-  const user = await currentUser(req);
-  return createSellRequest({
-    user,
-    tradeUrl: str(b.tradeUrl, 200) || user?.trade_url,
-    method: str(b.method, 10),
-    contact: str(b.contact, 60),
-    assetIds: Array.isArray(b.assetIds) ? b.assetIds.slice(0, 100).map((x) => str(String(x), 24)) : [],
-  });
-});
-
 // ── Публичная статистика ───────────────────────────────────
 
 r.get('/api/stats', async (req, res) => {
@@ -303,12 +266,6 @@ r.post('/api/admin/withdrawals/:id', async (req, res, { params }) => {
   const { action, note } = await readJson(req);
   if (action === 'send') { const c = await sendCryptoCheck(int(params.id)); return { id: int(params.id), status: 'paid', checkUrl: c.url }; }
   return finishWithdraw(int(params.id), action, str(note, 300));
-});
-r.get('/api/admin/sell-requests', async (req, res, { url }) => { await requireAdmin(req); return admin.listSellRequests(url.searchParams.get('status') || 'open'); });
-r.post('/api/admin/sell-requests/:id', async (req, res, { params }) => {
-  await requireAdmin(req);
-  const { action, amount, note } = await readJson(req);
-  return updateSellRequest(int(params.id), action, { amount: rublesToKop(amount), note: str(note, 300) });
 });
 r.get('/api/admin/skin-withdrawals', async (req, res, { url }) => { await requireAdmin(req); return admin.listSkinWithdrawals(url.searchParams.get('status') || 'open'); });
 r.post('/api/admin/skin-withdrawals/:id', async (req, res, { params }) => {

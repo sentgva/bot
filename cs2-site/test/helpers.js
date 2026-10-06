@@ -7,7 +7,7 @@ delete process.env.TG_BOT_TOKEN;
 
 const { resetDb } = await import('../lib/db.js');
 const { seedDemoItems } = await import('../lib/catalog.js');
-const { upsertSteamUser, changeBalance } = await import('../lib/users.js');
+const { upsertTelegramUser, changeBalance } = await import('../lib/users.js');
 
 export async function freshDb() {
   const db = await resetDb();
@@ -17,7 +17,7 @@ export async function freshDb() {
 
 let n = 0;
 export async function makeUser(balance = 0) {
-  const u = await upsertSteamUser({ steamId: String(76561198000000000n + BigInt(++n)), name: `user${n}`, avatar: null });
+  const u = await upsertTelegramUser({ id: 900000 + ++n, first_name: `user${n}` });
   if (balance) {
     const db = await (await import('../lib/db.js')).getDb();
     await db.tx((q) => changeBalance(q, u.id, balance, 'admin', { note: 'test' }));

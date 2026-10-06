@@ -44,7 +44,7 @@ const inputValue = () => state.owned.filter((i) => state.selected.has(i.id)).red
 
 function calc() {
   const value = inputValue();
-  if (!value || !state.target) return { value, chance: 0, ok: false, reason: state.user ? 'Выбери ставку и скин, который хочешь получить' : 'Войди через Steam, чтобы сделать ставку' };
+  if (!value || !state.target) return { value, chance: 0, ok: false, reason: state.user ? 'Выбери ставку и скин, который хочешь получить' : 'Войди через Telegram, чтобы сделать ставку' };
   const raw = (value / state.target.price) * (1 - state.cfg.houseEdge);
   if (value < state.cfg.minValue) return { value, chance: raw, ok: false, reason: `Минимальная ставка — ${rub(state.cfg.minValue)}` };
   if (raw > state.cfg.maxChance) return { value, chance: raw, ok: false, reason: `Шанс выше ${Math.round(state.cfg.maxChance * 100)}% — выбери цель дороже` };
@@ -86,8 +86,8 @@ function render() {
 function renderInput() {
   if (!state.user) {
     el.inputBody.innerHTML = emptyState({
-      iconName: 'i-user', title: 'Войди, чтобы сделать ставку', text: 'Вход через Steam — пароль мы не видим.',
-      action: `<a class="btn btn-primary" href="${esc(loginUrl())}">${icon('b-steam')}<span>Войти через Steam</span></a>`,
+      iconName: 'i-user', title: 'Войди, чтобы сделать ставку', text: 'Вход через Telegram — без паролей и регистрации.',
+      action: `<a class="btn btn-primary" href="${esc(loginUrl())}">${icon('b-telegram')}<span>Войти через Telegram</span></a>`,
     });
     el.balanceBox.hidden = true;
     return;

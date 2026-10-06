@@ -7,18 +7,19 @@ const STATUS_LABEL = {
   review: 'На проверке', processing: 'В обработке', sending: 'Отправляется (проверь чеки в @CryptoBot!)', paid: 'Выплачено', rejected: 'Отклонено',
   new: 'Новая', in_work: 'В работе', done: 'Завершена', sent: 'Отправлен', refunded: 'Возвращён',
 };
-const METHOD = { card: 'Карта', sbp: 'СБП', crypto: 'Крипта', balance: 'На баланс' };
 
 async function overview() {
   const o = await api('/api/admin/overview');
   $('[data-overview]').innerHTML = [
-    ['Выводов ждут', o.withdrawals], ['Заявок на продажу', o.sell_requests], ['Выводов скинов', o.skin_withdrawals],
+    ['Выводов ждут', o.withdrawals], ['Выводов скинов', o.skin_withdrawals],
     ['Балансы игроков', rub(o.total_balance)], ['Пополнено', rub(o.deposits)], ['Выплачено', rub(o.payouts)], ['Игроков', o.users],
   ].map(([l, v]) => `<div class="stat"><p class="stat-value">${esc(String(v))}</p><p class="stat-label">${l}</p></div>`).join('');
-  for (const k of ['withdrawals', 'sell_requests', 'skin_withdrawals']) $(`[data-count="${k}"]`).textContent = o[k] || '';
+  for (const k of ['withdrawals', 'skin_withdrawals']) $(`[data-count="${k}"]`).textContent = o[k] || '';
 }
 
-const user = (r) => `${esc(r.user_name || 'гость')}${r.steam_id ? ` <a href="https://steamcommunity.com/profiles/${esc(r.steam_id)}" target="_blank" rel="noopener" class="small">${esc(r.steam_id)}</a>` : ''}`;
+// Игрок: имя и ссылка на Telegram
+const tgLink = (r) => (r.tg_username ? `<a href="https://t.me/${esc(r.tg_username)}" target="_blank" rel="noopener" class="small">@${esc(r.tg_username)}</a>` : r.telegram_id ? `<span class="small muted">TG ${esc(r.telegram_id)}</span>` : '');
+const user = (r) => `${esc(r.user_name || 'гость')} ${tgLink(r)}`;
 const btn = (action, label, cls = 'btn-secondary') => `<button class="btn ${cls} btn-sm" type="button" data-action="${action}">${label}</button>`;
 
 const RENDER = {
@@ -36,16 +37,6 @@ const RENDER = {
       </div>`;
     });
   },
-  async sell() {
-    const list = await api(`/api/admin/sell-requests?status=${status}`);
-    return list.map((r) => `<div class="list-item" data-id="${r.id}">
-      <div class="grow"><p><b>#${r.id} · ${esc(METHOD[r.method] || r.method)}</b> ${r.estimate ? `· оценка ${rub(r.estimate)}` : ''} ${r.amount ? `· выплачено ${rub(r.amount)}` : ''}</p>
-      <p class="small"><a href="${esc(r.trade_url)}" target="_blank" rel="noopener">Трейд-ссылка</a>${r.contact ? ` · ${esc(r.contact)}` : ''}</p>
-      ${r.items.length ? `<p class="small muted">${r.items.map((i) => `${esc(i.hashName)} (${rub(i.price)})`).join(', ')}</p>` : ''}
-      <p class="small muted">${user(r)} · ${dateTime(r.created_at)} · ${esc(STATUS_LABEL[r.status])}</p></div>
-      ${['new', 'in_work'].includes(r.status) ? `${r.status === 'new' ? btn('take', 'В работу') : ''}${btn('done', r.method === 'balance' ? 'Зачислить' : 'Выплачено', 'btn-primary')}${btn('reject', 'Отклонить')}` : ''}
-    </div>`);
-  },
   async skins() {
     const list = await api(`/api/admin/skin-withdrawals?status=${status}`);
     return list.map((w) => `<div class="list-item" data-id="${w.id}">
@@ -59,7 +50,7 @@ const RENDER = {
     const list = await api(`/api/admin/users?q=${encodeURIComponent($('#u-q').value)}`);
     return list.map((u) => `<div class="list-item" data-id="${u.id}">
       <div class="grow"><p><b>${esc(u.name)}</b> ${u.is_banned ? '<span class="badge">Бан</span>' : ''}</p>
-      <p class="small muted">ID ${u.id} · <a href="https://steamcommunity.com/profiles/${esc(u.steam_id)}" target="_blank" rel="noopener">${esc(u.steam_id)}</a> · был ${dateTime(u.last_seen_at)}</p></div>
+      <p class="small muted">ID ${u.id} · ${tgLink(u)} · был ${dateTime(u.last_seen_at)}</p></div>
       <span class="amount">${rub(u.balance, { exact: true })}</span>
       ${btn('adjust', 'Баланс ±')}${btn(u.is_banned ? 'unban' : 'ban', u.is_banned ? 'Разбанить' : 'Забанить')}
     </div>`);
@@ -83,16 +74,12 @@ document.addEventListener('click', async (e) => {
   const id = b.closest('[data-id]').dataset.id;
   const action = b.dataset.action;
   let body = { action };
-  let url = { withdrawals: `/api/admin/withdrawals/${id}`, sell: `/api/admin/sell-requests/${id}`, skins: `/api/admin/skin-withdrawals/${id}`, users: `/api/admin/users/${id}` }[tab];
+  let url = { withdrawals: `/api/admin/withdrawals/${id}`, skins: `/api/admin/skin-withdrawals/${id}`, users: `/api/admin/users/${id}` }[tab];
 
   if (action === 'reject' || action === 'refunded') {
     const note = prompt('Причина (увидит игрок в истории):', '');
     if (note === null) return;
     body.note = note;
-  } else if (action === 'done') {
-    const amount = prompt('Итоговая сумма в рублях:', '');
-    if (!amount) return;
-    body.amount = amount;
   } else if (action === 'adjust') {
     const amount = prompt('Сколько рублей добавить (минус — списать):', '');
     if (!amount) return;
@@ -120,9 +107,9 @@ document.addEventListener('click', async (e) => {
 const SETTINGS = [
   ['houseEdge', 'Комиссия апгрейдера (доля, 0.05 = 5%)'], ['maxChance', 'Максимальный шанс (доля)'], ['minChance', 'Минимальный шанс (доля)'],
   ['maxUpgradeItems', 'Скинов в одном апгрейде'], ['minUpgradeValue', 'Мин. ставка апгрейда, коп.'], ['marketMarkup', 'Наценка маркета (доля)'],
-  ['siteSellRate', 'Продажа скина с сайта (доля цены)'], ['buybackRate', 'Выкуп из Steam (доля цены)'], ['cardFee', 'Комиссия карта/СБП (доля)'],
+  ['siteSellRate', 'Продажа скина с сайта (доля цены)'], ['cardFee', 'Комиссия карта/СБП (доля)'],
   ['cryptoFee', 'Комиссия крипта (доля)'], ['minWithdraw', 'Мин. вывод, коп.'], ['maxWithdraw', 'Макс. вывод, коп.'], ['minDeposit', 'Мин. пополнение, коп.'],
-  ['cryptoAutoLimit', 'Авто-вывод крипты до, коп.'], ['statsMinPaid', 'Показывать «выплачено» от, коп.'],
+  ['cryptoAutoLimit', 'Авто-вывод крипты до, коп.'], ['statsMinPaid', 'Показывать «выплачено» от, коп.'], ['bestDropMaxPrice', '«Лучший дроп» не дороже, коп.'],
 ];
 async function loadSettings() {
   const s = await api('/api/admin/settings');

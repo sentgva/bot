@@ -59,7 +59,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' https://telegram.org 'sha256-7eTeT5cNF2ms/31589MqAxn3ezSOOi16DkuBLYAfs/U='; style-src 'self'; img-src 'self' data: https://t.me https://*.telegram.org https://*.steamstatic.com https://steamcdn-a.akamaihd.net https://raw.githubusercontent.com; font-src 'self'; connect-src 'self'; frame-ancestors 'self' https://web.telegram.org; base-uri 'self'; form-action 'self' https://steamcommunity.com; object-src 'none'; upgrade-insecure-requests"
+          "value": "default-src 'self'; script-src 'self' https://telegram.org 'sha256-7eTeT5cNF2ms/31589MqAxn3ezSOOi16DkuBLYAfs/U='; style-src 'self'; img-src 'self' data: https://t.me https://*.telegram.org https://*.steamstatic.com https://steamcdn-a.akamaihd.net https://raw.githubusercontent.com; font-src 'self'; connect-src 'self'; frame-ancestors 'self' https://web.telegram.org; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests"
         },
         {
           "key": "X-Content-Type-Options",

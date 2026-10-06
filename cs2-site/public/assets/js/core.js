@@ -104,7 +104,8 @@ export async function refreshSession() {
   return s;
 }
 
-export const loginUrl = (next = location.pathname + location.hash) => `/api/auth/steam?next=${encodeURIComponent(next)}`;
+// Вход только через Telegram: страница /login/ сразу отправляет на oauth.telegram.org и возвращает обратно
+export const loginUrl = (next = location.pathname + location.hash) => `/login/?auto=1&next=${encodeURIComponent(next)}`;
 
 // ── Уведомления ────────────────────────────────────────────
 
@@ -257,7 +258,7 @@ export function renderAuth(user) {
   const box = $('[data-auth]');
   if (!box) return;
   if (!user) {
-    box.innerHTML = `<a class="btn btn-primary btn-sm" href="${esc(loginUrl())}">${icon('b-steam')}<span>Войти<span class="hide-sm"> через Steam</span></span></a>`;
+    box.innerHTML = `<a class="btn btn-primary btn-sm" href="${esc(loginUrl())}">${icon('b-telegram')}<span>Войти<span class="hide-sm"> через Telegram</span></span></a>`;
     return;
   }
   const initials = esc(user.name.trim().slice(0, 1).toUpperCase());
@@ -289,12 +290,12 @@ function initReveal() {
   els.forEach((el) => io.observe(el));
 }
 
-// Сообщения после входа через Steam (?login=failed)
+// Сообщения после неудачного входа (?login=failed)
 function loginNotice() {
   const p = new URLSearchParams(location.search);
   const v = p.get('login');
   if (!v) return;
-  toast(v === 'banned' ? 'Аккаунт заблокирован. Напиши в поддержку' : 'Не получилось войти через Steam. Попробуй ещё раз', 'error');
+  toast(v === 'banned' ? 'Аккаунт заблокирован. Напиши в поддержку' : 'Не получилось войти через Telegram. Попробуй ещё раз', 'error');
   p.delete('login');
   history.replaceState(null, '', location.pathname + (p.size ? `?${p}` : '') + location.hash);
 }

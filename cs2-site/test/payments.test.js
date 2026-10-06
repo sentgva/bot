@@ -7,7 +7,6 @@ import { config } from '../lib/config.js';
 import { finishWithdraw, handleCryptoWebhook, listPayments, requestWithdraw } from '../lib/payments.js';
 import { listWithdrawals } from '../lib/admin.js';
 import { normalizeCard, normalizePhone, normalizeTelegram, parseTradeUrl, rublesToKop } from '../lib/validate.js';
-import { createSellRequest, updateSellRequest } from '../lib/sell.js';
 
 beforeEach(freshDb);
 
@@ -69,19 +68,6 @@ test('вебхук Crypto Pay: подпись, зачисление ровно �
   } finally {
     config.cryptoPayToken = '';
   }
-});
-
-test('заявка на продажу: гость без контакта не проходит, админ зачисляет на баланс', async () => {
-  const trade = 'https://steamcommunity.com/tradeoffer/new/?partner=12345&token=AbCd_123';
-  await assert.rejects(createSellRequest({ user: null, tradeUrl: trade, method: 'card', contact: '' }), /телефон/);
-  await assert.rejects(createSellRequest({ user: null, tradeUrl: 'https://example.com', method: 'card', contact: '@luxeplayer' }), /трейд-ссылку/);
-  const guest = await createSellRequest({ user: null, tradeUrl: trade, method: 'card', contact: '+7 999 123 45 67' });
-  assert.ok(guest.id > 0);
-  const u = await makeUser(0);
-  const r = await createSellRequest({ user: u, tradeUrl: trade, method: 'balance', contact: '' });
-  await updateSellRequest(r.id, 'done', { amount: 123_400 });
-  assert.equal((await balanceOf(u.id)).balance, 123_400);
-  await assert.rejects(updateSellRequest(r.id, 'done', { amount: 1 }), /закрыта/);
 });
 
 test('валидация', () => {

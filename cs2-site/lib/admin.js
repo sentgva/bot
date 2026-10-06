@@ -10,7 +10,6 @@ export async function overview() {
   return db.one(`
     select
       (select count(*) from payments where direction = 'out' and status in ('review', 'sending'))::int as withdrawals,
-      (select count(*) from sell_requests where status in ('new', 'in_work'))::int as sell_requests,
       (select count(*) from skin_withdrawals where status = 'review')::int as skin_withdrawals,
       (select count(*) from users)::int as users,
       (select coalesce(sum(balance), 0)::bigint from users) as total_balance,
@@ -23,7 +22,7 @@ export async function listWithdrawals(status = 'open') {
   const db = await getDb();
   const statuses = status === 'open' ? ['review', 'processing', 'sending'] : ['paid', 'rejected'];
   const rows = await db.query(
-    `select p.*, u.name as user_name, u.steam_id, u.telegram_id, u.tg_username from payments p join users u on u.id = p.user_id
+    `select p.*, u.name as user_name, u.telegram_id, u.tg_username from payments p join users u on u.id = p.user_id
      where p.direction = 'out' and p.status = any($1) order by p.id ${status === 'open' ? 'asc' : 'desc'} limit 100`,
     [statuses],
   );
@@ -36,19 +35,10 @@ export async function listWithdrawals(status = 'open') {
   });
 }
 
-export async function listSellRequests(status = 'open') {
-  const db = await getDb();
-  return db.query(
-    `select r.*, u.name as user_name, u.steam_id, u.telegram_id, u.tg_username from sell_requests r left join users u on u.id = r.user_id
-     where r.status = any($1) order by r.id ${status === 'open' ? 'asc' : 'desc'} limit 100`,
-    [status === 'open' ? ['new', 'in_work'] : ['done', 'rejected']],
-  );
-}
-
 export async function listSkinWithdrawals(status = 'open') {
   const db = await getDb();
   return db.query(
-    `select w.*, u.name as user_name, u.steam_id, u.telegram_id, u.tg_username from skin_withdrawals w join users u on u.id = w.user_id
+    `select w.*, u.name as user_name, u.telegram_id, u.tg_username from skin_withdrawals w join users u on u.id = w.user_id
      where w.status = any($1) order by w.id ${status === 'open' ? 'asc' : 'desc'} limit 100`,
     [status === 'open' ? ['review', 'processing'] : ['sent', 'refunded']],
   );
@@ -58,8 +48,8 @@ export async function findUsers(query) {
   const db = await getDb();
   const q = String(query || '').trim();
   return db.query(
-    `select id, steam_id, telegram_id, tg_username, name, avatar, balance, is_banned, trade_url, created_at, last_seen_at from users
-     where $1 = '' or steam_id = $1 or telegram_id = $1 or tg_username = ltrim($1, '@') or name ilike $2 or id::text = $1
+    `select id, telegram_id, tg_username, name, avatar, balance, is_banned, trade_url, created_at, last_seen_at from users
+     where $1 = '' or telegram_id = $1 or tg_username = ltrim($1, '@') or name ilike $2 or id::text = $1
      order by last_seen_at desc limit 50`,
     [q, `%${q.replace(/[%_\\]/g, '\\$&')}%`],
   );

@@ -141,6 +141,6 @@ function setupLinks() {
     if (url.hostname === 't.me') tg.openTelegramLink(url.href);
     else tg.openLink(url.href);
   }, true);
-  // Вход через Steam внутри Telegram не нужен — аккаунт уже есть
-  $$('a[href^="/api/auth/steam"]').forEach((a) => { a.hidden = true; });
+  // Кнопки «Войти» внутри Telegram не нужны — аккаунт уже есть
+  $$('a[href^="/login/"]').forEach((a) => { a.hidden = true; });
 }

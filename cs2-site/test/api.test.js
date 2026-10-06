@@ -5,9 +5,10 @@ import { freshDb } from './helpers.js';
 import { handler } from '../lib/app.js';
 import { config } from '../lib/config.js';
 import { encodeSession, decodeSession } from '../lib/session.js';
-import { upsertSteamUser } from '../lib/users.js';
-import { verifyLogin } from '../lib/steam.js';
+import { upsertTelegramUser } from '../lib/users.js';
+import { signLoginWidget, verifyLoginWidget } from '../lib/telegram.js';
 
+const TOKEN = '987654:WIDGET-token';
 let server;
 let base;
 before(async () => {
@@ -16,7 +17,7 @@ before(async () => {
   base = `http://localhost:${server.address().port}`;
   config.siteUrl = base;
 });
-after(() => server.close());
+after(() => { server.close(); config.tgBotToken = ''; });
 
 const call = (path, { method = 'GET', body, cookie, origin } = {}) =>
   fetch(base + path, {
@@ -39,10 +40,11 @@ test('гость видит конфиг, но не может покупать'
   assert.ok(me.config.upgrade.maxChance > 0);
   const res = await call('/api/market/buy', { method: 'POST', body: { hashName: 'x', price: 1 } });
   assert.equal(res.status, 401);
+  assert.match((await res.json()).error, /Telegram/);
 });
 
 test('CSRF: запрос с чужого сайта отклоняется', async () => {
-  const u = await upsertSteamUser({ steamId: '76561198000009999', name: 'csrf', avatar: null });
+  const u = await upsertTelegramUser({ id: 31337, first_name: 'csrf' });
   const cookie = `ld_sess=${encodeSession({ uid: u.id, exp: Date.now() + 60_000 })}`;
   const res = await call('/api/me/seed/rotate', { method: 'POST', cookie, origin: 'https://evil.example' });
   assert.equal(res.status, 403);
@@ -59,44 +61,38 @@ test('каталог фильтруется и сортируется', async ()
   assert.ok(data.items.every((i) => i.buyPrice >= i.price));
 });
 
-test('трейд-ссылка другого аккаунта не принимается', async () => {
-  const u = await upsertSteamUser({ steamId: '76561197960265728', name: 't', avatar: null }); // accountid 0
+test('Telegram Login на сайте: подпись проверяется, вход ставит cookie сессии', async () => {
+  config.tgBotToken = TOKEN;
+  const user = { id: 424242, first_name: 'Артём', username: 'art3m', photo_url: 'https://t.me/i/userpic/320/a.jpg' };
+  const data = signLoginWidget(user, TOKEN);
+  assert.equal(verifyLoginWidget(data).id, 424242);
+  assert.equal(verifyLoginWidget({ ...data, id: 1 }), null, 'подменённый id');
+  assert.equal(verifyLoginWidget(signLoginWidget(user, 'other:bot')), null, 'подпись другого бота');
+  assert.equal(verifyLoginWidget(signLoginWidget(user, TOKEN, Math.floor(Date.now() / 1000) - 3 * 86400)), null, 'устаревшие данные');
+
+  const bad = await call('/api/auth/telegram-widget', { method: 'POST', body: { data: { ...data, hash: '0'.repeat(64) } } });
+  assert.equal(bad.status, 401);
+  const res = await call('/api/auth/telegram-widget', { method: 'POST', body: { data } });
+  assert.equal(res.status, 200);
+  const cookie = res.headers.get('set-cookie').split(';')[0];
+  const me = await (await call('/api/me', { cookie })).json();
+  assert.equal(me.user.name, 'Артём');
+  assert.deepEqual(me.user.telegram, { id: '424242', username: 'art3m' });
+  assert.equal(me.config.auth.telegramBotId, '987654');
+});
+
+test('трейд-ссылка проверяется по формату', async () => {
+  const u = await upsertTelegramUser({ id: 777, first_name: 't' });
   const cookie = `ld_sess=${encodeSession({ uid: u.id, exp: Date.now() + 60_000 })}`;
-  const bad = await call('/api/me', { method: 'PATCH', cookie, body: { tradeUrl: 'https://steamcommunity.com/tradeoffer/new/?partner=12345&token=AbCd_123' } });
+  const bad = await call('/api/me', { method: 'PATCH', cookie, body: { tradeUrl: 'https://example.com/trade' } });
   assert.equal(bad.status, 400);
-  const good = await call('/api/me', { method: 'PATCH', cookie, body: { tradeUrl: 'https://steamcommunity.com/tradeoffer/new/?partner=0&token=AbCd_123' } });
+  const good = await call('/api/me', { method: 'PATCH', cookie, body: { tradeUrl: 'https://steamcommunity.com/tradeoffer/new/?partner=12345&token=AbCd_123' } });
   assert.equal(good.status, 200);
 });
 
-test('форма продажи: honeypot тихо отбрасывает ботов', async () => {
-  const res = await call('/api/sell-requests', { method: 'POST', body: { website: 'spam', tradeUrl: 'x', method: 'card' } });
-  assert.equal((await res.json()).id, 0);
-});
-
-test('после входа редирект только внутрь сайта', async () => {
-  const res = await call('/api/auth/steam?next=//evil.example');
-  assert.equal(res.status, 302);
-  assert.ok(res.headers.get('location').startsWith('https://steamcommunity.com/openid/login'));
-  assert.match(res.headers.get('set-cookie'), /ld_next=%2Fprofile%2F/);
-});
-
-test('OpenID: проверка ответа Steam', async () => {
-  const ret = 'https://luxedrop.gg/api/auth/steam/callback';
-  const q = new URLSearchParams({
-    'openid.mode': 'id_res',
-    'openid.op_endpoint': 'https://steamcommunity.com/openid/login',
-    'openid.return_to': ret,
-    'openid.claimed_id': 'https://steamcommunity.com/openid/id/76561198000000042',
-    'openid.identity': 'https://steamcommunity.com/openid/id/76561198000000042',
-    'openid.sig': 'x',
-  });
-  let sent;
-  const steamOk = async (url, init) => { sent = init.body; return new Response('ns:http://specs.openid.net/auth/2.0\nis_valid:true\n'); };
-  assert.equal(await verifyLogin(q, ret, steamOk), '76561198000000042');
-  assert.equal(sent.get('openid.mode'), 'check_authentication');
-  const steamNo = async () => new Response('is_valid:false');
-  assert.equal(await verifyLogin(q, ret, steamNo), null);
-  assert.equal(await verifyLogin(q, 'https://other.site/cb', steamOk), null, 'чужой return_to');
+test('входа через Steam больше нет', async () => {
+  assert.equal((await call('/api/auth/steam')).status, 404);
+  assert.equal((await call('/api/steam-inventory')).status, 404);
 });
 
 test('неизвестный маршрут — 404 в JSON', async () => {

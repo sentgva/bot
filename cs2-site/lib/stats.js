@@ -28,7 +28,7 @@ export async function getStats() {
     maxChance: s.maxChance,
     cryptoFee: s.cryptoFee,
     cardFee: s.cardFee,
-    buybackRate: s.buybackRate,
+    siteSellRate: s.siteSellRate,
     minWithdraw: s.minWithdraw,
   };
   cache = { at: Date.now(), value };

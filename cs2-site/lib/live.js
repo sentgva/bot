@@ -1,8 +1,8 @@
 // Живые данные для ленты над сайтом и главной: онлайн, последние выигрыши, лучший дроп.
 // Всё считается по базе — ничего не выдумываем.
 //   • онлайн — сколько разных посетителей (игрок или IP) открывали сайт за последние 2 минуты;
-//   • лучший дроп — самый дорогой реальный выигрыш за 7 дней; если выигрышей ещё не было —
-//     самый дорогой скин маркета как «главный приз» (так и подписан на сайте).
+//   • лучший дроп — самый дорогой реальный выигрыш за 7 дней (не дороже bestDropMaxPrice); если таких нет —
+//     самый дорогой скин маркета до этого порога как «главный приз» (так и подписан на сайте).
 
 import { getDb } from './db.js';
 import { publicItem } from './catalog.js';
@@ -20,13 +20,19 @@ async function dropsAndBest() {
   const win = await db.one(
     `select up.id, up.chance_ppm, up.input_value, up.created_at, us.name as user_name, i.*
      from upgrades up join users us on us.id = up.user_id join items i on i.hash_name = up.target_hash_name
-     where up.won and up.created_at > now() - interval '7 days' order by up.target_price desc, up.id desc limit 1`,
+     where up.won and up.created_at > now() - interval '7 days' and up.target_price <= $1
+     order by up.target_price desc, up.id desc limit 1`,
+    [s.bestDropMaxPrice],
   );
   let best;
   if (win) {
     best = { type: 'win', item: publicItem(win), user: win.user_name, chance: win.chance_ppm, inputValue: win.input_value, at: win.created_at };
   } else {
-    const top = await db.one('select * from items where quantity > 0 order by price desc limit 1');
+    // Самый дорогой скин не дороже порога; ножи и перчатки — в приоритете, они эффектнее
+    const top = await db.one(
+      `select * from items where quantity > 0 and price <= $1 order by (rarity = 'gold') desc, price desc limit 1`,
+      [s.bestDropMaxPrice],
+    );
     // Минимальная ставка, с которой этот скин можно выбить (шанс не меньше минимального)
     best = top ? { type: 'top', item: publicItem(top), minStake: Math.ceil((top.price * s.minChance) / (1 - s.houseEdge)) } : null;
   }

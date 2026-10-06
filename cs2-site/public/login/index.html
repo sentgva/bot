@@ -3,9 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Админка | LuxeDrop</title>
-  <meta name="description" content="Панель управления LuxeDrop.">
+  <title>Вход через Telegram | LuxeDrop</title>
+  <meta name="description" content="Вход в LuxeDrop через Telegram — без паролей и регистрации.">
   <meta name="robots" content="noindex, nofollow">
+  <link rel="canonical" href="https://luxedrop.gg/login/">
   <!-- partial:head -->
   <meta name="theme-color" content="#0a0906">
   <meta property="og:site_name" content="LuxeDrop">
@@ -25,7 +26,7 @@
   <link rel="stylesheet" href="/assets/css/main.css">
   <script>try{var t=localStorage.getItem('ld-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
   <!-- /partial:head -->
-  <script type="module" src="/assets/js/admin.js"></script>
+  <script type="module" src="/assets/js/login.js"></script>
 </head>
 <body>
   <!-- partial:header -->
@@ -73,36 +74,22 @@
   <!-- /partial:header -->
 
   <main id="main">
-    <div class="container page-head">
-      <h1 class="h2">Админка</h1>
-      <p class="lead" data-denied hidden>Нет доступа. Войди через Telegram аккаунтом из списка ADMIN_TG_IDS.</p>
-    </div>
-    <div class="container app-section" data-app hidden>
-      <div class="stats mb-4" data-overview></div>
-      <div class="tabs mt-6" role="tablist" aria-label="Разделы админки">
-        <button class="tab" role="tab" id="t-withdrawals" aria-controls="p-withdrawals" aria-selected="true" data-tab="withdrawals">Выводы денег <span class="badge" data-count="withdrawals"></span></button>
-        <button class="tab" role="tab" id="t-skins" aria-controls="p-skins" aria-selected="false" tabindex="-1" data-tab="skins">Выводы скинов <span class="badge" data-count="skin_withdrawals"></span></button>
-        <button class="tab" role="tab" id="t-users" aria-controls="p-users" aria-selected="false" tabindex="-1" data-tab="users">Игроки</button>
-        <button class="tab" role="tab" id="t-settings" aria-controls="p-settings" aria-selected="false" tabindex="-1" data-tab="settings">Настройки</button>
+    <section class="container section">
+      <div class="card login-card">
+        <span class="icon-tile"><svg class="icon icon-lg" aria-hidden="true"><use href="/assets/icons.svg#b-telegram"/></svg></span>
+        <h1 class="h2">Вход через Telegram</h1>
+        <p class="muted" data-login-text>Без паролей и регистрации: Telegram подтвердит, что это ты, и вернёт тебя на сайт.</p>
+        <ul class="cta-points">
+          <li><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-lock"/></svg><span>Мы получаем только имя, ник и аватар из Telegram. Номер телефона не видим</span></li>
+          <li><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-zap"/></svg><span>Тот же аккаунт работает на сайте и в нашем Telegram-боте</span></li>
+        </ul>
+        <div class="login-actions" data-login-actions>
+          <a class="btn btn-primary btn-lg" href="#" data-login-go><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#b-telegram"/></svg><span>Войти через Telegram</span></a>
+          <a class="btn btn-secondary btn-lg" href="#" data-login-bot hidden target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-send"/></svg><span>Открыть в боте</span></a>
+          <a class="btn btn-secondary" href="/api/auth/dev" data-login-dev hidden>Войти тестовым игроком (локально)</a>
+        </div>
       </div>
-      <div class="row mb-4" data-status-filter>
-        <button class="chip" type="button" aria-pressed="true" data-status="open">Открытые</button>
-        <button class="chip" type="button" aria-pressed="false" data-status="closed">Закрытые</button>
-      </div>
-      <section role="tabpanel" id="p-withdrawals" aria-labelledby="t-withdrawals"><div class="list" data-list="withdrawals"></div></section>
-      <section role="tabpanel" id="p-skins" aria-labelledby="t-skins" hidden><div class="list" data-list="skins"></div></section>
-      <section role="tabpanel" id="p-users" aria-labelledby="t-users" hidden>
-        <form class="row mb-4" data-user-search role="search">
-          <label class="sr-only" for="u-q">Telegram ID, ник или ID</label>
-          <input class="input grow-1" id="u-q" name="q" type="search" placeholder="Telegram ID, @ник, имя или ID">
-          <button class="btn btn-secondary" type="submit">Найти</button>
-        </form>
-        <div class="list" data-list="users"></div>
-      </section>
-      <section role="tabpanel" id="p-settings" aria-labelledby="t-settings" hidden>
-        <form class="card form" data-settings-form></form>
-      </section>
-    </div>
+    </section>
   </main>
 
   <!-- partial:footer -->

@@ -19,7 +19,9 @@ test('онлайн считает разных посетителей за по�
 test('лучший дроп: пока выигрышей нет — «главный приз» из маркета, потом — реальный выигрыш', async () => {
   const before = await getLive('g:x');
   assert.equal(before.best.type, 'top');
-  assert.equal(before.best.item.hashName, 'AWP | Dragon Lore (Field-Tested)'); // самый дорогой в демо-каталоге
+  // Самый дорогой нож/перчатки не дороже 150 000 ₽ (Dragon Lore за 780 000 ₽ и Butterfly за 210 000 ₽ не подходят)
+  assert.equal(before.best.item.hashName, '★ Karambit | Doppler (Factory New)');
+  assert.ok(before.best.item.price <= 15_000_000);
   assert.ok(before.best.minStake > 0);
   assert.deepEqual(before.drops, []);
 

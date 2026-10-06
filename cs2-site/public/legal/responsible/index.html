@@ -24,8 +24,7 @@
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="manifest" href="/site.webmanifest">
   <link rel="preload" href="/assets/fonts/inter-cyrillic-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="/assets/fonts/exo-2-cyrillic-wght-italic.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="/assets/fonts/exo-2-latin-wght-italic.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/unbounded-cyrillic-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preconnect" href="https://community.akamai.steamstatic.com">
   <link rel="stylesheet" href="/assets/css/main.css">
   <script>try{var t=localStorage.getItem('ld-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
@@ -44,7 +43,6 @@
         <ul>
           <li><a href="/upgrade/">Апгрейд</a></li>
           <li><a href="/market/">Маркет</a></li>
-          <li><a href="/sell/">Продать</a></li>
           <li><a href="/fair/">Честность</a></li>
           <li class="nav-theme">
             <button class="btn btn-ghost" type="button" data-theme-toggle aria-label="Сменить тему">
@@ -61,7 +59,7 @@
           <svg class="icon i-moon" aria-hidden="true"><use href="/assets/icons.svg#i-moon"/></svg>
         </button>
         <div class="auth" data-auth>
-          <a class="btn btn-primary btn-sm" href="/api/auth/steam"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#b-steam"/></svg><span>Войти<span class="hide-sm"> через Steam</span></span></a>
+          <a class="btn btn-primary btn-sm" href="/login/"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#b-telegram"/></svg><span>Войти<span class="hide-sm"> через Telegram</span></span></a>
         </div>
         <button class="icon-btn nav-toggle" type="button" data-nav-toggle aria-controls="site-nav" aria-expanded="false" aria-label="Открыть меню">
           <svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-menu"/></svg>
@@ -116,7 +114,7 @@
           <a class="logo" href="/" aria-label="LuxeDrop — на главную">
             <img src="/assets/img/logo.webp" srcset="/assets/img/logo.webp 1x, /assets/img/logo@2x.webp 2x" alt="LuxeDrop" width="151" height="48" loading="lazy">
           </a>
-          <p class="muted small footer-about">Апгрейд, покупка и продажа скинов CS2. Вывод на карту, по СБП и в крипту.</p>
+          <p class="muted small footer-about">Апгрейд и маркет скинов CS2. Вход через Telegram, вывод на карту, по СБП и в крипту.</p>
           <!-- ЗАМЕНИТЬ: ссылки на ваши соцсети -->
           <div class="socials">
             <a href="https://t.me/luxedrop" rel="noopener" target="_blank" aria-label="Telegram-канал LuxeDrop"><svg aria-hidden="true"><use href="/assets/icons.svg#b-telegram"/></svg></a>
@@ -130,7 +128,6 @@
           <ul class="footer-links">
             <li><a href="/upgrade/">Апгрейдер</a></li>
             <li><a href="/market/">Маркет скинов</a></li>
-            <li><a href="/sell/">Продать скины</a></li>
             <li><a href="/fair/">Проверка честности</a></li>
           </ul>
         </nav>

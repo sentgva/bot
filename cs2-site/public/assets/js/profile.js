@@ -49,7 +49,7 @@ addEventListener('hashchange', () => openTab(location.hash.slice(1), { push: fal
 
 function renderHead() {
   $('[data-name]').textContent = user.name;
-  $('[data-account]').textContent = user.steamId ? `Steam ID: ${user.steamId}` : `Telegram: ${user.telegram?.username ? '@' + user.telegram.username : user.telegram?.id}`;
+  $('[data-account]').textContent = `Telegram: ${user.telegram?.username ? '@' + user.telegram.username : `ID ${user.telegram?.id ?? user.id}`}`;
   $('[data-avatar]').innerHTML = user.avatar
     ? `<img class="avatar" src="${esc(user.avatar)}" alt="" width="72" height="72">`
     : `<span class="avatar avatar-fallback" aria-hidden="true">${esc(user.name.slice(0, 1).toUpperCase())}</span>`;
@@ -153,13 +153,12 @@ function renderDeposit() {
         <p class="hint">Откроется @CryptoBot. Баланс пополнится автоматически сразу после оплаты.</p>
       </form>`;
   } else {
-    html += `<div class="callout">${icon('i-info')}<p>Пополнение криптой скоро заработает. А пока можно <a href="/sell/">продать скины на баланс</a>.</p></div>`;
+    html += `<div class="callout">${icon('i-info')}<p>Пополнение криптой скоро заработает. Следи за новостями в нашем Telegram-канале.</p></div>`;
   }
   if (p.deposit.demo) {
     html += `<div class="callout callout-warning mt-4">${icon('i-circle-alert')}<div><p><b>Тестовый режим.</b> Кнопка начисляет 5 000 ₽ для проверки сайта. В боевом режиме её нет.</p>
       <button class="btn btn-secondary btn-sm mt-3" type="button" data-demo data-loading="Начисляем…">+5 000 ₽ тестовых</button></div></div>`;
   }
-  html += `<p class="small muted mt-4">Или <a href="/sell/">продай скины из Steam</a> на баланс — до ${Math.round(cfg.market.buybackRate * 100)}% от рынка.</p>`;
   box.innerHTML = html;
 
   const form = $('#deposit-form');

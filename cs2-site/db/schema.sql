@@ -3,7 +3,7 @@
 
 create table if not exists users (
   id           bigserial primary key,
-  steam_id     text unique not null,
+  steam_id     text unique,             -- устарело: вход теперь только через Telegram
   name         text not null,
   avatar       text,
   trade_url    text,
@@ -124,30 +124,6 @@ create table if not exists skin_withdrawals (
   updated_at   timestamptz not null default now()
 );
 create index if not exists skin_withdrawals_status_idx on skin_withdrawals (status, id);
-
--- Заявки на продажу скинов (форма на главной и страница «Продать»)
-create table if not exists sell_requests (
-  id         bigserial primary key,
-  user_id    bigint references users(id),
-  trade_url  text not null,
-  method     text not null,                -- balance | card | sbp | crypto
-  contact    text,
-  items      jsonb not null default '[]',  -- [{assetId, hashName, price}]
-  estimate   bigint not null default 0,    -- оценка выкупа, копейки
-  status     text not null default 'new',  -- new | in_work | done | rejected
-  amount     bigint,                       -- итоговая сумма (ставит админ)
-  admin_note text,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
-create index if not exists sell_requests_status_idx on sell_requests (status, id);
-
--- Кэш инвентаря Steam, чтобы не упираться в лимиты Steam
-create table if not exists steam_inventory_cache (
-  steam_id   text primary key,
-  data       jsonb not null,
-  fetched_at timestamptz not null default now()
-);
 
 -- Ограничение частоты запросов (работает между копиями serverless-функции)
 create table if not exists rate_limits (

@@ -46,7 +46,6 @@ test('вход из Mini App: создаёт игрока, токен работ
   assert.ok(token);
   assert.equal(user.name, 'Артём');
   assert.deepEqual(user.telegram, { id: String(TG_USER.id), username: 'art3m' });
-  assert.equal(user.steamId, null);
 
   const me = await (await fetch(base + '/api/me', { headers: { Authorization: `Bearer ${token}` } })).json();
   assert.equal(me.user.id, user.id);
@@ -56,17 +55,13 @@ test('вход из Mini App: создаёт игрока, токен работ
   assert.equal(again.user.id, user.id);
   assert.equal(again.user.name, 'Тёма');
 
-  // Игрок из Telegram может указать любую трейд-ссылку (Steam не привязан)
+  // Трейд-ссылка проверяется по формату (Steam к аккаунту не привязан)
   const auth = { Authorization: `Bearer ${again.token}` };
   const patch = await fetch(base + '/api/me', {
     method: 'PATCH', headers: { 'Content-Type': 'application/json', Origin: base, ...auth },
     body: JSON.stringify({ tradeUrl: 'https://steamcommunity.com/tradeoffer/new/?partner=12345&token=AbCd_123' }),
   });
   assert.equal(patch.status, 200);
-  // Инвентарь Steam без привязанного Steam — понятная ошибка, а не падение
-  const inv = await fetch(base + '/api/steam-inventory', { headers: auth });
-  assert.equal(inv.status, 400);
-  assert.match((await inv.json()).error, /Steam/);
 });
 
 test('админ по Telegram ID', async () => {
