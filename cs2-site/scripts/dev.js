@@ -9,6 +9,8 @@ import path from 'node:path';
 process.env.PGLITE_DIR ??= path.resolve('.data/pglite');
 process.env.DEMO_TOPUP ??= '1';
 process.env.DEV_LOGIN ??= '1';
+// Локальный ключ шифрования карт, чтобы был виден вывод на карту. В продакшене задаётся свой DATA_KEY
+process.env.DATA_KEY ??= '00'.repeat(32);
 
 const { handler } = await import('../lib/app.js');
 const { seedDemoItems, syncCatalog } = await import('../lib/catalog.js');

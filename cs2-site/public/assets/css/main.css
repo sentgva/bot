@@ -331,7 +331,7 @@ table { border-collapse: collapse; width: 100%; }
 @media (max-width: 479px) {
   .header-actions > [data-theme-toggle] { display: none; }
   .nav-theme { display: block; margin-top: var(--s2); padding-top: var(--s2); border-top: 1px solid var(--border); }
-  .nav-theme .btn { width: 100%; justify-content: flex-start; min-height: 52px; font-size: 17px; color: var(--muted); }
+  .nav-theme .btn { width: 100%; justify-content: flex-start; min-height: 52px; padding: 0 14px; font-size: 17px; color: var(--muted); }
 }
 @media (max-width: 420px) {
   .logo span { display: none; }

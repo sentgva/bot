@@ -220,6 +220,7 @@ async function go() {
     state.selected.clear();
     setStake(0);
     await loadOwned();
+    loadTargets(true);
   } catch (err) {
     toastError(err);
     if (err.status === 409) await loadOwned();
@@ -244,10 +245,14 @@ function showResult(r) {
     ${actions}`;
   el.result.querySelector('[data-again]')?.addEventListener('click', () => {
     el.result.innerHTML = '';
+    // «Апгрейдить дальше»: выигранный скин сразу становится ставкой
+    if (r.won && state.owned.some((i) => i.id === r.resultItemId)) state.selected.add(r.resultItemId);
+    renderInput();
+    render();
+    loadTargets(true);
     el.inputBody.querySelector('[data-owned]')?.focus();
   });
-  if (r.won) state.target = null;
-  renderTargets();
+  state.target = null;
 }
 
 el.go.addEventListener('click', go);
