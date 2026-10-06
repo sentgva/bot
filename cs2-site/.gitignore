@@ -2,3 +2,8 @@ node_modules
 .data
 .env
 .vercel
+
+# Добавляет Vercel CLI при подключении интеграций
+.agents/
+.claude/
+skills-lock.json
