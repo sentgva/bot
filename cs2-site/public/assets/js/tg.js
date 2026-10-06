@@ -6,8 +6,8 @@
 import { $, $$, api, icon, setToken } from './core.js';
 
 const SDK = 'https://telegram.org/js/telegram-web-app.js';
-const BG = { dark: '#0a0f1e', light: '#f4f6fb' }; // совпадает с --bg в main.css
-const ACCENT = { dark: '#c41e3a', light: '#b0182f' };
+const BG = { dark: '#0a0906', light: '#f8f4ea' }; // совпадает с --bg в main.css
+const ACCENT = { dark: '#e2b13c', light: '#c99a2e' };
 
 let tg = null;
 
@@ -62,13 +62,14 @@ function sessionStorageToken() {
 // Тема Telegram → тема сайта, цвета шапки Telegram → наш фон
 function applyTheme() {
   const scheme = tg.colorScheme === 'light' ? 'light' : 'dark';
-  document.documentElement.dataset.theme = scheme;
+  if (scheme === 'light') document.documentElement.dataset.theme = 'light';
+  else delete document.documentElement.dataset.theme; // тёмная — основная тема сайта
   try {
     tg.setHeaderColor(BG[scheme]);
     tg.setBackgroundColor(BG[scheme]);
     if (tg.isVersionAtLeast?.('7.10')) tg.setBottomBarColor(BG[scheme]);
   } catch { /* старые версии Telegram */ }
-  tg.MainButton?.setParams({ color: ACCENT[scheme], text_color: '#ffffff' });
+  tg.MainButton?.setParams({ color: ACCENT[scheme], text_color: '#1a1203' });
 }
 
 // Вкладки внизу экрана вместо меню сайта

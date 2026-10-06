@@ -5,6 +5,7 @@
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
+import zlib from 'node:zlib';
 
 process.env.PGLITE_DIR ??= path.resolve('.data/pglite');
 process.env.DEMO_TOPUP ??= '1';
@@ -42,8 +43,12 @@ function serveStatic(req, res) {
   let status = 200;
   if (!fs.existsSync(file)) { file = path.join(ROOT, '404.html'); status = 404; }
   if (!fs.existsSync(file)) { res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }); return res.end('Не найдено'); }
-  res.writeHead(status, { 'Content-Type': TYPES[path.extname(file)] || 'application/octet-stream' });
-  fs.createReadStream(file).on('error', () => res.end()).pipe(res);
+  const type = TYPES[path.extname(file)] || 'application/octet-stream';
+  // Сжатие текстовых файлов, как на Vercel (чтобы замеры скорости локально были честными)
+  const br = /br/.test(req.headers['accept-encoding'] || '') && /text|javascript|json|svg|xml/.test(type);
+  res.writeHead(status, { 'Content-Type': type, ...(br && { 'Content-Encoding': 'br', Vary: 'Accept-Encoding' }) });
+  const stream = fs.createReadStream(file).on('error', () => res.end());
+  (br ? stream.pipe(zlib.createBrotliCompress()) : stream).pipe(res);
 }
 
 http.createServer((req, res) => {

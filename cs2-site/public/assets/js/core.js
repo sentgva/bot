@@ -153,6 +153,7 @@ export function confirmDialog({ title, html = '', confirm = 'Подтверди�
 export async function withLoading(btn, fn) {
   if (!btn) return fn();
   const html = btn.innerHTML;
+  const wasDisabled = btn.disabled; // кнопку, выключенную до запроса, не включаем обратно
   btn.classList.add('is-loading');
   btn.setAttribute('aria-busy', 'true');
   btn.disabled = true;
@@ -162,7 +163,7 @@ export async function withLoading(btn, fn) {
   } finally {
     btn.classList.remove('is-loading');
     btn.removeAttribute('aria-busy');
-    btn.disabled = false;
+    btn.disabled = wasDisabled;
     btn.innerHTML = html;
   }
 }
@@ -226,7 +227,7 @@ export function emptyState({ iconName = 'i-package', title, text = '', action = 
 
 function initTheme() {
   const btns = $$('[data-theme-toggle]');
-  const current = () => document.documentElement.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  const current = () => (document.documentElement.dataset.theme === 'light' ? 'light' : 'dark'); // тёмная — по умолчанию
   const sync = () => btns.forEach((b) => b.setAttribute('aria-label', current() === 'dark' ? 'Включить светлую тему' : 'Включить тёмную тему'));
   btns.forEach((b) => b.addEventListener('click', () => {
     const next = current() === 'dark' ? 'light' : 'dark';
@@ -306,3 +307,4 @@ initNav();
 initReveal();
 loginNotice();
 session().then((s) => renderAuth(s.user));
+import('./live.js'); // живая лента: онлайн и выигрыши

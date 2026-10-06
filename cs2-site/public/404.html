@@ -7,8 +7,7 @@
   <meta name="description" content="Такой страницы нет. Перейди на главную, в апгрейдер или маркет скинов CS2.">
   <meta name="robots" content="noindex">
   <!-- partial:head -->
-  <meta name="theme-color" content="#0a0f1e" media="(prefers-color-scheme: dark)">
-  <meta name="theme-color" content="#f4f6fb" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0a0906">
   <meta property="og:site_name" content="LuxeDrop">
   <meta property="og:locale" content="ru_RU">
   <meta property="og:image" content="https://luxedrop.gg/assets/img/og-image.jpg">
@@ -17,11 +16,13 @@
   <meta property="og:image:alt" content="LuxeDrop: апгрейд скинов CS2 и быстрый вывод денег">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="/favicon.ico" sizes="32x32">
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon-64.png" type="image/png" sizes="64x64">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="manifest" href="/site.webmanifest">
   <link rel="preload" href="/assets/fonts/inter-cyrillic-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="/assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/exo-2-cyrillic-wght-italic.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/exo-2-latin-wght-italic.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preconnect" href="https://community.akamai.steamstatic.com">
   <link rel="stylesheet" href="/assets/css/main.css">
   <script>try{var t=localStorage.getItem('ld-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
   <!-- /partial:head -->
@@ -33,8 +34,7 @@
   <header class="site-header">
     <div class="container header-inner">
       <a class="logo" href="/" aria-label="LuxeDrop — на главную">
-        <svg class="logo-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9"/><path d="M16 7.5 24.5 17H19v7.5h-6V17H7.5z" fill="#fff"/></svg>
-        <span>Luxe<b>Drop</b></span>
+        <img src="/assets/img/logo.webp" srcset="/assets/img/logo.webp 1x, /assets/img/logo@2x.webp 2x" alt="LuxeDrop" width="151" height="48">
       </a>
       <nav class="nav" id="site-nav" aria-label="Основное меню">
         <ul>
@@ -65,6 +65,13 @@
       </div>
     </div>
   </header>
+  <!-- Живая лента: онлайн и последние выигрыши (настоящие данные из /api/live) -->
+  <div class="live-strip" data-live>
+    <div class="container live-inner">
+      <p class="online"><span class="online-dot" aria-hidden="true"></span><b class="num" data-online-count>1</b>&nbsp;онлайн</p>
+      <div class="live-drops" data-live-drops aria-label="Последние выигрыши"><p class="live-empty">Загружаем выигрыши…</p></div>
+    </div>
+  </div>
   <!-- /partial:header -->
 
   <main id="main">
@@ -86,8 +93,7 @@
       <div class="footer-grid">
         <div class="footer-brand">
           <a class="logo" href="/" aria-label="LuxeDrop — на главную">
-            <svg class="logo-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9"/><path d="M16 7.5 24.5 17H19v7.5h-6V17H7.5z" fill="#fff"/></svg>
-            <span>Luxe<b>Drop</b></span>
+            <img src="/assets/img/logo.webp" srcset="/assets/img/logo.webp 1x, /assets/img/logo@2x.webp 2x" alt="LuxeDrop" width="151" height="48" loading="lazy">
           </a>
           <p class="muted small footer-about">Апгрейд, покупка и продажа скинов CS2. Вывод на карту, по СБП и в крипту.</p>
           <!-- ЗАМЕНИТЬ: ссылки на ваши соцсети -->

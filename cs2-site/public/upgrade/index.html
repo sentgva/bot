@@ -11,8 +11,7 @@
   <meta property="og:title" content="Апгрейдер скинов CS2 — шанс до 80% с проверкой">
   <meta property="og:description" content="Поставь скины, выбери цель дороже и проверь каждый бросок. Выигрыш — сразу в инвентаре.">
   <!-- partial:head -->
-  <meta name="theme-color" content="#0a0f1e" media="(prefers-color-scheme: dark)">
-  <meta name="theme-color" content="#f4f6fb" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0a0906">
   <meta property="og:site_name" content="LuxeDrop">
   <meta property="og:locale" content="ru_RU">
   <meta property="og:image" content="https://luxedrop.gg/assets/img/og-image.jpg">
@@ -21,11 +20,13 @@
   <meta property="og:image:alt" content="LuxeDrop: апгрейд скинов CS2 и быстрый вывод денег">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="/favicon.ico" sizes="32x32">
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon-64.png" type="image/png" sizes="64x64">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="manifest" href="/site.webmanifest">
   <link rel="preload" href="/assets/fonts/inter-cyrillic-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="/assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/exo-2-cyrillic-wght-italic.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/exo-2-latin-wght-italic.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preconnect" href="https://community.akamai.steamstatic.com">
   <link rel="stylesheet" href="/assets/css/main.css">
   <script>try{var t=localStorage.getItem('ld-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
   <!-- /partial:head -->
@@ -37,8 +38,7 @@
   <header class="site-header">
     <div class="container header-inner">
       <a class="logo" href="/" aria-label="LuxeDrop — на главную">
-        <svg class="logo-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9"/><path d="M16 7.5 24.5 17H19v7.5h-6V17H7.5z" fill="#fff"/></svg>
-        <span>Luxe<b>Drop</b></span>
+        <img src="/assets/img/logo.webp" srcset="/assets/img/logo.webp 1x, /assets/img/logo@2x.webp 2x" alt="LuxeDrop" width="151" height="48">
       </a>
       <nav class="nav" id="site-nav" aria-label="Основное меню">
         <ul>
@@ -69,6 +69,13 @@
       </div>
     </div>
   </header>
+  <!-- Живая лента: онлайн и последние выигрыши (настоящие данные из /api/live) -->
+  <div class="live-strip" data-live>
+    <div class="container live-inner">
+      <p class="online"><span class="online-dot" aria-hidden="true"></span><b class="num" data-online-count>1</b>&nbsp;онлайн</p>
+      <div class="live-drops" data-live-drops aria-label="Последние выигрыши"><p class="live-empty">Загружаем выигрыши…</p></div>
+    </div>
+  </div>
   <!-- /partial:header -->
 
   <main id="main">
@@ -84,7 +91,7 @@
         <section class="card upg-panel" aria-labelledby="in-title">
           <div class="panel-head">
             <h2 id="in-title">Твоя ставка</h2>
-            <span class="badge badge-blue num" data-input-total>0 ₽</span>
+            <span class="badge badge-accent num" data-input-total>0 ₽</span>
           </div>
           <div data-input-body>
             <div class="skin-grid">
@@ -111,15 +118,29 @@
             <svg class="icon accent" aria-hidden="true"><use href="/assets/icons.svg#i-arrow-right"/></svg>
             <div class="box"><span class="tiny muted">Цель</span><b data-sum-target>—</b></div>
           </div>
-          <div class="ring-wrap">
-            <svg class="ring" viewBox="0 0 120 120" aria-hidden="true">
-              <circle class="ring-track" cx="60" cy="60" r="52" fill="none" stroke-width="10"/>
-              <circle class="ring-win" cx="60" cy="60" r="52" fill="none" stroke-width="10" stroke-linecap="round" stroke-dasharray="0 326.73" data-ring-win/>
+          <div class="wheel" data-wheel>
+            <svg viewBox="0 0 240 240" aria-hidden="true">
+              <defs>
+                <linearGradient id="wheel-gold" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0" stop-color="#fff0b0"/><stop offset=".45" stop-color="#f2c94c"/><stop offset="1" stop-color="#b8821c"/>
+                </linearGradient>
+                <radialGradient id="wheel-disc" cx=".5" cy=".38" r=".7">
+                  <stop class="disc-hi" offset="0"/><stop class="disc-lo" offset="1"/>
+                </radialGradient>
+              </defs>
+              <circle class="bezel" cx="120" cy="120" r="117"/>
+              <g data-ticks></g>
+              <circle class="track" cx="120" cy="120" r="94"/>
+              <circle class="win-arc" cx="120" cy="120" r="94" stroke="url(#wheel-gold)" transform="rotate(-90 120 120)" stroke-dasharray="0 590.6" data-ring-win/>
+              <circle class="disc" cx="120" cy="120" r="80" fill="url(#wheel-disc)"/>
+              <g data-pointer>
+                <path class="pointer-head" d="M120 26 L109 3 Q120 -2 131 3 Z" fill="url(#wheel-gold)"/>
+              </g>
             </svg>
-            <div class="ring-pointer" data-pointer aria-hidden="true"></div>
-            <div class="ring-center" aria-live="polite">
-              <span class="ring-chance num" data-chance>0%</span>
-              <span class="ring-label" data-mult>выбери ставку и цель</span>
+            <div class="wheel-center" aria-live="polite">
+              <span class="wheel-chance" data-chance>0%</span>
+              <span class="wheel-label" data-mult>выбери ставку и цель</span>
+              <span class="wheel-roll num" data-roll></span>
             </div>
           </div>
           <button class="btn btn-primary btn-lg btn-block" type="button" data-go disabled data-loading="Бросаем…">
@@ -184,8 +205,7 @@
       <div class="footer-grid">
         <div class="footer-brand">
           <a class="logo" href="/" aria-label="LuxeDrop — на главную">
-            <svg class="logo-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9"/><path d="M16 7.5 24.5 17H19v7.5h-6V17H7.5z" fill="#fff"/></svg>
-            <span>Luxe<b>Drop</b></span>
+            <img src="/assets/img/logo.webp" srcset="/assets/img/logo.webp 1x, /assets/img/logo@2x.webp 2x" alt="LuxeDrop" width="151" height="48" loading="lazy">
           </a>
           <p class="muted small footer-about">Апгрейд, покупка и продажа скинов CS2. Вывод на карту, по СБП и в крипту.</p>
           <!-- ЗАМЕНИТЬ: ссылки на ваши соцсети -->

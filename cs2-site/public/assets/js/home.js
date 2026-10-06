@@ -1,5 +1,6 @@
 // Главная: калькулятор шанса, живые цифры, форма заявки, CTA для вошедших.
-import { $, api, rub, session } from './core.js';
+import { $, api, pct, rub, session, skinImage } from './core.js';
+import { onLive } from './live.js';
 import { initSellForm } from './forms.js';
 
 const pctText = (x, digits = 1) => `${(x * 100).toFixed(digits).replace('.', ',').replace(/,0$/, '')}%`;
@@ -47,3 +48,23 @@ session().then(({ user, config }) => {
 });
 
 initSellForm($('#sell-form'));
+
+// ── Лучший дроп ────────────────────────────────────────────
+onLive(({ best }) => {
+  const card = $('[data-best]');
+  if (!card || !best) return;
+  const { item } = best;
+  card.classList.remove('best-skeleton');
+  card.removeAttribute('aria-busy');
+  card.dataset.rarity = item.rarity || 'gold';
+  $('[data-best-img]').innerHTML = skinImage(item, item.hashName).replace('<div class="skin-img">', '').replace(/<\/div>$/, '');
+  $('[data-best-name]').textContent = item.hashName;
+  $('[data-best-price]').textContent = rub(item.price);
+  if (best.type === 'win') {
+    $('[data-best-label]').textContent = 'Лучший дроп недели';
+    $('[data-best-meta]').textContent = `${best.user} · шанс ${pct(best.chance)} · ставка ${rub(best.inputValue)}`;
+  } else {
+    $('[data-best-label]').textContent = 'Главный приз';
+    $('[data-best-meta]').textContent = `Можно выбить со ставки от ${rub(best.minStake)}`;
+  }
+});

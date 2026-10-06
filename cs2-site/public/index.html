@@ -11,8 +11,7 @@
   <meta property="og:title" content="LuxeDrop — апгрейд скинов CS2 с выводом на карту и в крипту">
   <meta property="og:description" content="Шанс до 80% с проверкой каждого броска. USDT — за 2 минуты, карта — в среднем за 15.">
   <!-- partial:head -->
-  <meta name="theme-color" content="#0a0f1e" media="(prefers-color-scheme: dark)">
-  <meta name="theme-color" content="#f4f6fb" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0a0906">
   <meta property="og:site_name" content="LuxeDrop">
   <meta property="og:locale" content="ru_RU">
   <meta property="og:image" content="https://luxedrop.gg/assets/img/og-image.jpg">
@@ -21,11 +20,13 @@
   <meta property="og:image:alt" content="LuxeDrop: апгрейд скинов CS2 и быстрый вывод денег">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="/favicon.ico" sizes="32x32">
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon-64.png" type="image/png" sizes="64x64">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="manifest" href="/site.webmanifest">
   <link rel="preload" href="/assets/fonts/inter-cyrillic-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="/assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/exo-2-cyrillic-wght-italic.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/exo-2-latin-wght-italic.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preconnect" href="https://community.akamai.steamstatic.com">
   <link rel="stylesheet" href="/assets/css/main.css">
   <script>try{var t=localStorage.getItem('ld-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
   <!-- /partial:head -->
@@ -75,8 +76,7 @@
   <header class="site-header">
     <div class="container header-inner">
       <a class="logo" href="/" aria-label="LuxeDrop — на главную">
-        <svg class="logo-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9"/><path d="M16 7.5 24.5 17H19v7.5h-6V17H7.5z" fill="#fff"/></svg>
-        <span>Luxe<b>Drop</b></span>
+        <img src="/assets/img/logo.webp" srcset="/assets/img/logo.webp 1x, /assets/img/logo@2x.webp 2x" alt="LuxeDrop" width="151" height="48">
       </a>
       <nav class="nav" id="site-nav" aria-label="Основное меню">
         <ul>
@@ -107,6 +107,13 @@
       </div>
     </div>
   </header>
+  <!-- Живая лента: онлайн и последние выигрыши (настоящие данные из /api/live) -->
+  <div class="live-strip" data-live>
+    <div class="container live-inner">
+      <p class="online"><span class="online-dot" aria-hidden="true"></span><b class="num" data-online-count>1</b>&nbsp;онлайн</p>
+      <div class="live-drops" data-live-drops aria-label="Последние выигрыши"><p class="live-empty">Загружаем выигрыши…</p></div>
+    </div>
+  </div>
   <!-- /partial:header -->
 
   <main id="main">
@@ -115,7 +122,7 @@
       <div class="container hero-grid">
         <div>
           <p class="eyebrow"><svg class="icon icon-sm" aria-hidden="true"><use href="/assets/icons.svg#i-zap"/></svg>Апгрейд · Маркет · Выкуп скинов</p>
-          <h1 class="h1" id="hero-title">Апгрейд скинов CS2 с выводом на карту и&nbsp;в&nbsp;крипту за&nbsp;минуты</h1>
+          <h1 class="h1" id="hero-title">Апгрейд скинов CS2 <span class="gold-text">с выводом на карту и&nbsp;в&nbsp;крипту</span> за&nbsp;минуты</h1>
           <p class="lead">Шанс до 80% — и каждый бросок можно проверить. Продавай скины и получай деньги на карту, по СБП или в USDT без ожидания по 7 дней, как в Steam.</p>
           <div class="hero-cta">
             <a class="btn btn-primary btn-lg" href="/api/auth/steam?next=%2Fupgrade%2F" data-hero-primary>
@@ -132,41 +139,16 @@
           </ul>
         </div>
 
-        <!-- Демонстрация апгрейда. Иконки скинов — официальные картинки из Steam (assets/img/skins, WebP 480×360) -->
-        <div class="hero-visual" aria-label="Пример апгрейда: AK-47 Redline за 1 250 рублей в USP-S Kill Confirmed за 2 600 рублей, шанс 45,7%" role="img">
-          <div class="demo-card">
-            <div class="demo-skins">
-              <div class="skin" data-rarity="classified">
-                <div class="skin-img"><img src="/assets/img/skins/ak47-redline.webp" alt="" width="480" height="360" decoding="async"></div>
-                <span class="skin-name">AK-47 | Redline</span>
-                <span class="skin-meta">FT · Засекреченное</span>
-                <span class="skin-price">1 250 ₽</span>
-              </div>
-              <span class="demo-arrow" aria-hidden="true"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-arrow-right"/></svg></span>
-              <div class="skin" data-rarity="covert">
-                <div class="skin-img"><img src="/assets/img/skins/usps-kill-confirmed.webp" alt="" width="480" height="360" decoding="async"></div>
-                <span class="skin-name">USP-S | Kill Confirmed</span>
-                <span class="skin-meta">FT · Тайное</span>
-                <span class="skin-price">2 600 ₽</span>
-              </div>
-            </div>
-            <div class="demo-ring">
-              <div class="ring-wrap">
-                <svg class="ring" viewBox="0 0 120 120" aria-hidden="true">
-                  <circle class="ring-track" cx="60" cy="60" r="52" fill="none" stroke-width="10"/>
-                  <circle class="ring-win" cx="60" cy="60" r="52" fill="none" stroke-width="10" stroke-linecap="round" stroke-dasharray="149.3 326.7"/>
-                </svg>
-                <div class="ring-center">
-                  <span class="ring-chance">45,7%</span>
-                  <span class="ring-label">шанс · ×2,08</span>
-                </div>
-              </div>
-            </div>
-            <div class="demo-foot">
-              <span class="muted">Хэш сида виден до броска</span>
-              <span class="badge badge-success"><svg class="icon icon-sm" aria-hidden="true"><use href="/assets/icons.svg#i-shield-check"/></svg>Provably fair</span>
-            </div>
-          </div>
+        <!-- Лучший дроп: самый дорогой реальный выигрыш за неделю, а пока их нет — самый дорогой скин маркета («главный приз») -->
+        <div class="hero-visual">
+          <article class="best best-skeleton" data-best aria-live="polite" aria-busy="true">
+            <span class="best-label" data-best-label>Лучший дроп</span>
+            <div class="best-img" data-best-img></div>
+            <p class="best-name" data-best-name>&nbsp;</p>
+            <p class="best-meta" data-best-meta>&nbsp;</p>
+            <p class="best-price" data-best-price>&nbsp;</p>
+            <a class="btn btn-primary" href="/upgrade/"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-dices"/></svg><span>Выбить в апгрейдере</span></a>
+          </article>
         </div>
       </div>
     </section>
@@ -520,8 +502,7 @@
       <div class="footer-grid">
         <div class="footer-brand">
           <a class="logo" href="/" aria-label="LuxeDrop — на главную">
-            <svg class="logo-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9"/><path d="M16 7.5 24.5 17H19v7.5h-6V17H7.5z" fill="#fff"/></svg>
-            <span>Luxe<b>Drop</b></span>
+            <img src="/assets/img/logo.webp" srcset="/assets/img/logo.webp 1x, /assets/img/logo@2x.webp 2x" alt="LuxeDrop" width="151" height="48" loading="lazy">
           </a>
           <p class="muted small footer-about">Апгрейд, покупка и продажа скинов CS2. Вывод на карту, по СБП и в крипту.</p>
           <!-- ЗАМЕНИТЬ: ссылки на ваши соцсети -->

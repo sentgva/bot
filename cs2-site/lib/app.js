@@ -18,6 +18,7 @@ import {
 } from './payments.js';
 import { createSellRequest, listSellRequests, steamInventoryWithPrices, updateSellRequest } from './sell.js';
 import { getStats } from './stats.js';
+import { getLive } from './live.js';
 import { getSettings, updateSettings } from './settings.js';
 import { isValidClientSeed } from './fair.js';
 import { parseTradeUrl, rublesToKop } from './validate.js';
@@ -275,6 +276,13 @@ r.post('/api/sell-requests', async (req) => {
 r.get('/api/stats', async (req, res) => {
   res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=60');
   return getStats();
+});
+
+// Лента над сайтом: онлайн, последние выигрыши, лучший дроп. Заодно отмечает посетителя как «онлайн».
+r.get('/api/live', async (req, res) => {
+  await rateLimit(`live:${ipKey(req)}`, 120, 60);
+  const u = await currentUser(req);
+  return getLive(u ? `u:${u.id}` : `g:${ipKey(req)}`);
 });
 
 // ── Крон (Vercel Cron шлёт Authorization: Bearer CRON_SECRET) ──

@@ -174,3 +174,10 @@ alter table users alter column steam_id drop not null;
 alter table users add column if not exists telegram_id text;
 alter table users add column if not exists tg_username text;
 create unique index if not exists users_telegram_idx on users (telegram_id);
+
+-- Кто сейчас на сайте: страница отмечается раз в 20 секунд (для честного счётчика «онлайн»)
+create table if not exists presence (
+  key     text primary key,               -- u:<id игрока> или g:<хэш IP>
+  seen_at timestamptz not null default now()
+);
+create index if not exists presence_seen_idx on presence (seen_at);
