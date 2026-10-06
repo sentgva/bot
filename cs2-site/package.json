@@ -1,0 +1,25 @@
+{
+  "name": "luxedrop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "LuxeDrop: апгрейд, покупка и продажа скинов CS2 с выводом на карту и в крипту",
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch-path=lib --watch-path=api scripts/dev.js",
+    "start": "node scripts/dev.js",
+    "test": "node --test test/*.test.js",
+    "migrate": "node scripts/migrate.js",
+    "partials": "node scripts/partials.js",
+    "prices": "node scripts/prices.js"
+  },
+  "engines": {
+    "node": ">=20.12"
+  },
+  "dependencies": {
+    "@vercel/functions": "^3.9.9",
+    "pg": "^8.16.0"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8"
+  }
+}

@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /profile/
+Disallow: /admin/
+
+Sitemap: https://luxedrop.gg/sitemap.xml

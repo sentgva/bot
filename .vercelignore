@@ -4,3 +4,4 @@ test
 .env
 .env.*
 !.env.example
+cs2-site

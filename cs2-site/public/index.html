@@ -1,0 +1,573 @@
+<!doctype html>
+<html lang="ru" class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>LuxeDrop — апгрейд скинов CS2 с выводом на карту и в крипту</title>
+  <meta name="description" content="Апгрейд, покупка и продажа скинов CS2. Шанс до 80% с проверкой каждого броска, вывод в USDT за 2 минуты и на карту в среднем за 15. Вход через Steam.">
+  <link rel="canonical" href="https://luxedrop.gg/">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://luxedrop.gg/">
+  <meta property="og:title" content="LuxeDrop — апгрейд скинов CS2 с выводом на карту и в крипту">
+  <meta property="og:description" content="Шанс до 80% с проверкой каждого броска. USDT — за 2 минуты, карта — в среднем за 15.">
+  <!-- partial:head -->
+  <meta name="theme-color" content="#0a0f1e" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f4f6fb" media="(prefers-color-scheme: light)">
+  <meta property="og:site_name" content="LuxeDrop">
+  <meta property="og:locale" content="ru_RU">
+  <meta property="og:image" content="https://luxedrop.gg/assets/img/og-image.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="LuxeDrop: апгрейд скинов CS2 и быстрый вывод денег">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="/favicon.ico" sizes="32x32">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="preload" href="/assets/fonts/inter-cyrillic-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <script>try{var t=localStorage.getItem('ld-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+  <!-- /partial:head -->
+  <script type="module" src="/assets/js/home.js"></script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://luxedrop.gg/#org",
+        "name": "LuxeDrop",
+        "url": "https://luxedrop.gg/",
+        "logo": "https://luxedrop.gg/icon-512.png",
+        "email": "support@luxedrop.gg",
+        "sameAs": ["https://t.me/luxedrop", "https://vk.com/luxedrop", "https://youtube.com/@luxedrop"],
+        "contactPoint": { "@type": "ContactPoint", "contactType": "customer support", "email": "support@luxedrop.gg", "availableLanguage": "ru" }
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://luxedrop.gg/#site",
+        "name": "LuxeDrop",
+        "url": "https://luxedrop.gg/",
+        "inLanguage": "ru",
+        "publisher": { "@id": "https://luxedrop.gg/#org" }
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          { "@type": "Question", "name": "Это не развод? Почему вам можно доверять?", "acceptedAnswer": { "@type": "Answer", "text": "Вход только через официальный Steam, пароль мы не видим. Каждый апгрейд можно проверить на странице «Честность». Начни с малого: пополни 500 ₽ и выведи — убедись сам." } },
+          { "@type": "Question", "name": "Сколько ждать вывод на карту?", "acceptedAnswer": { "@type": "Answer", "text": "Крипта до 20 000 ₽ уходит автоматически за 1–2 минуты. Карта и СБП — в среднем 15 минут с 10:00 до 23:00 МСК. Заявки, оставленные ночью, выплачиваем утром." } },
+          { "@type": "Question", "name": "Какие комиссии?", "acceptedAnswer": { "@type": "Answer", "text": "Вывод в крипту — 0%, на карту и по СБП — 3%. В маркете наценка 5% к рыночной цене. Продажа скина с сайта — 95% цены, выкуп скинов из Steam — до 85%. В апгрейдере комиссия 5% заложена в шанс." } },
+          { "@type": "Question", "name": "Как проверить, что апгрейд честный?", "acceptedAnswer": { "@type": "Answer", "text": "До броска мы показываем хэш серверного сида. Результат считается из серверного сида, твоего клиентского сида и номера броска. После смены сида мы раскрываем его, и любой бросок можно пересчитать на странице «Честность»." } },
+          { "@type": "Question", "name": "Безопасно ли входить через Steam?", "acceptedAnswer": { "@type": "Answer", "text": "Да. Вход идёт на steamcommunity.com, мы получаем только Steam ID, ник и аватар. Мы никогда не просим пароль, коды Steam Guard или API-ключ." } },
+          { "@type": "Question", "name": "Что, если скин не пришёл?", "acceptedAnswer": { "@type": "Answer", "text": "Обычно обмен приходит за 5–30 минут. Если обмен не удался, скин вернётся в твой инвентарь на сайте, и его можно вывести снова или продать." } },
+          { "@type": "Question", "name": "Почему вы выкупаете скины дешевле цены в Steam?", "acceptedAnswer": { "@type": "Answer", "text": "В Steam деньги остаются на кошельке Steam и их нельзя вывести, а комиссия площадки — 15%. Мы платим настоящими деньгами на карту или в крипту и берём на себя риск перепродажи." } },
+          { "@type": "Question", "name": "С какого возраста можно пользоваться сервисом?", "acceptedAnswer": { "@type": "Answer", "text": "Только с 18 лет. Апгрейд — игра с риском: ставь только то, что готов потерять. Можно попросить поддержку заблокировать аккаунт на нужный срок." } }
+        ]
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <!-- partial:header -->
+  <a class="skip-link" href="#main">Перейти к содержимому</a>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="logo" href="/" aria-label="LuxeDrop — на главную">
+        <svg class="logo-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9"/><path d="M16 7.5 24.5 17H19v7.5h-6V17H7.5z" fill="#fff"/></svg>
+        <span>Luxe<b>Drop</b></span>
+      </a>
+      <nav class="nav" id="site-nav" aria-label="Основное меню">
+        <ul>
+          <li><a href="/upgrade/">Апгрейд</a></li>
+          <li><a href="/market/">Маркет</a></li>
+          <li><a href="/sell/">Продать</a></li>
+          <li><a href="/fair/">Честность</a></li>
+          <li class="nav-theme">
+            <button class="btn btn-ghost" type="button" data-theme-toggle aria-label="Сменить тему">
+              <svg class="icon i-sun" aria-hidden="true"><use href="/assets/icons.svg#i-sun"/></svg>
+              <svg class="icon i-moon" aria-hidden="true"><use href="/assets/icons.svg#i-moon"/></svg>
+              <span>Сменить тему</span>
+            </button>
+          </li>
+        </ul>
+      </nav>
+      <div class="header-actions">
+        <button class="icon-btn" type="button" data-theme-toggle aria-label="Сменить тему">
+          <svg class="icon i-sun" aria-hidden="true"><use href="/assets/icons.svg#i-sun"/></svg>
+          <svg class="icon i-moon" aria-hidden="true"><use href="/assets/icons.svg#i-moon"/></svg>
+        </button>
+        <div class="auth" data-auth>
+          <a class="btn btn-primary btn-sm" href="/api/auth/steam"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#b-steam"/></svg><span>Войти<span class="hide-sm"> через Steam</span></span></a>
+        </div>
+        <button class="icon-btn nav-toggle" type="button" data-nav-toggle aria-controls="site-nav" aria-expanded="false" aria-label="Открыть меню">
+          <svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-menu"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+  <!-- /partial:header -->
+
+  <main id="main">
+    <!-- ===== Hero ===== -->
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="container hero-grid">
+        <div>
+          <p class="eyebrow"><svg class="icon icon-sm" aria-hidden="true"><use href="/assets/icons.svg#i-zap"/></svg>Апгрейд · Маркет · Выкуп скинов</p>
+          <h1 class="h1" id="hero-title">Апгрейд скинов CS2 с выводом на карту и&nbsp;в&nbsp;крипту за&nbsp;минуты</h1>
+          <p class="lead">Шанс до 80% — и каждый бросок можно проверить. Продавай скины и получай деньги на карту, по СБП или в USDT без ожидания по 7 дней, как в Steam.</p>
+          <div class="hero-cta">
+            <a class="btn btn-primary btn-lg" href="/api/auth/steam?next=%2Fupgrade%2F" data-hero-primary>
+              <svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#b-steam"/></svg><span>Войти через Steam</span>
+            </a>
+            <a class="btn btn-secondary btn-lg" href="/upgrade/">
+              <span>Попробовать апгрейд</span><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-arrow-right"/></svg>
+            </a>
+          </div>
+          <ul class="trust-list">
+            <li><svg class="icon icon-sm" aria-hidden="true"><use href="/assets/icons.svg#i-lock"/></svg>Пароль от Steam мы не видим</li>
+            <li><svg class="icon icon-sm" aria-hidden="true"><use href="/assets/icons.svg#i-shield-check"/></svg>Проверяемый шанс</li>
+            <li><svg class="icon icon-sm" aria-hidden="true"><use href="/assets/icons.svg#i-wallet"/></svg>Вывод от 500 ₽</li>
+          </ul>
+        </div>
+
+        <!-- Демонстрация апгрейда. Силуэты можно заменить картинками скинов:
+             ЗАМЕНИТЬ: WebP 512×384, скин на прозрачном фоне (AK-47 | Redline и USP-S | Kill Confirmed),
+             например из Steam CDN: https://community.akamai.steamstatic.com/economy/image/<icon_url>/512fx384f -->
+        <div class="hero-visual" aria-label="Пример апгрейда: AK-47 Redline за 1 250 рублей в USP-S Kill Confirmed за 2 600 рублей, шанс 45,7%" role="img">
+          <div class="demo-card">
+            <div class="demo-skins">
+              <div class="skin" data-rarity="classified">
+                <div class="skin-img"><svg class="silhouette" viewBox="0 0 120 44" fill="currentColor" aria-hidden="true"><path d="M4 18h34l3-4h34l2-3h9v3h28v5h-28l-3 4H72l-7 15h-9l5-13H44l-4 11H30l3-11H18l-9 5H4z"/></svg></div>
+                <span class="skin-name">AK-47 | Redline</span>
+                <span class="skin-meta">FT · Засекреченное</span>
+                <span class="skin-price">1 250 ₽</span>
+              </div>
+              <span class="demo-arrow" aria-hidden="true"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-arrow-right"/></svg></span>
+              <div class="skin" data-rarity="covert">
+                <div class="skin-img"><svg class="silhouette" viewBox="0 0 120 44" fill="currentColor" aria-hidden="true"><path d="M30 14h50l4-4h8v4h20v6H92l-2 4H70l-4 14h-9l3-14H44l-3 6h-9l2-6H20l-8 4H6l2-10z"/></svg></div>
+                <span class="skin-name">USP-S | Kill Confirmed</span>
+                <span class="skin-meta">FT · Тайное</span>
+                <span class="skin-price">2 600 ₽</span>
+              </div>
+            </div>
+            <div class="demo-ring">
+              <div class="ring-wrap">
+                <svg class="ring" viewBox="0 0 120 120" aria-hidden="true">
+                  <circle class="ring-track" cx="60" cy="60" r="52" fill="none" stroke-width="10"/>
+                  <circle class="ring-win" cx="60" cy="60" r="52" fill="none" stroke-width="10" stroke-linecap="round" stroke-dasharray="149.3 326.7"/>
+                </svg>
+                <div class="ring-center">
+                  <span class="ring-chance">45,7%</span>
+                  <span class="ring-label">шанс · ×2,08</span>
+                </div>
+              </div>
+            </div>
+            <div class="demo-foot">
+              <span class="muted">Хэш сида виден до броска</span>
+              <span class="badge badge-success"><svg class="icon icon-sm" aria-hidden="true"><use href="/assets/icons.svg#i-shield-check"/></svg>Provably fair</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Цифры (обновляются из /api/stats) ===== -->
+    <section class="container" aria-label="LuxeDrop в цифрах">
+      <div class="stats" data-stats>
+        <div class="stat reveal"><p class="stat-value" data-stat="maxChance">до 80%</p><p class="stat-label">шанс апгрейда — риск выбираешь сам</p></div>
+        <div class="stat reveal"><p class="stat-value" data-stat="cryptoFee">0%</p><p class="stat-label">комиссия на вывод в USDT и TON</p></div>
+        <div class="stat reveal"><p class="stat-value" data-stat="minWithdraw">500 ₽</p><p class="stat-label">минимальный вывод на карту и в крипту</p></div>
+        <div class="stat reveal"><p class="stat-value" data-stat="buyback">85%</p><p class="stat-label" data-stat-label="buyback">от рыночной цены при продаже скинов</p></div>
+      </div>
+    </section>
+
+    <!-- ===== Как это работает ===== -->
+    <section class="section" id="how" aria-labelledby="how-title">
+      <div class="container">
+        <div class="section-head reveal">
+          <p class="eyebrow">Как это работает</p>
+          <h2 class="h2" id="how-title">3 шага — и твой скин стоит дороже</h2>
+        </div>
+        <ol class="grid grid-3 steps">
+          <li class="card step reveal">
+            <span class="step-num" aria-hidden="true">1</span>
+            <h3 class="h3">Войди через Steam</h3>
+            <p class="muted">Вход на официальном steamcommunity.com. Нам приходят только Steam ID, ник и аватар — пароль и почта остаются у Steam.</p>
+          </li>
+          <li class="card step reveal">
+            <span class="step-num" aria-hidden="true">2</span>
+            <h3 class="h3">Пополни баланс или купи скин</h3>
+            <p class="muted">USDT или TON от 100 ₽, либо продай скины из инвентаря Steam. В маркете — тысячи скинов по рыночной цене.</p>
+          </li>
+          <li class="card step reveal">
+            <span class="step-num" aria-hidden="true">3</span>
+            <h3 class="h3">Апгрейдни и забери</h3>
+            <p class="muted">Выигранный скин уходит в Steam на твою трейд-ссылку, а деньги — на карту, по СБП или в крипту.</p>
+          </li>
+        </ol>
+        <div class="row mt-6">
+          <a class="btn btn-primary" href="/upgrade/">Открыть апгрейдер<svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-arrow-right"/></svg></a>
+          <a class="btn btn-ghost" href="/market/">Сначала посмотреть маркет</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Калькулятор шанса ===== -->
+    <section class="section section-tint" id="upgrade" aria-labelledby="calc-title">
+      <div class="container calc">
+        <div class="reveal">
+          <p class="eyebrow">Апгрейдер</p>
+          <h2 class="h2" id="calc-title">Риск выбираешь ты: ×1,5 с шансом 63% или ×10 с шансом 9,5%</h2>
+          <p class="lead">Шанс считается по одной формуле для всех: <b>ставка ÷ цена цели × 0,95</b>. 5% — комиссия сервиса, она заложена в шанс и не меняется от броска к броску.</p>
+          <ul class="cta-points">
+            <li><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-check"/></svg><span>Ставь до 6 скинов сразу или добавь часть баланса</span></li>
+            <li><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-check"/></svg><span>Выигрыш сразу в инвентаре: выводи, продавай или апгрейдь дальше</span></li>
+            <li><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-check"/></svg><span>Каждый бросок можно пересчитать самому</span></li>
+          </ul>
+        </div>
+        <form class="card reveal" id="calc" aria-label="Калькулятор шанса апгрейда">
+          <div class="field">
+            <label for="calc-amount">Ставка</label>
+            <div class="input-group">
+              <input class="input num" id="calc-amount" name="amount" type="number" inputmode="decimal" min="10" step="10" value="1000">
+              <span class="suffix" aria-hidden="true">₽</span>
+            </div>
+          </div>
+          <fieldset class="field radio-group mt-5 mult-chips">
+            <legend class="legend">Во сколько раз дороже цель</legend>
+            <label class="chip"><input type="radio" name="mult" value="1.5">×1,5</label>
+            <label class="chip"><input type="radio" name="mult" value="2" checked>×2</label>
+            <label class="chip"><input type="radio" name="mult" value="3">×3</label>
+            <label class="chip"><input type="radio" name="mult" value="5">×5</label>
+            <label class="chip"><input type="radio" name="mult" value="10">×10</label>
+            <label class="chip"><input type="radio" name="mult" value="20">×20</label>
+          </fieldset>
+          <div class="calc-result" aria-live="polite">
+            <div class="stat"><p class="stat-value" data-calc="chance">47,5%</p><p class="stat-label">шанс</p></div>
+            <div class="stat"><p class="stat-value" data-calc="target">2 000 ₽</p><p class="stat-label">цена скина-цели</p></div>
+          </div>
+          <a class="btn btn-primary btn-block mt-5" href="/upgrade/">Подобрать скин в апгрейдере<svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-arrow-right"/></svg></a>
+        </form>
+      </div>
+    </section>
+
+    <!-- ===== Вывод денег — главное отличие ===== -->
+    <section class="section" id="payout" aria-labelledby="payout-title">
+      <div class="container">
+        <div class="section-head reveal">
+          <p class="eyebrow">Вывод денег</p>
+          <!-- ЗАМЕНИТЬ сроки, если у вас другие -->
+          <h2 class="h2" id="payout-title">Крипта — за 2 минуты, карта — в среднем за 15. Комиссия от 0%</h2>
+          <p class="lead">Деньги со скинов — это настоящие деньги. Выводи, куда удобно, без посредников и барыг в личке.</p>
+        </div>
+        <div class="grid grid-3">
+          <article class="card card-hover reveal">
+            <span class="icon-tile"><svg class="icon icon-lg" aria-hidden="true"><use href="/assets/icons.svg#i-coins"/></svg></span>
+            <h3 class="h3">USDT и TON</h3>
+            <p class="muted mt-2">Автоматически, без менеджера. Приходит чеком в @CryptoBot — оттуда на любой кошелёк или биржу.</p>
+            <p class="row mt-4"><span class="badge badge-success">0% комиссия</span><span class="badge">1–2 минуты</span></p>
+          </article>
+          <article class="card card-hover reveal">
+            <span class="icon-tile"><svg class="icon icon-lg" aria-hidden="true"><use href="/assets/icons.svg#i-credit-card"/></svg></span>
+            <h3 class="h3">Банковская карта</h3>
+            <p class="muted mt-2">МИР, Visa и Mastercard российских банков. Номер карты хранится зашифрованным и удаляется после выплаты.</p>
+            <p class="row mt-4"><span class="badge">3% комиссия</span><span class="badge">≈ 15 минут</span></p>
+          </article>
+          <article class="card card-hover reveal">
+            <span class="icon-tile"><svg class="icon icon-lg" aria-hidden="true"><use href="/assets/icons.svg#i-smartphone"/></svg></span>
+            <h3 class="h3">СБП по номеру телефона</h3>
+            <p class="muted mt-2">Сбер, Т-Банк, Альфа, ВТБ и другие. Достаточно номера телефона и банка — карта не нужна.</p>
+            <p class="row mt-4"><span class="badge">3% комиссия</span><span class="badge">≈ 15 минут</span></p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Продажа скинов: сравнение со Steam ===== -->
+    <section class="section section-tint" id="sell" aria-labelledby="sell-title">
+      <div class="container calc">
+        <div class="reveal">
+          <p class="eyebrow">Продажа скинов</p>
+          <h2 class="h2" id="sell-title">Продай инвентарь за 2 клика — до 85% от рыночной цены</h2>
+          <p class="lead">Войди через Steam — мы сами оценим каждый скин. Выбери, что продать, и получи деньги сразу после обмена.</p>
+          <div class="row mt-6">
+            <a class="btn btn-primary" href="/sell/">Оценить инвентарь<svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-arrow-right"/></svg></a>
+            <a class="btn btn-ghost" href="#cta">Оставить заявку без входа</a>
+          </div>
+        </div>
+        <div class="card compare reveal">
+          <table>
+            <caption class="sr-only">Сравнение продажи скинов на торговой площадке Steam и в LuxeDrop</caption>
+            <thead><tr><th scope="col"><span class="sr-only">Параметр</span></th><th scope="col">Торговая площадка Steam</th><th scope="col">LuxeDrop</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">Куда приходят деньги</th><td>На кошелёк Steam</td><td class="yes">Карта, СБП, USDT, TON</td></tr>
+              <tr><th scope="row">Можно вывести</th><td>Нет</td><td class="yes">Да, от 500 ₽</td></tr>
+              <tr><th scope="row">Комиссия</th><td>15%</td><td class="yes">От 0% на вывод</td></tr>
+              <tr><th scope="row">Скорость</th><td>Когда найдётся покупатель</td><td class="yes">Оценка за 15 минут</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Честность ===== -->
+    <section class="section" id="fair" aria-labelledby="fair-title">
+      <div class="container">
+        <div class="section-head reveal">
+          <p class="eyebrow">Честная игра</p>
+          <h2 class="h2" id="fair-title">Мы не можем подкрутить результат — и ты можешь это проверить</h2>
+          <p class="lead">Результат каждого апгрейда определён заранее и зашифрован. Изменить его после твоей ставки невозможно.</p>
+        </div>
+        <div class="grid grid-3">
+          <article class="card reveal">
+            <span class="icon-tile"><svg class="icon icon-lg" aria-hidden="true"><use href="/assets/icons.svg#i-lock"/></svg></span>
+            <h3 class="h3">До броска</h3>
+            <p class="muted mt-2">Показываем SHA-256 хэш серверного сида. По хэшу сид не угадать, но и подменить его потом нельзя.</p>
+          </article>
+          <article class="card reveal">
+            <span class="icon-tile"><svg class="icon icon-lg" aria-hidden="true"><use href="/assets/icons.svg#i-fingerprint"/></svg></span>
+            <h3 class="h3">Твой вклад</h3>
+            <p class="muted mt-2">Бросок зависит и от твоего клиентского сида — его можно поменять в любой момент. Мы не знаем его заранее.</p>
+          </article>
+          <article class="card reveal">
+            <span class="icon-tile"><svg class="icon icon-lg" aria-hidden="true"><use href="/assets/icons.svg#i-circle-check"/></svg></span>
+            <h3 class="h3">После</h3>
+            <p class="muted mt-2">Сменил сид — мы раскрываем старый. Вставь его в проверку и пересчитай любой свой бросок.</p>
+          </article>
+        </div>
+        <div class="row mt-6">
+          <a class="btn btn-secondary" href="/fair/">Проверить бросок<svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-arrow-right"/></svg></a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Социальное доказательство ===== -->
+    <!-- ЗАМЕНИТЬ ДО ЗАПУСКА: отзывы и кейсы ниже — образцы оформления. Публикуйте только реальные отзывы
+         реальных игроков (с их согласия), иначе это обман пользователей и нарушение закона о рекламе. -->
+    <section class="section section-tint" id="reviews" aria-labelledby="reviews-title">
+      <div class="container">
+        <div class="section-head reveal">
+          <p class="eyebrow">Отзывы</p>
+          <h2 class="h2" id="reviews-title" data-paid-title>Игроки выводят деньги каждый день</h2>
+          <p class="lead">Что говорят те, кто уже апгрейдил и выводил.</p>
+        </div>
+
+        <div class="grid grid-3">
+          <article class="card review reveal">
+            <div class="review-head"><span class="avatar avatar-fallback" aria-hidden="true">А</span><div><p><b>Артём</b> <span class="muted small">· art3m</span></p><p class="stars" role="img" aria-label="Оценка 5 из 5"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-star"/></svg><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-star"/></svg><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-star"/></svg><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-star"/></svg><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-star"/></svg></p></div></div>
+            <blockquote><p>Сначала закинул 500 ₽ на пробу и сразу вывел — пришло на Т-Банк через 12 минут. Потом уже апгрейдил нормально.</p></blockquote>
+            <p class="review-foot"><span>Вывел на карту 4 200 ₽</span><span>сентябрь 2026</span></p>
+          </article>
+          <article class="card review reveal">
+            <div class="review-head"><span class="avatar avatar-fallback" aria-hidden="true">F</span><div><p><b>frostbyte</b></p><p class="stars" role="img" aria-label="Оценка 5 из 5"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-star"/></svg><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-star"/></svg><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-star"/></svg><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-star"/></svg><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-star"/></svg></p></div></div>
+            <blockquote><p>Вывожу в USDT — чек в CryptoBot приходит за минуту, без всяких «ожидайте менеджера». Для меня это главное.</p></blockquote>
+            <p class="review-foot"><span>Вывел 180 USDT</span><span>сентябрь 2026</span></p>
+          </article>
+          <article class="card review reveal">
+            <div class="review-head"><span class="avatar avatar-fallback" aria-hidden="true">Л</span><div><p><b>Лиза</b> <span class="muted small">· liza.cs</span></p><p class="stars" role="img" aria-label="Оценка 4 из 5"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-star"/></svg><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-star"/></svg><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-star"/></svg><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-star"/></svg></p></div></div>
+            <blockquote><p>Продала старый инвентарь, который год лежал без дела. Оценили честно, по СБП пришло вечером того же дня.</p></blockquote>
+            <p class="review-foot"><span>Продала 14 скинов</span><span>август 2026</span></p>
+          </article>
+          <article class="card review reveal">
+            <div class="review-head"><span class="avatar avatar-fallback" aria-hidden="true">Н</span><div><p><b>Никита</b> <span class="muted small">· nkt</span></p><p class="stars" role="img" aria-label="Оценка 5 из 5"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-star"/></svg><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-star"/></svg><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-star"/></svg><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-star"/></svg><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-star"/></svg></p></div></div>
+            <blockquote><p>Нравится, что нет мигающих баннеров и таймеров. Зашёл, поставил ×2, забрал — всё понятно с первого раза.</p></blockquote>
+            <p class="review-foot"><span>Апгрейд ×2</span><span>август 2026</span></p>
+          </article>
+          <article class="card review reveal">
+            <div class="review-head"><span class="avatar avatar-fallback" aria-hidden="true">V</span><div><p><b>vortex</b></p><p class="stars" role="img" aria-label="Оценка 5 из 5"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-star"/></svg><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-star"/></svg><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-star"/></svg><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-star"/></svg><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-star"/></svg></p></div></div>
+            <blockquote><p>Проверил пару бросков через страницу честности — всё сходится. Сменил свой сид и играю дальше спокойно.</p></blockquote>
+            <p class="review-foot"><span>Проверил 3 броска</span><span>июль 2026</span></p>
+          </article>
+          <article class="card review reveal">
+            <div class="review-head"><span class="avatar avatar-fallback" aria-hidden="true">Д</span><div><p><b>Денис</b> <span class="muted small">· den4ik</span></p><p class="stars" role="img" aria-label="Оценка 4 из 5"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-star"/></svg><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-star"/></svg><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-star"/></svg><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-star"/></svg></p></div></div>
+            <blockquote><p>Ночью заявка на карту ждала до утра, зато в 10:05 уже были деньги. Поддержка в Telegram отвечает быстро.</p></blockquote>
+            <p class="review-foot"><span>Вывел на карту 9 800 ₽</span><span>июль 2026</span></p>
+          </article>
+        </div>
+
+        <h3 class="h3 mt-7 mb-4 reveal">Как это выглядит в цифрах</h3>
+        <div class="grid grid-3">
+          <article class="card case reveal">
+            <p class="case-flow">AK-47 | Redline <svg class="icon icon-sm accent" aria-hidden="true"><use href="/assets/icons.svg#i-arrow-right"/></svg> AWP | Asiimov</p>
+            <p class="muted small">1 250 ₽ → 9 800 ₽ · шанс 12,1% · ×7,8</p>
+            <p class="row"><span class="badge badge-success">Вывод на карту за 11 мин</span></p>
+          </article>
+          <article class="card case reveal">
+            <p class="case-flow">3 скина <svg class="icon icon-sm accent" aria-hidden="true"><use href="/assets/icons.svg#i-arrow-right"/></svg> M4A1-S | Printstream</p>
+            <p class="muted small">5 400 ₽ → 11 500 ₽ · шанс 44,6% · ×2,1</p>
+            <p class="row"><span class="badge badge-success">Скин в Steam за 20 мин</span></p>
+          </article>
+          <article class="card case reveal">
+            <p class="case-flow">Старый инвентарь <svg class="icon icon-sm accent" aria-hidden="true"><use href="/assets/icons.svg#i-arrow-right"/></svg> USDT</p>
+            <p class="muted small">22 скина · оценка 31 400 ₽ · без апгрейда</p>
+            <p class="row"><span class="badge badge-success">Выплата за 2 мин</span></p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== FAQ ===== -->
+    <section class="section" id="faq" aria-labelledby="faq-title">
+      <div class="container">
+        <div class="section-head center reveal">
+          <p class="eyebrow">Вопросы</p>
+          <h2 class="h2" id="faq-title">Отвечаем до того, как ты спросишь</h2>
+        </div>
+        <div class="faq">
+          <details class="reveal">
+            <summary>Это не развод? Почему вам можно доверять?<svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-chevron-down"/></svg></summary>
+            <div class="answer"><p>Вход только через официальный Steam — пароль мы не видим. Каждый апгрейд проверяется на странице <a href="/fair/">«Честность»</a>. Цифры на главной считаются по реальным выплатам.</p><p>Лучшая проверка — маленькая сумма: пополни 500 ₽ и сразу выведи. Убедись сам, а потом решай.</p></div>
+          </details>
+          <details class="reveal">
+            <summary>Сколько ждать вывод на карту?<svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-chevron-down"/></svg></summary>
+            <div class="answer"><p>Крипта до 20 000 ₽ уходит автоматически — 1–2 минуты. Карта и СБП — в среднем 15 минут с 10:00 до 23:00 МСК. Заявки, оставленные ночью, выплачиваем утром.</p><p>Крупные суммы иногда проверяем вручную — до 24 часов. Статус всегда виден в профиле.</p></div>
+          </details>
+          <details class="reveal">
+            <summary>Какие комиссии?<svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-chevron-down"/></svg></summary>
+            <div class="answer"><p>Вывод в USDT и TON — 0%, на карту и по СБП — 3%. В маркете наценка 5% к рыночной цене. Продажа скина с сайта — 95% цены, выкуп скинов из Steam — до 85%.</p><p>В апгрейдере комиссия 5% уже заложена в шанс. Других списаний нет.</p></div>
+          </details>
+          <details class="reveal">
+            <summary>Как проверить, что апгрейд честный?<svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-chevron-down"/></svg></summary>
+            <div class="answer"><p>До броска ты видишь хэш серверного сида. Результат считается из серверного сида, твоего клиентского сида и номера броска (nonce). Смени сид в профиле — мы раскроем старый, и любой бросок можно пересчитать на странице <a href="/fair/">«Честность»</a>.</p></div>
+          </details>
+          <details class="reveal">
+            <summary>Безопасно ли входить через Steam?<svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-chevron-down"/></svg></summary>
+            <div class="answer"><p>Да. Вход идёт на steamcommunity.com — проверь адрес в строке браузера. Мы получаем только Steam ID, ник и аватар.</p><p>Мы никогда не просим пароль, коды Steam Guard или API-ключ. Если кто-то просит — это мошенники.</p></div>
+          </details>
+          <details class="reveal">
+            <summary>Что, если скин не пришёл?<svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-chevron-down"/></svg></summary>
+            <div class="answer"><p>Обычно обмен приходит за 5–30 минут. Если обмен не удался — скин вернётся в твой инвентарь на сайте, его можно вывести снова или продать. Если что-то пошло не так, напиши в <a href="https://t.me/luxedrop_support" target="_blank" rel="noopener">поддержку</a>.</p></div>
+          </details>
+          <details class="reveal">
+            <summary>Почему вы выкупаете скины дешевле цены в Steam?<svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-chevron-down"/></svg></summary>
+            <div class="answer"><p>В Steam деньги остаются на кошельке Steam — их нельзя вывести, а комиссия площадки 15%. Мы платим настоящими деньгами на карту или в крипту и берём на себя риск перепродажи.</p></div>
+          </details>
+          <details class="reveal">
+            <summary>С какого возраста можно пользоваться?<svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-chevron-down"/></svg></summary>
+            <div class="answer"><p>Только с 18 лет. Апгрейд — игра с риском: ставь только то, что готов потерять. Можно попросить поддержку заблокировать аккаунт на нужный срок — подробнее в разделе <a href="/legal/responsible/">«Ответственная игра»</a>.</p></div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Финальный CTA ===== -->
+    <section class="section section-tint" id="cta" aria-labelledby="cta-title">
+      <div class="container">
+        <div class="cta-box">
+          <div>
+            <p class="eyebrow">Продать скины</p>
+            <h2 class="h2" id="cta-title">Продай скины сегодня — деньги придут на карту или в крипту</h2>
+            <ul class="cta-points">
+              <li><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-check"/></svg><span>Оценка в среднем за 15 минут</span></li>
+              <li><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-check"/></svg><span>До 85% от рыночной цены</span></li>
+              <li><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-check"/></svg><span>Деньги сразу после обмена в Steam</span></li>
+              <li><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-check"/></svg><span>Регистрация не нужна — только трейд-ссылка</span></li>
+            </ul>
+          </div>
+          <div>
+            <!-- partial:sell-form -->
+            <form class="form" id="sell-form" novalidate>
+              <div class="field">
+                <label for="sell-trade">Трейд-ссылка Steam</label>
+                <input class="input" id="sell-trade" name="tradeUrl" type="url" inputmode="url" autocomplete="off" spellcheck="false" required
+                  placeholder="https://steamcommunity.com/tradeoffer/new/?partner=…" aria-describedby="sell-trade-hint sell-trade-error">
+                <p class="hint" id="sell-trade-hint">Где взять: Steam → Инвентарь → Предложения обмена → <a href="https://steamcommunity.com/my/tradeoffers/privacy#trade_offer_access_url" target="_blank" rel="noopener">Кто может отправлять мне предложения</a>.</p>
+                <p class="error" id="sell-trade-error" aria-live="polite"></p>
+              </div>
+              <fieldset class="field radio-group" aria-describedby="sell-method-error">
+                <legend class="legend">Куда получить деньги</legend>
+                <label class="chip"><input type="radio" name="method" value="card" id="sell-method" required>Карта</label>
+                <label class="chip"><input type="radio" name="method" value="sbp">СБП</label>
+                <label class="chip"><input type="radio" name="method" value="crypto">USDT / TON</label>
+                <label class="chip" data-auth-only hidden><input type="radio" name="method" value="balance">На баланс</label>
+                <p class="error error-full" id="sell-method-error" aria-live="polite"></p>
+              </fieldset>
+              <div class="field">
+                <label for="sell-contact">Телефон или Telegram <span class="muted optional" hidden>(необязательно)</span></label>
+                <input class="input" id="sell-contact" name="contact" type="text" inputmode="text" autocomplete="tel" required
+                  placeholder="+7 (999) 123-45-67 или @username" aria-describedby="sell-contact-hint sell-contact-error">
+                <p class="hint" id="sell-contact-hint">Напишем, как только отправим обмен. Спам не шлём.</p>
+                <p class="error" id="sell-contact-error" aria-live="polite"></p>
+              </div>
+              <!-- Ловушка для ботов: люди это поле не видят и не заполняют -->
+              <div class="hp" aria-hidden="true"><label for="sell-website">Сайт</label><input id="sell-website" name="website" type="text" tabindex="-1" autocomplete="off"></div>
+              <div class="field">
+                <label class="checkbox"><input type="checkbox" name="agree" id="sell-agree" required aria-describedby="sell-agree-error">
+                  <span>Мне есть 18 лет, я согласен с <a href="/legal/terms/">условиями</a> и <a href="/legal/privacy/">обработкой данных</a></span></label>
+                <p class="error" id="sell-agree-error" aria-live="polite"></p>
+              </div>
+              <button class="btn btn-primary btn-lg btn-block" type="submit" data-loading="Отправляем…">
+                <svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-hand-coins"/></svg><span>Получить оценку и деньги</span>
+              </button>
+              <p class="hint">Отвечаем в среднем за 15 минут с 10:00 до 23:00 МСК. <!-- ЗАМЕНИТЬ, если график другой --></p>
+            </form>
+            <div class="form-success" data-form-success hidden tabindex="-1" role="status">
+              <span class="icon-tile"><svg class="icon icon-lg" aria-hidden="true"><use href="/assets/icons.svg#i-circle-check"/></svg></span>
+              <h3 class="h3">Заявка <span data-request-id></span> принята</h3>
+              <p class="muted">Менеджер проверит скины и пришлёт обмен в Steam. Деньги отправим сразу после того, как обмен будет принят.</p>
+              <button class="btn btn-secondary" type="button" data-form-again>Отправить ещё одну</button>
+            </div>
+            <!-- /partial:sell-form -->
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- partial:footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a class="logo" href="/" aria-label="LuxeDrop — на главную">
+            <svg class="logo-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9"/><path d="M16 7.5 24.5 17H19v7.5h-6V17H7.5z" fill="#fff"/></svg>
+            <span>Luxe<b>Drop</b></span>
+          </a>
+          <p class="muted small footer-about">Апгрейд, покупка и продажа скинов CS2. Вывод на карту, по СБП и в крипту.</p>
+          <!-- ЗАМЕНИТЬ: ссылки на ваши соцсети -->
+          <div class="socials">
+            <a href="https://t.me/luxedrop" rel="noopener" target="_blank" aria-label="Telegram-канал LuxeDrop"><svg aria-hidden="true"><use href="/assets/icons.svg#b-telegram"/></svg></a>
+            <a href="https://discord.gg/luxedrop" rel="noopener" target="_blank" aria-label="Discord-сервер LuxeDrop"><svg aria-hidden="true"><use href="/assets/icons.svg#b-discord"/></svg></a>
+            <a href="https://vk.com/luxedrop" rel="noopener" target="_blank" aria-label="LuxeDrop во ВКонтакте"><svg aria-hidden="true"><use href="/assets/icons.svg#b-vk"/></svg></a>
+            <a href="https://youtube.com/@luxedrop" rel="noopener" target="_blank" aria-label="LuxeDrop на YouTube"><svg aria-hidden="true"><use href="/assets/icons.svg#b-youtube"/></svg></a>
+          </div>
+        </div>
+        <nav aria-label="Сервис">
+          <p class="footer-title">Сервис</p>
+          <ul class="footer-links">
+            <li><a href="/upgrade/">Апгрейдер</a></li>
+            <li><a href="/market/">Маркет скинов</a></li>
+            <li><a href="/sell/">Продать скины</a></li>
+            <li><a href="/fair/">Проверка честности</a></li>
+          </ul>
+        </nav>
+        <nav aria-label="Помощь">
+          <p class="footer-title">Помощь</p>
+          <ul class="footer-links">
+            <li><a href="/#faq">Частые вопросы</a></li>
+            <!-- ЗАМЕНИТЬ: контакты поддержки -->
+            <li><a href="https://t.me/luxedrop_support" rel="noopener" target="_blank">Поддержка в Telegram</a></li>
+            <li><a href="mailto:support@luxedrop.gg">support@luxedrop.gg</a></li>
+            <li><a href="/profile/">Личный кабинет</a></li>
+          </ul>
+        </nav>
+        <nav aria-label="Документы">
+          <p class="footer-title">Документы</p>
+          <ul class="footer-links">
+            <li><a href="/legal/terms/">Пользовательское соглашение</a></li>
+            <li><a href="/legal/privacy/">Политика конфиденциальности</a></li>
+            <li><a href="/legal/responsible/">Ответственная игра</a></li>
+          </ul>
+        </nav>
+      </div>
+      <div class="footer-bottom">
+        <p><span class="age-badge" aria-label="Только для лиц старше 18 лет">18+</span>&nbsp; © 2026 LuxeDrop. Сервис для совершеннолетних.</p>
+        <p>Не связан с Valve Corporation. Counter-Strike и Steam — товарные знаки Valve.</p>
+      </div>
+    </div>
+  </footer>
+  <!-- /partial:footer -->
+</body>
+</html>

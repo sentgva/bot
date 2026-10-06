@@ -1,0 +1,41 @@
+<form class="form" id="sell-form" novalidate>
+  <div class="field">
+    <label for="sell-trade">Трейд-ссылка Steam</label>
+    <input class="input" id="sell-trade" name="tradeUrl" type="url" inputmode="url" autocomplete="off" spellcheck="false" required
+      placeholder="https://steamcommunity.com/tradeoffer/new/?partner=…" aria-describedby="sell-trade-hint sell-trade-error">
+    <p class="hint" id="sell-trade-hint">Где взять: Steam → Инвентарь → Предложения обмена → <a href="https://steamcommunity.com/my/tradeoffers/privacy#trade_offer_access_url" target="_blank" rel="noopener">Кто может отправлять мне предложения</a>.</p>
+    <p class="error" id="sell-trade-error" aria-live="polite"></p>
+  </div>
+  <fieldset class="field radio-group" aria-describedby="sell-method-error">
+    <legend class="legend">Куда получить деньги</legend>
+    <label class="chip"><input type="radio" name="method" value="card" id="sell-method" required>Карта</label>
+    <label class="chip"><input type="radio" name="method" value="sbp">СБП</label>
+    <label class="chip"><input type="radio" name="method" value="crypto">USDT / TON</label>
+    <label class="chip" data-auth-only hidden><input type="radio" name="method" value="balance">На баланс</label>
+    <p class="error error-full" id="sell-method-error" aria-live="polite"></p>
+  </fieldset>
+  <div class="field">
+    <label for="sell-contact">Телефон или Telegram <span class="muted optional" hidden>(необязательно)</span></label>
+    <input class="input" id="sell-contact" name="contact" type="text" inputmode="text" autocomplete="tel" required
+      placeholder="+7 (999) 123-45-67 или @username" aria-describedby="sell-contact-hint sell-contact-error">
+    <p class="hint" id="sell-contact-hint">Напишем, как только отправим обмен. Спам не шлём.</p>
+    <p class="error" id="sell-contact-error" aria-live="polite"></p>
+  </div>
+  <!-- Ловушка для ботов: люди это поле не видят и не заполняют -->
+  <div class="hp" aria-hidden="true"><label for="sell-website">Сайт</label><input id="sell-website" name="website" type="text" tabindex="-1" autocomplete="off"></div>
+  <div class="field">
+    <label class="checkbox"><input type="checkbox" name="agree" id="sell-agree" required aria-describedby="sell-agree-error">
+      <span>Мне есть 18 лет, я согласен с <a href="/legal/terms/">условиями</a> и <a href="/legal/privacy/">обработкой данных</a></span></label>
+    <p class="error" id="sell-agree-error" aria-live="polite"></p>
+  </div>
+  <button class="btn btn-primary btn-lg btn-block" type="submit" data-loading="Отправляем…">
+    <svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-hand-coins"/></svg><span>Получить оценку и деньги</span>
+  </button>
+  <p class="hint">Отвечаем в среднем за 15 минут с 10:00 до 23:00 МСК. <!-- ЗАМЕНИТЬ, если график другой --></p>
+</form>
+<div class="form-success" data-form-success hidden tabindex="-1" role="status">
+  <span class="icon-tile"><svg class="icon icon-lg" aria-hidden="true"><use href="/assets/icons.svg#i-circle-check"/></svg></span>
+  <h3 class="h3">Заявка <span data-request-id></span> принята</h3>
+  <p class="muted">Менеджер проверит скины и пришлёт обмен в Steam. Деньги отправим сразу после того, как обмен будет принят.</p>
+  <button class="btn btn-secondary" type="button" data-form-again>Отправить ещё одну</button>
+</div>

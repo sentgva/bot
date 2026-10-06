@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="ru" class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Профиль — баланс, инвентарь и вывод | LuxeDrop</title>
+  <meta name="description" content="Личный кабинет LuxeDrop: баланс, пополнение и вывод на карту, СБП или в крипту, скины на сайте и история апгрейдов.">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="canonical" href="https://luxedrop.gg/profile/">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://luxedrop.gg/profile/">
+  <meta property="og:title" content="Профиль LuxeDrop">
+  <meta property="og:description" content="Баланс, инвентарь и вывод денег.">
+  <!-- partial:head -->
+  <meta name="theme-color" content="#0a0f1e" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f4f6fb" media="(prefers-color-scheme: light)">
+  <meta property="og:site_name" content="LuxeDrop">
+  <meta property="og:locale" content="ru_RU">
+  <meta property="og:image" content="https://luxedrop.gg/assets/img/og-image.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="LuxeDrop: апгрейд скинов CS2 и быстрый вывод денег">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="/favicon.ico" sizes="32x32">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="preload" href="/assets/fonts/inter-cyrillic-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <script>try{var t=localStorage.getItem('ld-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+  <!-- /partial:head -->
+  <script type="module" src="/assets/js/profile.js"></script>
+</head>
+<body>
+  <!-- partial:header -->
+  <a class="skip-link" href="#main">Перейти к содержимому</a>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="logo" href="/" aria-label="LuxeDrop — на главную">
+        <svg class="logo-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9"/><path d="M16 7.5 24.5 17H19v7.5h-6V17H7.5z" fill="#fff"/></svg>
+        <span>Luxe<b>Drop</b></span>
+      </a>
+      <nav class="nav" id="site-nav" aria-label="Основное меню">
+        <ul>
+          <li><a href="/upgrade/">Апгрейд</a></li>
+          <li><a href="/market/">Маркет</a></li>
+          <li><a href="/sell/">Продать</a></li>
+          <li><a href="/fair/">Честность</a></li>
+          <li class="nav-theme">
+            <button class="btn btn-ghost" type="button" data-theme-toggle aria-label="Сменить тему">
+              <svg class="icon i-sun" aria-hidden="true"><use href="/assets/icons.svg#i-sun"/></svg>
+              <svg class="icon i-moon" aria-hidden="true"><use href="/assets/icons.svg#i-moon"/></svg>
+              <span>Сменить тему</span>
+            </button>
+          </li>
+        </ul>
+      </nav>
+      <div class="header-actions">
+        <button class="icon-btn" type="button" data-theme-toggle aria-label="Сменить тему">
+          <svg class="icon i-sun" aria-hidden="true"><use href="/assets/icons.svg#i-sun"/></svg>
+          <svg class="icon i-moon" aria-hidden="true"><use href="/assets/icons.svg#i-moon"/></svg>
+        </button>
+        <div class="auth" data-auth>
+          <a class="btn btn-primary btn-sm" href="/api/auth/steam"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#b-steam"/></svg><span>Войти<span class="hide-sm"> через Steam</span></span></a>
+        </div>
+        <button class="icon-btn nav-toggle" type="button" data-nav-toggle aria-controls="site-nav" aria-expanded="false" aria-label="Открыть меню">
+          <svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-menu"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+  <!-- /partial:header -->
+
+  <main id="main">
+    <h1 class="sr-only">Профиль</h1>
+    <div class="container page-head" data-guest hidden>
+      <div class="empty">
+        <span class="icon-tile"><svg class="icon icon-lg" aria-hidden="true"><use href="/assets/icons.svg#i-user"/></svg></span>
+        <h2 class="h3">Войди, чтобы открыть профиль</h2>
+        <p>Баланс, скины и вывод денег — после входа через Steam.</p>
+        <a class="btn btn-primary" href="/api/auth/steam?next=%2Fprofile%2F" data-login-link><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#b-steam"/></svg><span>Войти через Steam</span></a>
+      </div>
+    </div>
+
+    <div data-app hidden>
+      <div class="container page-head">
+        <div class="profile-head">
+          <div class="profile-user">
+            <span data-avatar></span>
+            <div>
+              <p class="h3" data-name></p>
+              <p class="small muted">Steam ID: <span class="mono" data-steam-id></span></p>
+            </div>
+          </div>
+          <div class="card balance-card">
+            <div>
+              <p class="small muted">Баланс</p>
+              <p class="balance-value" data-balance-exact>0 ₽</p>
+            </div>
+            <div class="row">
+              <a class="btn btn-primary btn-sm" href="#wallet" data-goto="wallet"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-plus"/></svg>Пополнить</a>
+              <a class="btn btn-secondary btn-sm" href="#wallet" data-goto="wallet"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-banknote"/></svg>Вывести</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="container app-section">
+        <div class="tabs" role="tablist" aria-label="Разделы профиля">
+          <button class="tab" role="tab" id="tab-inventory" aria-controls="panel-inventory" aria-selected="true" data-tab="inventory"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-package"/></svg>Инвентарь</button>
+          <button class="tab" role="tab" id="tab-wallet" aria-controls="panel-wallet" aria-selected="false" tabindex="-1" data-tab="wallet"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-wallet"/></svg>Кошелёк</button>
+          <button class="tab" role="tab" id="tab-history" aria-controls="panel-history" aria-selected="false" tabindex="-1" data-tab="history"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-history"/></svg>История</button>
+          <button class="tab" role="tab" id="tab-upgrades" aria-controls="panel-upgrades" aria-selected="false" tabindex="-1" data-tab="upgrades"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-trending-up"/></svg>Апгрейды</button>
+          <button class="tab" role="tab" id="tab-settings" aria-controls="panel-settings" aria-selected="false" tabindex="-1" data-tab="settings"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-settings"/></svg>Настройки</button>
+        </div>
+
+        <!-- Инвентарь -->
+        <section role="tabpanel" id="panel-inventory" aria-labelledby="tab-inventory" tabindex="0">
+          <div class="callout callout-warning mb-4" data-no-trade hidden>
+            <svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-circle-alert"/></svg>
+            <p>Чтобы выводить скины в Steam, добавь трейд-ссылку в <a href="#settings" data-goto="settings">настройках</a>.</p>
+          </div>
+          <div class="skin-grid skin-grid-wide" data-owned></div>
+          <div class="mt-6" data-skin-wd-box hidden>
+            <h2 class="h3 mb-4">Выводы скинов</h2>
+            <div class="list" data-skin-wd></div>
+          </div>
+        </section>
+
+        <!-- Кошелёк -->
+        <section role="tabpanel" id="panel-wallet" aria-labelledby="tab-wallet" tabindex="0" hidden>
+          <div class="two-col">
+            <div class="card">
+              <h2 class="h3">Пополнить баланс</h2>
+              <div data-deposit class="mt-4"></div>
+            </div>
+            <div class="card">
+              <h2 class="h3">Вывести деньги</h2>
+              <form class="form mt-4" id="withdraw-form" novalidate>
+                <fieldset class="field radio-group" aria-describedby="wd-method-error">
+                  <legend class="legend">Куда вывести</legend>
+                  <label class="chip" data-method="card"><input type="radio" name="method" value="card" id="wd-method">Карта</label>
+                  <label class="chip" data-method="sbp"><input type="radio" name="method" value="sbp">СБП</label>
+                  <label class="chip" data-method="crypto"><input type="radio" name="method" value="crypto">USDT / TON</label>
+                  <p class="error error-full" id="wd-method-error" aria-live="polite"></p>
+                </fieldset>
+                <div class="field" data-for="card" hidden>
+                  <label for="wd-card">Номер карты</label>
+                  <input class="input num" id="wd-card" name="card" type="text" inputmode="numeric" autocomplete="cc-number" placeholder="2200 0000 0000 0000" aria-describedby="wd-card-error">
+                  <p class="error" id="wd-card-error" aria-live="polite"></p>
+                </div>
+                <div class="field" data-for="sbp" hidden>
+                  <label for="wd-phone">Телефон, привязанный к банку</label>
+                  <input class="input num" id="wd-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+7 (999) 123-45-67" aria-describedby="wd-phone-error">
+                  <p class="error" id="wd-phone-error" aria-live="polite"></p>
+                </div>
+                <div class="field" data-for="sbp" hidden>
+                  <label for="wd-bank">Банк</label>
+                  <select class="select" id="wd-bank" name="bank" aria-describedby="wd-bank-error"><option value="">Выбери банк</option></select>
+                  <p class="error" id="wd-bank-error" aria-live="polite"></p>
+                </div>
+                <fieldset class="field radio-group" data-for="crypto" hidden aria-describedby="wd-asset-error">
+                  <legend class="legend">Монета</legend>
+                  <label class="chip"><input type="radio" name="asset" value="USDT" id="wd-asset" checked>USDT</label>
+                  <label class="chip"><input type="radio" name="asset" value="TON">TON</label>
+                  <p class="hint error-full">Придёт чеком в @CryptoBot — оттуда можно вывести на любой кошелёк.</p>
+                  <p class="error error-full" id="wd-asset-error" aria-live="polite"></p>
+                </fieldset>
+                <div class="field">
+                  <label for="wd-amount">Сумма</label>
+                  <div class="row">
+                    <div class="input-group grow-1">
+                      <input class="input num" id="wd-amount" name="amount" type="number" inputmode="decimal" min="0" step="0.01" aria-describedby="wd-amount-hint wd-amount-error">
+                      <span class="suffix" aria-hidden="true">₽</span>
+                    </div>
+                    <button class="btn btn-secondary" type="button" data-all>Всё</button>
+                  </div>
+                  <p class="hint" id="wd-amount-hint" data-limits></p>
+                  <p class="error" id="wd-amount-error" aria-live="polite"></p>
+                </div>
+                <div class="summary">
+                  <div><span>Комиссия</span><span class="num" data-fee>—</span></div>
+                  <div class="total"><span>Получишь</span><span class="num" data-receive>—</span></div>
+                </div>
+                <button class="btn btn-primary btn-lg btn-block" type="submit" data-loading="Создаём заявку…">
+                  <svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-banknote"/></svg><span>Вывести</span>
+                </button>
+              </form>
+            </div>
+          </div>
+          <h2 class="h3 mt-7 mb-4">Пополнения и выводы</h2>
+          <div class="list" data-payments></div>
+        </section>
+
+        <!-- История -->
+        <section role="tabpanel" id="panel-history" aria-labelledby="tab-history" tabindex="0" hidden>
+          <div class="list" data-ledger></div>
+        </section>
+
+        <!-- Апгрейды -->
+        <section role="tabpanel" id="panel-upgrades" aria-labelledby="tab-upgrades" tabindex="0" hidden>
+          <p class="muted mb-4">Чтобы проверить бросок, смени сид в настройках — старый раскроется, и у каждого броска появится кнопка «Проверить».</p>
+          <div class="list" data-upgrades></div>
+        </section>
+
+        <!-- Настройки -->
+        <section role="tabpanel" id="panel-settings" aria-labelledby="tab-settings" tabindex="0" hidden>
+          <div class="two-col">
+            <form class="card form" id="trade-form" novalidate>
+              <h2 class="h3">Трейд-ссылка Steam</h2>
+              <div class="field">
+                <label for="trade-url">Ссылка для обмена</label>
+                <input class="input" id="trade-url" name="tradeUrl" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://steamcommunity.com/tradeoffer/new/?partner=…" aria-describedby="trade-url-hint trade-url-error">
+                <p class="hint" id="trade-url-hint">Найди её в Steam: <a href="https://steamcommunity.com/my/tradeoffers/privacy#trade_offer_access_url" target="_blank" rel="noopener">Инвентарь → Предложения обмена → Кто может отправлять мне предложения</a>.</p>
+                <p class="error" id="trade-url-error" aria-live="polite"></p>
+              </div>
+              <button class="btn btn-primary" type="submit" data-loading="Сохраняем…">Сохранить</button>
+            </form>
+
+            <div class="card form">
+              <h2 class="h3">Честная игра</h2>
+              <div class="field">
+                <span class="legend">Хэш текущего серверного сида</span>
+                <p class="mono small" data-seed-hash></p>
+                <p class="hint">Бросков с этим сидом: <span data-seed-nonce>0</span></p>
+              </div>
+              <form class="field" id="client-seed-form" novalidate>
+                <label for="client-seed">Клиентский сид</label>
+                <div class="row">
+                  <input class="input grow-1" id="client-seed" name="clientSeed" type="text" maxlength="32" autocomplete="off" spellcheck="false" aria-describedby="client-seed-error">
+                  <button class="btn btn-secondary" type="submit" data-loading="…">Сохранить</button>
+                </div>
+                <p class="error" id="client-seed-error" aria-live="polite"></p>
+              </form>
+              <div>
+                <button class="btn btn-secondary" type="button" data-rotate data-loading="Меняем…"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-refresh-cw"/></svg>Сменить серверный сид</button>
+                <div data-revealed class="mt-4" aria-live="polite"></div>
+              </div>
+            </div>
+          </div>
+          <div class="row mt-6">
+            <button class="btn btn-ghost" type="button" data-logout><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-log-out"/></svg>Выйти из аккаунта</button>
+            <a class="btn btn-ghost" href="/admin/" data-admin-link hidden><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-sliders-horizontal"/></svg>Админка</a>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <!-- partial:footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a class="logo" href="/" aria-label="LuxeDrop — на главную">
+            <svg class="logo-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9"/><path d="M16 7.5 24.5 17H19v7.5h-6V17H7.5z" fill="#fff"/></svg>
+            <span>Luxe<b>Drop</b></span>
+          </a>
+          <p class="muted small footer-about">Апгрейд, покупка и продажа скинов CS2. Вывод на карту, по СБП и в крипту.</p>
+          <!-- ЗАМЕНИТЬ: ссылки на ваши соцсети -->
+          <div class="socials">
+            <a href="https://t.me/luxedrop" rel="noopener" target="_blank" aria-label="Telegram-канал LuxeDrop"><svg aria-hidden="true"><use href="/assets/icons.svg#b-telegram"/></svg></a>
+            <a href="https://discord.gg/luxedrop" rel="noopener" target="_blank" aria-label="Discord-сервер LuxeDrop"><svg aria-hidden="true"><use href="/assets/icons.svg#b-discord"/></svg></a>
+            <a href="https://vk.com/luxedrop" rel="noopener" target="_blank" aria-label="LuxeDrop во ВКонтакте"><svg aria-hidden="true"><use href="/assets/icons.svg#b-vk"/></svg></a>
+            <a href="https://youtube.com/@luxedrop" rel="noopener" target="_blank" aria-label="LuxeDrop на YouTube"><svg aria-hidden="true"><use href="/assets/icons.svg#b-youtube"/></svg></a>
+          </div>
+        </div>
+        <nav aria-label="Сервис">
+          <p class="footer-title">Сервис</p>
+          <ul class="footer-links">
+            <li><a href="/upgrade/">Апгрейдер</a></li>
+            <li><a href="/market/">Маркет скинов</a></li>
+            <li><a href="/sell/">Продать скины</a></li>
+            <li><a href="/fair/">Проверка честности</a></li>
+          </ul>
+        </nav>
+        <nav aria-label="Помощь">
+          <p class="footer-title">Помощь</p>
+          <ul class="footer-links">
+            <li><a href="/#faq">Частые вопросы</a></li>
+            <!-- ЗАМЕНИТЬ: контакты поддержки -->
+            <li><a href="https://t.me/luxedrop_support" rel="noopener" target="_blank">Поддержка в Telegram</a></li>
+            <li><a href="mailto:support@luxedrop.gg">support@luxedrop.gg</a></li>
+            <li><a href="/profile/">Личный кабинет</a></li>
+          </ul>
+        </nav>
+        <nav aria-label="Документы">
+          <p class="footer-title">Документы</p>
+          <ul class="footer-links">
+            <li><a href="/legal/terms/">Пользовательское соглашение</a></li>
+            <li><a href="/legal/privacy/">Политика конфиденциальности</a></li>
+            <li><a href="/legal/responsible/">Ответственная игра</a></li>
+          </ul>
+        </nav>
+      </div>
+      <div class="footer-bottom">
+        <p><span class="age-badge" aria-label="Только для лиц старше 18 лет">18+</span>&nbsp; © 2026 LuxeDrop. Сервис для совершеннолетних.</p>
+        <p>Не связан с Valve Corporation. Counter-Strike и Steam — товарные знаки Valve.</p>
+      </div>
+    </div>
+  </footer>
+  <!-- /partial:footer -->
+</body>
+</html>

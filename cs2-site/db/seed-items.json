@@ -1,0 +1,242 @@
+[
+ {
+  "hashName": "P250 | Sand Dune (Field-Tested)",
+  "weapon": "P250",
+  "rarity": "consumer",
+  "price": 800
+ },
+ {
+  "hashName": "MP9 | Storm (Minimal Wear)",
+  "weapon": "MP9",
+  "rarity": "consumer",
+  "price": 900
+ },
+ {
+  "hashName": "Nova | Predator (Field-Tested)",
+  "weapon": "Nova",
+  "rarity": "industrial",
+  "price": 1400
+ },
+ {
+  "hashName": "Glock-18 | High Beam (Factory New)",
+  "weapon": "Glock-18",
+  "rarity": "milspec",
+  "price": 3500
+ },
+ {
+  "hashName": "USP-S | Ticket to Hell (Field-Tested)",
+  "weapon": "USP-S",
+  "rarity": "restricted",
+  "price": 12000
+ },
+ {
+  "hashName": "M4A1-S | Night Terror (Field-Tested)",
+  "weapon": "M4A1-S",
+  "rarity": "milspec",
+  "price": 6500
+ },
+ {
+  "hashName": "MAC-10 | Neon Rider (Field-Tested)",
+  "weapon": "MAC-10",
+  "rarity": "classified",
+  "price": 29000
+ },
+ {
+  "hashName": "P90 | Asiimov (Field-Tested)",
+  "weapon": "P90",
+  "rarity": "covert",
+  "price": 52000
+ },
+ {
+  "hashName": "Desert Eagle | Mecha Industries (Field-Tested)",
+  "weapon": "Desert Eagle",
+  "rarity": "restricted",
+  "price": 41000
+ },
+ {
+  "hashName": "AK-47 | Slate (Field-Tested)",
+  "weapon": "AK-47",
+  "rarity": "restricted",
+  "price": 38000
+ },
+ {
+  "hashName": "AK-47 | Redline (Field-Tested)",
+  "weapon": "AK-47",
+  "rarity": "classified",
+  "price": 125000
+ },
+ {
+  "hashName": "AK-47 | Redline (Minimal Wear)",
+  "weapon": "AK-47",
+  "rarity": "classified",
+  "price": 295000
+ },
+ {
+  "hashName": "M4A4 | Desolate Space (Field-Tested)",
+  "weapon": "M4A4",
+  "rarity": "classified",
+  "price": 115000
+ },
+ {
+  "hashName": "USP-S | Kill Confirmed (Field-Tested)",
+  "weapon": "USP-S",
+  "rarity": "covert",
+  "price": 260000
+ },
+ {
+  "hashName": "Glock-18 | Water Elemental (Minimal Wear)",
+  "weapon": "Glock-18",
+  "rarity": "classified",
+  "price": 62000
+ },
+ {
+  "hashName": "AWP | Atheris (Field-Tested)",
+  "weapon": "AWP",
+  "rarity": "restricted",
+  "price": 24000
+ },
+ {
+  "hashName": "AWP | Neo-Noir (Field-Tested)",
+  "weapon": "AWP",
+  "rarity": "covert",
+  "price": 220000
+ },
+ {
+  "hashName": "AWP | Asiimov (Field-Tested)",
+  "weapon": "AWP",
+  "rarity": "covert",
+  "price": 980000
+ },
+ {
+  "hashName": "AWP | Hyper Beast (Field-Tested)",
+  "weapon": "AWP",
+  "rarity": "covert",
+  "price": 330000
+ },
+ {
+  "hashName": "M4A1-S | Printstream (Field-Tested)",
+  "weapon": "M4A1-S",
+  "rarity": "covert",
+  "price": 1150000
+ },
+ {
+  "hashName": "AK-47 | Vulcan (Field-Tested)",
+  "weapon": "AK-47",
+  "rarity": "covert",
+  "price": 1450000
+ },
+ {
+  "hashName": "Desert Eagle | Printstream (Field-Tested)",
+  "weapon": "Desert Eagle",
+  "rarity": "covert",
+  "price": 540000
+ },
+ {
+  "hashName": "StatTrak™ AK-47 | Redline (Field-Tested)",
+  "weapon": "AK-47",
+  "rarity": "classified",
+  "price": 410000
+ },
+ {
+  "hashName": "StatTrak™ USP-S | Cortex (Field-Tested)",
+  "weapon": "USP-S",
+  "rarity": "classified",
+  "price": 78000
+ },
+ {
+  "hashName": "AK-47 | Fire Serpent (Field-Tested)",
+  "weapon": "AK-47",
+  "rarity": "covert",
+  "price": 7200000
+ },
+ {
+  "hashName": "M4A4 | Howl (Field-Tested)",
+  "weapon": "M4A4",
+  "rarity": "gold",
+  "price": 32000000
+ },
+ {
+  "hashName": "AWP | Dragon Lore (Field-Tested)",
+  "weapon": "AWP",
+  "rarity": "covert",
+  "price": 78000000
+ },
+ {
+  "hashName": "★ Karambit | Doppler (Factory New)",
+  "weapon": "Karambit",
+  "rarity": "gold",
+  "price": 9800000
+ },
+ {
+  "hashName": "★ Butterfly Knife | Fade (Factory New)",
+  "weapon": "Butterfly Knife",
+  "rarity": "gold",
+  "price": 21000000
+ },
+ {
+  "hashName": "★ Flip Knife | Slaughter (Minimal Wear)",
+  "weapon": "Flip Knife",
+  "rarity": "gold",
+  "price": 3100000
+ },
+ {
+  "hashName": "★ Gut Knife | Tiger Tooth (Factory New)",
+  "weapon": "Gut Knife",
+  "rarity": "gold",
+  "price": 1250000
+ },
+ {
+  "hashName": "★ Shadow Daggers | Marble Fade (Factory New)",
+  "weapon": "Shadow Daggers",
+  "rarity": "gold",
+  "price": 1650000
+ },
+ {
+  "hashName": "★ Sport Gloves | Vice (Field-Tested)",
+  "weapon": "Sport Gloves",
+  "rarity": "gold",
+  "price": 24000000
+ },
+ {
+  "hashName": "★ Driver Gloves | Imperial Plaid (Field-Tested)",
+  "weapon": "Driver Gloves",
+  "rarity": "gold",
+  "price": 2200000
+ },
+ {
+  "hashName": "Five-SeveN | Monkey Business (Field-Tested)",
+  "weapon": "Five-SeveN",
+  "rarity": "classified",
+  "price": 31000
+ },
+ {
+  "hashName": "Tec-9 | Fuel Injector (Field-Tested)",
+  "weapon": "Tec-9",
+  "rarity": "covert",
+  "price": 34000
+ },
+ {
+  "hashName": "SSG 08 | Dragonfire (Field-Tested)",
+  "weapon": "SSG 08",
+  "rarity": "covert",
+  "price": 145000
+ },
+ {
+  "hashName": "UMP-45 | Primal Saber (Field-Tested)",
+  "weapon": "UMP-45",
+  "rarity": "classified",
+  "price": 26000
+ },
+ {
+  "hashName": "Galil AR | Chatterbox (Field-Tested)",
+  "weapon": "Galil AR",
+  "rarity": "covert",
+  "price": 72000
+ },
+ {
+  "hashName": "FAMAS | Roll Cage (Field-Tested)",
+  "weapon": "FAMAS",
+  "rarity": "classified",
+  "price": 33000
+ }
+]
