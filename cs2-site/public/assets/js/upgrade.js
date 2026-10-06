@@ -1,6 +1,6 @@
 // Апгрейдер: выбор ставки (скины + баланс), выбор цели, расчёт шанса, бросок с анимацией стрелки.
 import {
-  $, $$, api, dateTime, emptyState, esc, icon, loginUrl, pct, prefersReducedMotion, rub, session, setBalance,
+  $, $$, api, dateTime, emptyState, esc, icon, loginUrl, pct, prefersReducedMotion, lc, session, setBalance,
   skeletonCards, skinCard, skinImage, toastError, withLoading,
 } from './core.js';
 
@@ -46,7 +46,7 @@ function calc() {
   const value = inputValue();
   if (!value || !state.target) return { value, chance: 0, ok: false, reason: state.user ? 'Выбери ставку и скин, который хочешь получить' : 'Войди через Telegram, чтобы сделать ставку' };
   const raw = (value / state.target.price) * (1 - state.cfg.houseEdge);
-  if (value < state.cfg.minValue) return { value, chance: raw, ok: false, reason: `Минимальная ставка — ${rub(state.cfg.minValue)}` };
+  if (value < state.cfg.minValue) return { value, chance: raw, ok: false, reason: `Минимальная ставка — ${lc(state.cfg.minValue)}` };
   if (raw > state.cfg.maxChance) return { value, chance: raw, ok: false, reason: `Шанс выше ${Math.round(state.cfg.maxChance * 100)}% — выбери цель дороже` };
   if (raw < state.cfg.minChance) return { value, chance: raw, ok: false, reason: 'Шанс меньше 1% — выбери цель дешевле или добавь ставку' };
   return { value, chance: raw, ok: true, reason: '' };
@@ -55,9 +55,9 @@ function calc() {
 function render() {
   const { value, chance, ok, reason } = calc();
   const shown = Math.min(chance, state.cfg.maxChance);
-  el.inputTotal.textContent = rub(value);
-  el.sumIn.textContent = rub(value);
-  el.sumTarget.textContent = state.target ? rub(state.target.price) : '—';
+  el.inputTotal.textContent = lc(value);
+  el.sumIn.textContent = lc(value);
+  el.sumTarget.textContent = state.target ? lc(state.target.price) : '—';
   // После броска колесо держит зону того апгрейда, чтобы было видно, куда попала стрелка
   const res = state.result;
   const arc = res ? res.chance / 1e6 : shown;
@@ -108,7 +108,7 @@ function renderInput() {
   const max = Math.floor(state.user.balance / 100);
   el.range.max = String(max);
   el.stake.max = String(max);
-  el.balanceLeft.textContent = rub(state.user.balance);
+  el.balanceLeft.textContent = lc(state.user.balance);
 }
 
 el.inputBody.addEventListener('click', (e) => {
@@ -327,7 +327,7 @@ async function loadFeed() {
         <div class="feed-item" data-rarity="${esc(w.item.rarity || '')}">
           ${skinImage(w.item, '')}
           <div class="grow"><p class="name">${esc(w.item.name)}</p><p class="tiny muted">${esc(w.user)} · шанс ${pct(w.chance)} · ${dateTime(w.at)}</p></div>
-          <span class="num"><b>${rub(w.item.price)}</b></span>
+          <span class="num"><b>${lc(w.item.price)}</b></span>
         </div>`).join('')
       : '<p class="muted">Здесь появятся последние выигрыши. Стань первым!</p>';
   } catch {

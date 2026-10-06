@@ -89,7 +89,7 @@
         <section class="card upg-panel" aria-labelledby="in-title">
           <div class="panel-head">
             <h2 id="in-title">Твоя ставка</h2>
-            <span class="badge badge-accent num" data-input-total>0 ₽</span>
+            <span class="badge badge-accent num" data-input-total>0 LC</span>
           </div>
           <div data-input-body>
             <div class="skin-grid">
@@ -101,10 +101,10 @@
             <label class="legend" for="stake">Добавить с баланса</label>
             <div class="input-group">
               <input class="input num" id="stake" type="number" inputmode="decimal" min="0" step="1" value="0" aria-describedby="stake-hint">
-              <span class="suffix" aria-hidden="true">₽</span>
+              <span class="suffix" aria-hidden="true">LC</span>
             </div>
             <input class="range" type="range" min="0" step="1" value="0" data-stake-range aria-label="Сумма с баланса, ползунок">
-            <p class="hint" id="stake-hint">На балансе: <span data-balance-left>0 ₽</span></p>
+            <p class="hint" id="stake-hint">На балансе: <span data-balance-left>0 LC</span></p>
           </div>
         </section>
 
@@ -112,7 +112,7 @@
         <section class="card upg-panel upg-center" aria-labelledby="ring-title">
           <h2 id="ring-title" class="sr-only">Шанс и результат</h2>
           <div class="upg-summary">
-            <div class="box"><span class="tiny muted">Ставка</span><b data-sum-in>0 ₽</b></div>
+            <div class="box"><span class="tiny muted">Ставка</span><b data-sum-in>0 LC</b></div>
             <svg class="icon accent" aria-hidden="true"><use href="/assets/icons.svg#i-arrow-right"/></svg>
             <div class="box"><span class="tiny muted">Цель</span><b data-sum-target>—</b></div>
           </div>
@@ -184,7 +184,7 @@
 
       <section class="card mt-7 prose" aria-labelledby="how-title">
         <h2 class="h3" id="how-title">Как считается шанс</h2>
-        <p class="mt-3">Шанс = стоимость ставки ÷ цена цели × 0,95. Например, ставка 1 000 ₽ и цель за 2 000 ₽ дают 47,5%. Максимальный шанс — 80%, минимальный — 1%.</p>
+        <p class="mt-3">Шанс = стоимость ставки ÷ цена цели × 0,95. Например, ставка 1 000 LC и цель за 2 000 LC дают 47,5%. Максимальный шанс — 80%, минимальный — 1%.</p>
         <p>Результат броска — число от 0 до 999 999. Если оно меньше шанса × 1 000 000, ты выиграл. Число считается из серверного сида, твоего клиентского сида и номера броска — <a href="/fair/">как проверить</a>.</p>
         <p>Скины из ставки сгорают в любом случае. Ставь только то, что готов потерять. <a href="/legal/responsible/">Ответственная игра</a>.</p>
       </section>

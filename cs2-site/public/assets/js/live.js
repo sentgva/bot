@@ -1,6 +1,6 @@
 // Живая лента над сайтом: честный онлайн и последние выигрыши. Обновляется раз в 20 секунд,
 // пока вкладка открыта и видна. Главная подписывается через onLive() — запрос всё равно один.
-import { $, esc, rub, skinImage } from './core.js';
+import { $, esc, lc, skinImage } from './core.js';
 
 const POLL_MS = 20_000;
 const strip = $('[data-live]');
@@ -27,7 +27,7 @@ function renderDrops(drops) {
     return `<a class="drop${isNew ? ' is-new' : ''}" href="/upgrade/" data-rarity="${esc(d.item.rarity || '')}"
       title="${esc(d.user)} выиграл ${esc(d.item.hashName)} с шансом ${(d.chance / 10000).toFixed(1).replace('.', ',')}%">
       ${skinImage(d.item, '').replace('<div class="skin-img">', '').replace(/<\/div>$/, '')}
-      <span class="drop-text"><span class="drop-name">${esc(d.item.name)}</span><span class="drop-price">${rub(d.item.price)}</span></span>
+      <span class="drop-text"><span class="drop-name">${esc(d.item.name)}</span><span class="drop-price">${lc(d.item.price)}</span></span>
     </a>`;
   }).join('');
   drops.forEach((d) => seen.add(d.id));

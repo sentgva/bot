@@ -10,6 +10,7 @@
 import fs from 'node:fs';
 import { config } from './config.js';
 import { getDb } from './db.js';
+import { floorLc } from './lc.js';
 
 const SKINPORT_URL = 'https://api.skinport.com/v1/items';
 const META_URL = 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/api/en/skins_not_grouped.json';
@@ -33,7 +34,8 @@ export function splitHashName(hashName) {
 
 const toKop = (price) => {
   const rate = config.priceCurrency === 'RUB' ? 1 : config.usdRubRate;
-  return rate > 0 && Number.isFinite(price) ? Math.round(price * rate * 100) : 0;
+  // Цена скина в LC (1 LC = 1 ₽), округление вниз до целого LC
+  return rate > 0 && Number.isFinite(price) ? floorLc(Math.floor(price * rate * 100)) : 0;
 };
 
 export async function fetchSkinportPrices(fetchImpl = fetch) {

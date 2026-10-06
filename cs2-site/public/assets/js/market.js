@@ -1,6 +1,6 @@
 // Маркет: фильтры (синхронизируются с адресом страницы), сетка скинов, покупка с подтверждением.
 import {
-  $, api, confirmDialog, emptyState, esc, loginUrl, rub, session, setBalance, skeletonCards, skinCard, toast, toastError, withLoading,
+  $, api, confirmDialog, emptyState, esc, loginUrl, lc, session, setBalance, skeletonCards, skinCard, toast, toastError, withLoading,
 } from './core.js';
 
 const PAGE = 30;
@@ -60,7 +60,7 @@ function render() {
   grid.innerHTML = state.items.length
     ? state.items.map((i, idx) => skinCard(i, {
       price: i.buyPrice,
-      actions: `<button class="btn btn-primary btn-sm" type="button" data-buy="${idx}" aria-label="Купить ${esc(i.name)} за ${rub(i.buyPrice)}">Купить</button>`,
+      actions: `<button class="btn btn-primary btn-sm" type="button" data-buy="${idx}" aria-label="Купить ${esc(i.name)} за ${lc(i.buyPrice)}">Купить</button>`,
     })).join('')
     : emptyState({ iconName: 'i-search', title: 'Ничего не нашлось', text: 'Попробуй убрать часть фильтров или изменить запрос.' });
   more.hidden = state.offset >= state.total;
@@ -105,9 +105,9 @@ grid.addEventListener('click', async (e) => {
   const after = user.balance - item.buyPrice;
   const ok = await confirmDialog({
     title: `Купить ${item.name}?`,
-    html: `<p>Цена: <b>${rub(item.buyPrice)}</b>. ${after >= 0
-      ? `После покупки на балансе останется ${rub(after, { exact: true })}.`
-      : `На балансе ${rub(user.balance, { exact: true })} — не хватает ${rub(-after, { exact: true })}.`}</p>`,
+    html: `<p>Цена: <b>${lc(item.buyPrice)}</b>. ${after >= 0
+      ? `После покупки на балансе останется ${lc(after)}.`
+      : `На балансе ${lc(user.balance)} — не хватает ${lc(-after)}.`}</p>`,
     confirm: after >= 0 ? 'Купить' : 'Пополнить баланс',
   });
   if (!ok) return;

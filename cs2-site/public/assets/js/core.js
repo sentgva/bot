@@ -12,15 +12,12 @@ export const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&a
 
 export const icon = (name, cls = 'icon') => `<svg class="${cls}" aria-hidden="true"><use href="${ICONS}#${name}"/></svg>`;
 
+const intFmt = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 });
 const rubFmt = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 2, minimumFractionDigits: 0 });
-const rubFmt0 = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 });
-// Копейки → «1 250 ₽». Копейки показываем только у сумм до 1 000 ₽ — так цифры читаются быстрее.
-// exact: true — всегда с копейками (баланс в профиле, суммы выводов).
-export const rub = (kop, { exact = false } = {}) => {
-  const v = Math.round(kop) / 100;
-  const short = !exact && Math.abs(v) >= 1000;
-  return `${(short ? rubFmt0 : rubFmt).format(short ? Math.trunc(v) : v)} ₽`;
-};
+// LuxeCoin — валюта сайта (1 LC = 1 ₽ стоимости скинов). Сотые доли → «1 250 LC», всегда вниз до целого.
+export const lc = (v) => `${intFmt.format(Math.floor(v / 100))} LC`;
+// Настоящие рубли — только там, где деньги уходят на карту/СБП (сумма к выплате)
+export const rub = (kop) => `${rubFmt.format(Math.round(kop) / 100)} ₽`;
 export const pct = (ppm, digits = 1) => `${(ppm / 10000).toFixed(digits).replace('.', ',')}%`;
 export const dateTime = (v) => new Date(v).toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
@@ -209,7 +206,7 @@ export function skinCard(item, { mode = 'static', selected = false, disabled = f
     ${skinImage(item, name)}
     <span class="skin-name">${esc(name)}</span>
     <span class="skin-meta">${esc(meta || RARITY[item.rarity] || ' ')}</span>
-    <span class="skin-price">${price != null ? rub(price) : '—'}</span>
+    <span class="skin-price">${price != null ? lc(price) : '—'}</span>
     ${actions ? `<span class="skin-actions">${actions}</span>` : ''}`;
   const common = `data-rarity="${esc(item.rarity || '')}" title="${esc(item.hashName || name)}" ${attrs}`;
   if (mode === 'select') {
@@ -266,13 +263,13 @@ export function renderAuth(user) {
     ? `<img class="avatar" src="${esc(user.avatar)}" alt="" width="44" height="44">`
     : `<span class="avatar avatar-fallback" aria-hidden="true">${initials}</span>`;
   box.innerHTML = `
-    <a class="balance-chip" href="/profile/#wallet" aria-label="Баланс ${rub(user.balance)}, пополнить или вывести">${icon('i-wallet')}<span data-balance>${rub(user.balance)}</span></a>
+    <a class="balance-chip" href="/profile/#wallet" aria-label="Баланс ${lc(user.balance)}, пополнить или вывести">${icon('i-coins')}<span data-balance>${lc(user.balance)}</span></a>
     <a class="avatar-link" href="/profile/" aria-label="Профиль: ${esc(user.name)}">${avatar}</a>`;
 }
 
 // Обновить баланс в шапке без перезагрузки
 export function setBalance(kop) {
-  $$('[data-balance]').forEach((el) => { el.textContent = rub(kop); });
+  $$('[data-balance]').forEach((el) => { el.textContent = lc(kop); });
 }
 
 // ── Появление при скролле ──────────────────────────────────

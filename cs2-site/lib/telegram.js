@@ -95,7 +95,7 @@ export async function handleUpdate(update, fetchImpl = fetch) {
   const isStart = typeof msg.text === 'string' && msg.text.startsWith('/start');
   const text = isStart
     ? `Привет, ${msg.from?.first_name || 'игрок'}! Это LuxeDrop — апгрейд скинов CS2.\n\n`
-      + '• Шанс до 80%, каждый бросок можно проверить\n• Вывод в USDT за 2 минуты, на карту — в среднем за 15\n\nЖми кнопку ниже — апгрейдер откроется прямо в Telegram.'
+      + '• Шанс до 80%, каждый бросок можно проверить\n• Пополнение звёздами ⭐ — баланс в LuxeCoin (1 LC = 1 ₽)\n• Вывод в USDT за 2 минуты, на карту — в среднем за 15\n\nЖми кнопку ниже — апгрейдер откроется прямо в Telegram.'
     : 'Апгрейдер открывается кнопкой ниже 👇\nВопросы — в поддержку: @luxedrop_support'; // ЗАМЕНИТЬ: контакт поддержки
   await tgApi('sendMessage', { chat_id: msg.chat.id, text, reply_markup: openButton() }, fetchImpl);
   return { ok: true };

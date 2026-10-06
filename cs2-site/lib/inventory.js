@@ -6,11 +6,13 @@ import { getItem, publicItem } from './catalog.js';
 import { getSettings } from './settings.js';
 import { changeBalance, lockUser } from './users.js';
 import { parseTradeUrl } from './validate.js';
-import { notifyAdmin, rub } from './notify.js';
+import { notifyAdmin } from './notify.js';
+import { floorLc, fmtLc } from './lc.js';
 import * as market from './providers/market-csgo.js';
 
-export const buyPrice = (price, s) => Math.ceil(price * (1 + s.marketMarkup));
-export const sellPrice = (price, s) => Math.floor(price * s.siteSellRate);
+// Цены в целых LC, округление вниз
+export const buyPrice = (price, s) => floorLc(price * (1 + s.marketMarkup));
+export const sellPrice = (price, s) => floorLc(price * s.siteSellRate);
 
 export async function buyItem(userId, hashName, expectedPrice) {
   const db = await getDb();
@@ -96,7 +98,7 @@ export async function withdrawItem(userId, itemId) {
       await db.query('update skin_withdrawals set error = $2, updated_at = now() where id = $1', [w.id, String(err.message).slice(0, 300)]);
     }
   }
-  if (status === 'review') await notifyAdmin(['🎯 Вывод скина на проверку', `#${w.id} ${w.hash_name} — ${rub(w.price)}`, w.trade_url]);
+  if (status === 'review') await notifyAdmin(['🎯 Вывод скина на проверку', `#${w.id} ${w.hash_name} — ${fmtLc(w.price)}`, w.trade_url]);
   return { id: w.id, status };
 }
 

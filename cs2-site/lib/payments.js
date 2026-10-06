@@ -1,4 +1,5 @@
-// Деньги: пополнение (крипта, демо) и вывод (карта, СБП, крипта).
+// Деньги: пополнение (звёзды Telegram, крипта, демо) и вывод (карта, СБП, крипта).
+// Баланс — в LuxeCoin (1 LC = 1 ₽), все суммы — целые LC.
 //
 // Вывод: сумма сразу списывается с баланса (замораживается) и создаётся выплата.
 //   • Крипта до cryptoAutoLimit — автоматически: создаём чек в @CryptoBot, игрок забирает его по ссылке.
@@ -13,6 +14,8 @@ import { changeBalance, lockUser } from './users.js';
 import { maskCard, normalizeCard, normalizePhone } from './validate.js';
 import { canEncrypt, decrypt, encrypt } from './crypto-box.js';
 import { notifyAdmin, rub } from './notify.js';
+import { floorLc, fmtLc, isWholeLc, starsToLc } from './lc.js';
+import { tgApi } from './telegram.js';
 import * as cryptopay from './providers/cryptopay.js';
 
 export const BANKS = ['Сбербанк', 'Т-Банк', 'Альфа-Банк', 'ВТБ', 'Газпромбанк', 'Райффайзенбанк', 'Озон Банк', 'Яндекс Банк', 'Другой банк'];
@@ -22,7 +25,8 @@ export function methodsInfo(s) {
     card: { enabled: canEncrypt(), fee: s.cardFee },
     sbp: { enabled: true, fee: s.cardFee },
     crypto: { enabled: cryptopay.isConfigured(), fee: s.cryptoFee, assets: cryptopay.ASSETS },
-    deposit: { crypto: cryptopay.isConfigured(), demo: config.demoTopup },
+    deposit: { stars: Boolean(config.tgBotToken), crypto: cryptopay.isConfigured(), demo: config.demoTopup },
+    stars: { lcPerStar: s.lcPerStar, min: s.minStars, max: s.maxStars },
     minWithdraw: s.minWithdraw,
     maxWithdraw: s.maxWithdraw,
     minDeposit: s.minDeposit,
@@ -35,7 +39,8 @@ export function methodsInfo(s) {
 export async function createCryptoDeposit(userId, amount) {
   const s = await getSettings();
   if (!cryptopay.isConfigured()) fail(503, 'Пополнение криптой временно недоступно');
-  if (!Number.isSafeInteger(amount) || amount < s.minDeposit) fail(400, `Минимальное пополнение — ${rub(s.minDeposit)}`);
+  amount = floorLc(amount); // пополнение — целые LC
+  if (!Number.isSafeInteger(amount) || amount < s.minDeposit) fail(400, `Минимальное пополнение — ${fmtLc(s.minDeposit)}`);
   if (amount > 100_000_000) fail(400, 'Слишком большая сумма за раз');
   const db = await getDb();
   const p = await db.one(
@@ -78,6 +83,86 @@ export async function handleCryptoWebhook(rawBody, signature) {
   });
 }
 
+// ── Звёзды Telegram (валюта XTR) ───────────────────────────
+// 1. Создаём ссылку на счёт (createInvoiceLink) — открывается в Telegram, на сайте и в Mini App.
+// 2. Перед оплатой Telegram спрашивает бота (pre_checkout_query) — проверяем, что счёт ещё действителен.
+// 3. После оплаты приходит successful_payment — зачисляем LC ровно один раз.
+// Сумма в LC фиксируется при создании счёта: курс lcPerStar, округление вниз.
+
+const starsPayload = (id) => `stars:${id}`;
+const parseStarsPayload = (p) => Number((/^stars:(\d+)$/.exec(String(p || '')) || [])[1]) || null;
+
+export async function createStarsInvoice(userId, stars, fetchImpl) {
+  const s = await getSettings();
+  if (!config.tgBotToken) fail(503, 'Оплата звёздами временно недоступна');
+  if (!Number.isSafeInteger(stars) || stars < s.minStars || stars > s.maxStars) fail(400, `Можно от ${s.minStars} до ${s.maxStars.toLocaleString('ru-RU')} ⭐`, { field: 'stars' });
+  const amount = starsToLc(stars, s.lcPerStar);
+  if (amount <= 0) fail(400, 'Слишком мало звёзд');
+  const db = await getDb();
+  const p = await db.one(
+    `insert into payments (user_id, direction, method, amount, status, details) values ($1, 'in', 'stars', $2, 'pending', $3) returning id`,
+    [userId, amount, JSON.stringify({ stars, lcPerStar: s.lcPerStar })],
+  );
+  try {
+    const url = await tgApi('createInvoiceLink', {
+      title: `${fmtLc(amount)} на баланс`,
+      description: `LuxeDrop: ${stars} ⭐ → ${fmtLc(amount)}. LuxeCoin — валюта сайта, 1 LC = 1 ₽ стоимости скинов.`,
+      payload: starsPayload(p.id),
+      currency: 'XTR', // звёзды Telegram; платёжный провайдер не нужен
+      prices: [{ label: fmtLc(amount), amount: stars }],
+    }, fetchImpl);
+    await db.query(`update payments set details = details || $2 where id = $1`, [p.id, JSON.stringify({ url })]);
+    return { id: p.id, url, amount, stars };
+  } catch (err) {
+    await db.query(`update payments set status = 'failed', details = details || $2 where id = $1`, [p.id, JSON.stringify({ error: err.message })]);
+    fail(502, 'Не получилось создать счёт в Telegram. Попробуй ещё раз');
+  }
+}
+
+async function findStarsPayment(q, payload, lock = false) {
+  const id = parseStarsPayload(payload);
+  if (!id) return null;
+  return q.one(`select * from payments where id = $1 and direction = 'in' and method = 'stars'${lock ? ' for update' : ''}`, [id]);
+}
+
+// Telegram спрашивает перед списанием звёзд: отвечаем за 10 секунд
+export async function handlePreCheckout(query, fetchImpl) {
+  const db = await getDb();
+  const p = await findStarsPayment(db, query.invoice_payload);
+  const ok = Boolean(p) && p.status === 'pending' && query.currency === 'XTR' && Number(query.total_amount) === p.details.stars;
+  await tgApi('answerPreCheckoutQuery', ok
+    ? { pre_checkout_query_id: query.id, ok: true }
+    : { pre_checkout_query_id: query.id, ok: false, error_message: 'Счёт устарел или уже оплачен. Создай новый в профиле LuxeDrop' }, fetchImpl);
+  return ok;
+}
+
+// Оплата прошла: зачисляем LC (повторное сообщение ничего не начислит второй раз)
+export async function handleStarsPaid(message, fetchImpl) {
+  const sp = message.successful_payment;
+  const db = await getDb();
+  const result = await db.tx(async (q) => {
+    const p = await findStarsPayment(q, sp.invoice_payload, true);
+    if (!p) return { skipped: true };
+    if (p.status === 'paid') return { duplicate: true };
+    if (sp.currency !== 'XTR' || Number(sp.total_amount) !== p.details.stars) {
+      await q.query(`update payments set status = 'review', details = details || $2 where id = $1`, [p.id, JSON.stringify({ mismatch: sp })]);
+      return { review: true, p };
+    }
+    await q.query(
+      `update payments set status = 'paid', paid_at = now(), updated_at = now(), provider_id = $2, details = details || $3 where id = $1`,
+      [p.id, sp.telegram_payment_charge_id, JSON.stringify({ payerTelegramId: message.from?.id ?? null })],
+    );
+    const balance = await changeBalance(q, p.user_id, p.amount, 'deposit', { ref: `payment:${p.id}`, note: `${p.details.stars} ⭐` });
+    return { ok: true, p, balance };
+  });
+  if (result.ok) {
+    await tgApi('sendMessage', { chat_id: message.chat.id, text: `✅ Зачислено ${fmtLc(result.p.amount)} за ${result.p.details.stars} ⭐\nБаланс: ${fmtLc(result.balance)}` }, fetchImpl).catch(() => {});
+  } else if (result.review) {
+    await notifyAdmin([`⚠️ Оплата звёздами #${result.p.id}: сумма не совпала, проверь вручную`]);
+  }
+  return result;
+}
+
 // Тестовое пополнение для стенда (DEMO_TOPUP=1)
 export async function demoTopup(userId) {
   if (!config.demoTopup) fail(404, 'Недоступно');
@@ -101,8 +186,9 @@ export async function requestWithdraw(userId, input) {
   const info = methodsInfo(s);
   const { method, amount } = input;
   if (!['card', 'sbp', 'crypto'].includes(method) || !info[method].enabled) fail(400, 'Этот способ вывода сейчас недоступен');
-  if (!Number.isSafeInteger(amount) || amount < s.minWithdraw) fail(400, `Минимальный вывод — ${rub(s.minWithdraw)}`);
-  if (amount > s.maxWithdraw) fail(400, `Максимум за раз — ${rub(s.maxWithdraw)}`);
+  if (!isWholeLc(amount)) fail(400, 'Сумма вывода — целое число LC', { field: 'amount' });
+  if (amount < s.minWithdraw) fail(400, `Минимальный вывод — ${fmtLc(s.minWithdraw)}`);
+  if (amount > s.maxWithdraw) fail(400, `Максимум за раз — ${fmtLc(s.maxWithdraw)}`);
 
   const details = {};
   if (method === 'card') {
@@ -137,7 +223,7 @@ export async function requestWithdraw(userId, input) {
     if (done) return { id: p.id, status: 'paid', checkUrl: done.url };
   }
   const what = method === 'card' ? `карта ${details.card}` : method === 'sbp' ? `СБП ${details.phone}, ${details.bank}` : `крипта ${details.asset}`;
-  await notifyAdmin(['💸 Новая заявка на вывод', `#${p.id}: ${rub(amount - fee)} (комиссия ${rub(fee)})`, what]);
+  await notifyAdmin(['💸 Новая заявка на вывод', `#${p.id}: ${rub(amount - fee)} к выплате (списано ${fmtLc(amount)}, комиссия ${rub(fee)})`, what]);
   return { id: p.id, status: 'review' };
 }
 
@@ -196,8 +282,8 @@ export async function listPayments(userId) {
     [userId],
   );
   return rows.map((r) => {
-    const { card, phone, bank, asset, checkUrl, cryptoAmount, url } = r.details || {};
+    const { card, phone, bank, asset, checkUrl, cryptoAmount, url, stars } = r.details || {};
     const own = r.status === 'pending' ? { url } : {};
-    return { ...r, details: { card, phone, bank, asset, checkUrl, cryptoAmount, ...own } };
+    return { ...r, details: { card, phone, bank, asset, checkUrl, cryptoAmount, stars, ...own } };
   });
 }

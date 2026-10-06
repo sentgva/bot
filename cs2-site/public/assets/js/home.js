@@ -1,5 +1,5 @@
 // Главная: калькулятор шанса, живые цифры, витрина маркета, лучший дроп, вход через Telegram.
-import { $, api, pct, rub, session, skinCard, skinImage } from './core.js';
+import { $, api, pct, lc, session, skinCard, skinImage } from './core.js';
 import { onLive } from './live.js';
 
 const pctText = (x, digits = 1) => `${(x * 100).toFixed(digits).replace('.', ',').replace(/,0$/, '')}%`;
@@ -13,7 +13,7 @@ function updateCalc() {
   const mult = Number(calc.elements.mult.value) || 2;
   const chance = Math.min(maxChance, (1 / mult) * (1 - edge));
   $('[data-calc="chance"]').textContent = pctText(chance);
-  $('[data-calc="target"]').textContent = rub(Math.round(amount * mult * 100));
+  $('[data-calc="target"]').textContent = lc(Math.floor(amount * mult) * 100);
 }
 calc?.addEventListener('input', updateCalc);
 calc?.addEventListener('submit', (e) => e.preventDefault());
@@ -24,12 +24,12 @@ api('/api/stats').then((s) => {
   maxChance = s.maxChance;
   $('[data-stat="maxChance"]').textContent = `до ${pctText(s.maxChance, 0)}`;
   $('[data-stat="cryptoFee"]').textContent = pctText(s.cryptoFee, 0);
-  $('[data-stat="minWithdraw"]').textContent = rub(s.minWithdraw);
+  $('[data-stat="minWithdraw"]').textContent = lc(s.minWithdraw);
   if (s.paid) {
     // Когда выплат достаточно — показываем, сколько реально выплачено
-    $('[data-stat="sell"]').textContent = rub(s.paid).replace(/,\d+/, '');
+    $('[data-stat="sell"]').textContent = lc(s.paid).replace(/,\d+/, '');
     $('[data-stat-label="sell"]').textContent = 'уже выплачено игрокам';
-    $('[data-paid-title]').textContent = `${rub(s.paid).replace(/,\d+/, '')} уже выплачено игрокам`;
+    $('[data-paid-title]').textContent = `${lc(s.paid).replace(/,\d+/, '')} уже выплачено игрокам`;
   } else {
     $('[data-stat="sell"]').textContent = pctText(s.siteSellRate, 0);
   }
@@ -38,6 +38,12 @@ api('/api/stats').then((s) => {
 
 session().then(({ user, config }) => {
   if (config) { edge = config.upgrade.houseEdge; maxChance = config.upgrade.maxChance; updateCalc(); }
+  // Курс звёзд из настроек сервера: 250 ⭐ → сколько LC (вниз до целого)
+  const rate = config?.payments?.stars?.lcPerStar;
+  if (rate) {
+    $('[data-lc-rate]').textContent = String(rate).replace('.', ',');
+    $('[data-lc-example]').textContent = Math.floor(250 * rate).toLocaleString('ru-RU');
+  }
   // Кнопка «Открыть в боте» — ссылка на нашего бота из настроек сервера
   const bot = $('[data-cta-bot]');
   if (config?.auth?.botUsername) bot.href = `https://t.me/${config.auth.botUsername}`;
@@ -69,12 +75,12 @@ onLive(({ best }) => {
   card.dataset.rarity = item.rarity || 'gold';
   $('[data-best-img]').innerHTML = skinImage(item, item.hashName).replace('<div class="skin-img">', '').replace(/<\/div>$/, '');
   $('[data-best-name]').textContent = item.hashName;
-  $('[data-best-price]').textContent = rub(item.price);
+  $('[data-best-price]').textContent = lc(item.price);
   if (best.type === 'win') {
     $('[data-best-label]').textContent = 'Лучший дроп недели';
-    $('[data-best-meta]').textContent = `${best.user} · шанс ${pct(best.chance)} · ставка ${rub(best.inputValue)}`;
+    $('[data-best-meta]').textContent = `${best.user} · шанс ${pct(best.chance)} · ставка ${lc(best.inputValue)}`;
   } else {
     $('[data-best-label]').textContent = 'Главный приз';
-    $('[data-best-meta]').textContent = `Можно выбить со ставки от ${rub(best.minStake)}`;
+    $('[data-best-meta]').textContent = `Можно выбить со ставки от ${lc(best.minStake)}`;
   }
 });

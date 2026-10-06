@@ -1,6 +1,6 @@
 // Профиль: вкладки, инвентарь на сайте, пополнение и вывод, история, апгрейды, настройки.
 import {
-  $, $$, api, confirmDialog, dateTime, emptyState, esc, icon, loginUrl, pct, refreshSession, rub, session, setBalance, setToken,
+  $, $$, api, confirmDialog, dateTime, emptyState, esc, icon, loginUrl, pct, refreshSession, lc, rub, session, setBalance, setToken,
   skinCard, toast, toastError, withLoading,
 } from './core.js';
 import { TRADE_URL, formatCard, isCard, isPhone, liveValidate, maskPhone } from './forms.js';
@@ -60,7 +60,7 @@ function renderHead() {
 
 function updateBalance(kop) {
   user.balance = kop;
-  $('[data-balance-exact]').textContent = rub(kop, { exact: true });
+  $('[data-balance-exact]').textContent = lc(kop);
   setBalance(kop);
   updateWithdrawSummary();
 }
@@ -75,7 +75,7 @@ loaders.inventory = async () => {
     ? owned.map((i) => skinCard(i, {
       tag: i.status === 'withdrawing' ? '<span class="badge badge-warning">Выводится</span>' : '',
       actions: i.status === 'owned'
-        ? `<button class="btn btn-secondary btn-sm" type="button" data-sell="${i.id}" aria-label="Продать ${esc(i.name)} за ${rub(i.sellPrice)}">Продать ${rub(i.sellPrice)}</button>
+        ? `<button class="btn btn-secondary btn-sm" type="button" data-sell="${i.id}" aria-label="Продать ${esc(i.name)} за ${lc(i.sellPrice)}">Продать ${lc(i.sellPrice)}</button>
            <button class="btn btn-ghost btn-sm" type="button" data-withdraw="${i.id}" aria-label="Вывести ${esc(i.name)} в Steam">${icon('i-arrow-up-right')}<span class="sr-only">В Steam</span></button>`
         : '',
     })).join('')
@@ -89,7 +89,7 @@ loaders.inventory = async () => {
   $('[data-skin-wd-box]').hidden = !wd.length;
   $('[data-skin-wd]').innerHTML = wd.map((w) => `
     <div class="list-item"><div class="grow"><p><b>${esc(w.hash_name)}</b></p><p class="small muted">${dateTime(w.created_at)}</p></div>
-    <span class="amount">${rub(w.price)}</span><span class="badge ${WD[w.status]?.[1] || ''}">${WD[w.status]?.[0] || esc(w.status)}</span></div>`).join('');
+    <span class="amount">${lc(w.price)}</span><span class="badge ${WD[w.status]?.[1] || ''}">${WD[w.status]?.[0] || esc(w.status)}</span></div>`).join('');
 };
 
 $('[data-owned]').addEventListener('click', async (e) => {
@@ -97,13 +97,13 @@ $('[data-owned]').addEventListener('click', async (e) => {
   const wdBtn = e.target.closest('[data-withdraw]');
   if (sellBtn) {
     const item = owned.find((i) => i.id === Number(sellBtn.dataset.sell));
-    const ok = await confirmDialog({ title: `Продать ${item.name}?`, html: `<p>На баланс придёт <b>${rub(item.sellPrice)}</b> — сразу, без ожидания.</p>`, confirm: 'Продать' });
+    const ok = await confirmDialog({ title: `Продать ${item.name}?`, html: `<p>На баланс придёт <b>${lc(item.sellPrice)}</b> — сразу, без ожидания.</p>`, confirm: 'Продать' });
     if (!ok) return;
     await withLoading(sellBtn, async () => {
       try {
         const r = await api('/api/inventory/sell', { method: 'POST', body: { ids: [item.id] } });
         updateBalance(r.balance);
-        toast(`Продано за ${rub(r.total)}`, 'success');
+        toast(`Продано за ${lc(r.total)}`, 'success');
       } catch (err) { toastError(err); }
     });
     loaders.inventory();
@@ -134,37 +134,55 @@ const PAY_STATUS = {
   pending: ['Ожидает оплаты', 'badge-blue'], review: ['На проверке', 'badge-warning'], processing: ['Отправляем', 'badge-blue'],
   sending: ['Отправляем', 'badge-blue'], paid: ['Готово', 'badge-success'], rejected: ['Отклонено', ''],
 };
-const PAY_METHOD = { crypto: 'Крипта', card: 'Карта', sbp: 'СБП', demo: 'Тестовое' };
+const PAY_METHOD = { stars: 'Звёзды Telegram', crypto: 'Крипта', card: 'Карта', sbp: 'СБП', demo: 'Тестовое' };
 
 function renderDeposit() {
   const p = cfg.payments;
   const box = $('[data-deposit]');
   let html = '';
+  if (p.deposit.stars) {
+    const rate = String(p.stars.lcPerStar).replace('.', ',');
+    html += `
+      <form class="form" id="stars-form" novalidate>
+        <div class="field">
+          <label for="stars-amount">Звёзды Telegram</label>
+          <div class="input-group"><input class="input num" id="stars-amount" name="stars" type="number" inputmode="numeric" min="${p.stars.min}" max="${p.stars.max}" step="1" value="250" aria-describedby="stars-amount-hint stars-amount-error"><span class="suffix" aria-hidden="true">⭐</span></div>
+          <p class="hint" id="stars-amount-hint">Курс: 1 ⭐ = ${rate} LC, округляем вниз до целого LC.</p>
+          <p class="error" id="stars-amount-error" aria-live="polite"></p>
+        </div>
+        <div class="chips">${[100, 250, 500, 1000, 2500].map((v) => `<button type="button" class="chip" data-stars="${v}">${v.toLocaleString('ru-RU')} ⭐</button>`).join('')}</div>
+        <div class="summary"><div class="total"><span>Получишь</span><span class="num" data-stars-lc>—</span></div></div>
+        <button class="btn btn-primary btn-block" type="submit" data-loading="Создаём счёт…">${icon('i-star')}<span>Оплатить звёздами</span></button>
+        <p class="hint">Оплата проходит в Telegram. LuxeCoin зачислятся сразу после оплаты.</p>
+      </form>`;
+  }
   if (p.deposit.crypto) {
     html += `
-      <form class="form" id="deposit-form" novalidate>
+      <form class="form${p.deposit.stars ? ' mt-6' : ''}" id="deposit-form" novalidate>
         <div class="field">
-          <label for="dep-amount">Сумма</label>
-          <div class="input-group"><input class="input num" id="dep-amount" name="amount" type="number" inputmode="decimal" min="${p.minDeposit / 100}" step="1" value="1000" aria-describedby="dep-amount-error"><span class="suffix" aria-hidden="true">₽</span></div>
+          <label for="dep-amount">Криптой: USDT или TON</label>
+          <div class="input-group"><input class="input num" id="dep-amount" name="amount" type="number" inputmode="numeric" min="${p.minDeposit / 100}" step="1" value="1000" aria-describedby="dep-amount-error"><span class="suffix" aria-hidden="true">LC</span></div>
           <p class="error" id="dep-amount-error" aria-live="polite"></p>
         </div>
-        <div class="chips">${[500, 1000, 3000, 5000].map((v) => `<button type="button" class="chip" data-dep="${v}">${v.toLocaleString('ru-RU')} ₽</button>`).join('')}</div>
-        <button class="btn btn-primary btn-block" type="submit" data-loading="Создаём счёт…">${icon('i-coins')}<span>Оплатить в USDT или TON</span></button>
-        <p class="hint">Откроется @CryptoBot. Баланс пополнится автоматически сразу после оплаты.</p>
+        <div class="chips">${[500, 1000, 3000, 5000].map((v) => `<button type="button" class="chip" data-dep="${v}">${v.toLocaleString('ru-RU')} LC</button>`).join('')}</div>
+        <button class="btn btn-secondary btn-block" type="submit" data-loading="Создаём счёт…">${icon('i-coins')}<span>Оплатить в USDT или TON</span></button>
+        <p class="hint">Счёт в рублях: 1 LC = 1 ₽. Откроется @CryptoBot, баланс пополнится сам.</p>
       </form>`;
-  } else {
-    html += `<div class="callout">${icon('i-info')}<p>Пополнение криптой скоро заработает. Следи за новостями в нашем Telegram-канале.</p></div>`;
+  }
+  if (!p.deposit.stars && !p.deposit.crypto) {
+    html += `<div class="callout">${icon('i-info')}<p>Пополнение скоро заработает. Следи за новостями в нашем Telegram-канале.</p></div>`;
   }
   if (p.deposit.demo) {
-    html += `<div class="callout callout-warning mt-4">${icon('i-circle-alert')}<div><p><b>Тестовый режим.</b> Кнопка начисляет 5 000 ₽ для проверки сайта. В боевом режиме её нет.</p>
-      <button class="btn btn-secondary btn-sm mt-3" type="button" data-demo data-loading="Начисляем…">+5 000 ₽ тестовых</button></div></div>`;
+    html += `<div class="callout callout-warning mt-4">${icon('i-circle-alert')}<div><p><b>Тестовый режим.</b> Кнопка начисляет 5 000 LC для проверки сайта. В боевом режиме её нет.</p>
+      <button class="btn btn-secondary btn-sm mt-3" type="button" data-demo data-loading="Начисляем…">+5 000 LC тестовых</button></div></div>`;
   }
   box.innerHTML = html;
+  setupStars(p);
 
   const form = $('#deposit-form');
   if (form) {
     form.addEventListener('click', (e) => { const c = e.target.closest('[data-dep]'); if (c) form.elements.amount.value = c.dataset.dep; });
-    const v = liveValidate(form, { amount: (val) => (Number(val) * 100 >= p.minDeposit ? '' : `Минимум ${rub(p.minDeposit)}`) });
+    const v = liveValidate(form, { amount: (val) => (Number(val) * 100 >= p.minDeposit ? '' : `Минимум ${lc(p.minDeposit)}`) });
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       if (!v.validateAll()) return;
@@ -186,10 +204,57 @@ function renderDeposit() {
     try {
       const r = await api('/api/deposit/demo', { method: 'POST' });
       updateBalance(r.balance);
-      toast('Начислено 5 000 ₽ тестовых', 'success');
+      toast('Начислено 5 000 LC тестовых', 'success');
       loaders.wallet();
     } catch (err) { toastError(err); }
   }));
+}
+
+// Пополнение звёздами: счёт Telegram. В Mini App открывается прямо в приложении, на сайте — в Telegram.
+function setupStars(p) {
+  const form = $('#stars-form');
+  if (!form) return;
+  const input = form.elements.stars;
+  const preview = () => {
+    const n = Math.floor(Number(input.value) || 0);
+    $('[data-stars-lc]').textContent = n > 0 ? lc(Math.floor(n * p.stars.lcPerStar) * 100) : '—';
+  };
+  form.addEventListener('click', (e) => { const c = e.target.closest('[data-stars]'); if (c) { input.value = c.dataset.stars; preview(); } });
+  input.addEventListener('input', preview);
+  preview();
+  const v = liveValidate(form, {
+    stars: (val) => {
+      const n = Number(val);
+      if (!Number.isInteger(n)) return 'Целое число звёзд';
+      if (n < p.stars.min) return `Минимум ${p.stars.min} ⭐`;
+      if (n > p.stars.max) return `Максимум ${p.stars.max.toLocaleString('ru-RU')} ⭐`;
+      return '';
+    },
+  });
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!v.validateAll()) return;
+    const tg = window.Telegram?.WebApp?.initData ? window.Telegram.WebApp : null;
+    const win = tg ? null : window.open('', '_blank'); // на сайте окно открываем сразу по клику (Safari)
+    await withLoading(form.querySelector('[type="submit"]'), async () => {
+      try {
+        const r = await api('/api/deposit/stars', { method: 'POST', body: { stars: Number(input.value) } });
+        if (tg?.openInvoice) {
+          tg.openInvoice(r.url, (status) => {
+            if (status === 'paid') { toast(`Оплачено! Зачисляем ${lc(r.amount)}`, 'success'); pollBalance(); }
+            else if (status === 'failed') toast('Оплата не прошла. Попробуй ещё раз', 'error');
+          });
+        } else {
+          if (win) { win.opener = null; win.location.href = r.url; } else location.href = r.url;
+          toast('Счёт открыт в Telegram. После оплаты баланс обновится сам', 'info', { timeout: 8000 });
+          pollBalance();
+        }
+      } catch (err) {
+        win?.close();
+        if (!(err.data?.field && v.setServerError(err.data.field, err.message))) toastError(err);
+      }
+    });
+  });
 }
 
 // После создания счёта проверяем баланс, пока игрок платит
@@ -211,7 +276,7 @@ function setupWithdraw() {
   for (const m of ['card', 'sbp', 'crypto']) $(`[data-method="${m}"]`, wdForm).hidden = !p[m].enabled;
   const bank = wdForm.elements.bank;
   bank.innerHTML = '<option value="">Выбери банк</option>' + p.banks.map((b) => `<option>${esc(b)}</option>`).join('');
-  $('[data-limits]').textContent = `От ${rub(p.minWithdraw)} до ${rub(p.maxWithdraw)} за раз`;
+  $('[data-limits]').textContent = `От ${lc(p.minWithdraw)} до ${lc(p.maxWithdraw)} за раз`;
   wdForm.elements.card.addEventListener('input', () => { wdForm.elements.card.value = formatCard(wdForm.elements.card.value); });
   maskPhone(wdForm.elements.phone);
 
@@ -224,9 +289,10 @@ function setupWithdraw() {
     amount: (val) => {
       const kop = Math.round(Number(val) * 100);
       if (!kop) return 'Укажи сумму';
-      if (kop < p.minWithdraw) return `Минимум ${rub(p.minWithdraw)}`;
-      if (kop > p.maxWithdraw) return `Максимум ${rub(p.maxWithdraw)} за раз`;
-      if (kop > user.balance) return `На балансе только ${rub(user.balance, { exact: true })}`;
+      if (!Number.isInteger(Number(val))) return 'Целое число LC';
+      if (kop < p.minWithdraw) return `Минимум ${lc(p.minWithdraw)}`;
+      if (kop > p.maxWithdraw) return `Максимум ${lc(p.maxWithdraw)} за раз`;
+      if (kop > user.balance) return `На балансе только ${lc(user.balance)}`;
       return '';
     },
   });
@@ -237,7 +303,7 @@ function setupWithdraw() {
     updateWithdrawSummary();
   });
   wdForm.addEventListener('input', updateWithdrawSummary);
-  $('[data-all]', wdForm).addEventListener('click', () => { wdForm.elements.amount.value = (user.balance / 100).toFixed(2); updateWithdrawSummary(); });
+  $('[data-all]', wdForm).addEventListener('click', () => { wdForm.elements.amount.value = String(Math.floor(user.balance / 100)); updateWithdrawSummary(); });
 
   wdForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -276,8 +342,8 @@ function updateWithdrawSummary() {
   const kop = Math.round(Number(wdForm.elements.amount.value) * 100) || 0;
   const feeRate = m ? cfg.payments[m].fee : null;
   const fee = feeRate == null ? null : Math.ceil(kop * feeRate);
-  $('[data-fee]').textContent = fee == null ? '—' : `${rub(fee, { exact: true })} (${Math.round(feeRate * 100)}%)`;
-  $('[data-receive]').textContent = fee == null || !kop ? '—' : rub(kop - fee, { exact: true });
+  $('[data-fee]').textContent = fee == null ? '—' : `${rub(fee)} (${Math.round(feeRate * 100)}%)`;
+  $('[data-receive]').textContent = fee == null || !kop ? '—' : rub(kop - fee); // 1 LC = 1 ₽
 }
 
 loaders.wallet = async () => {
@@ -286,14 +352,14 @@ loaders.wallet = async () => {
     ? list.map((p) => {
       const [label, cls] = PAY_STATUS[p.status] || [p.status, ''];
       const d = p.details || {};
-      const where = d.card || (d.phone ? `${d.phone}, ${d.bank}` : '') || d.asset || '';
+      const where = d.card || (d.phone ? `${d.phone}, ${d.bank}` : '') || d.asset || (d.stars ? `${d.stars} ⭐` : '');
       const link = d.checkUrl ? `<a class="btn btn-secondary btn-sm" href="${esc(d.checkUrl)}" target="_blank" rel="noopener">Открыть чек</a>`
         : d.url ? `<a class="btn btn-secondary btn-sm" href="${esc(d.url)}" target="_blank" rel="noopener">Оплатить</a>` : '';
       return `<div class="list-item">
         <span class="icon-tile">${icon(p.direction === 'in' ? 'i-plus' : 'i-banknote')}</span>
         <div class="grow"><p><b>${p.direction === 'in' ? 'Пополнение' : 'Вывод'}</b> · ${esc(PAY_METHOD[p.method] || p.method)} ${where ? `· <span class="muted">${esc(where)}</span>` : ''}</p>
-        <p class="small muted">#${p.id} · ${dateTime(p.created_at)}${p.fee ? ` · комиссия ${rub(p.fee, { exact: true })}` : ''}</p></div>
-        <span class="amount ${p.direction === 'in' ? 'plus' : ''}">${p.direction === 'in' ? '+' : '−'}${rub(p.amount, { exact: true })}</span>
+        <p class="small muted">#${p.id} · ${dateTime(p.created_at)}${p.fee ? ` · комиссия ${lc(p.fee)}` : ''}</p></div>
+        <span class="amount ${p.direction === 'in' ? 'plus' : ''}">${p.direction === 'in' ? '+' : '−'}${lc(p.amount)}</span>
         <span class="badge ${cls}">${label}</span>${link}
       </div>`;
     }).join('')
@@ -311,8 +377,8 @@ loaders.history = async () => {
   $('[data-ledger]').innerHTML = list.length
     ? list.map((l) => `<div class="list-item">
         <div class="grow"><p><b>${esc(KIND[l.kind] || l.kind)}</b>${l.note ? ` · <span class="muted">${esc(l.note)}</span>` : ''}</p><p class="small muted">${dateTime(l.created_at)}</p></div>
-        <span class="amount ${l.amount > 0 ? 'plus' : ''}">${l.amount > 0 ? '+' : '−'}${rub(Math.abs(l.amount), { exact: true })}</span>
-        <span class="small muted num">= ${rub(l.balance_after, { exact: true })}</span>
+        <span class="amount ${l.amount > 0 ? 'plus' : ''}">${l.amount > 0 ? '+' : '−'}${lc(Math.abs(l.amount))}</span>
+        <span class="small muted num">= ${lc(l.balance_after)}</span>
       </div>`).join('')
     : emptyState({ iconName: 'i-history', title: 'История пуста', text: 'Все движения по балансу будут здесь.' });
 };
@@ -329,8 +395,8 @@ loaders.upgrades = async () => {
       return `<div class="list-item">
         <span class="badge ${u.won ? 'badge-success' : ''}">${u.won ? 'Победа' : 'Мимо'}</span>
         <div class="grow"><p><b>${esc(u.target_hash_name)}</b></p>
-        <p class="small muted">${dateTime(u.created_at)} · ставка ${rub(u.input_value)} · шанс ${pct(u.chance_ppm)} · бросок ${u.roll.toLocaleString('ru-RU')} · nonce ${u.nonce}</p></div>
-        <span class="amount">${rub(u.target_price)}</span>${verify}
+        <p class="small muted">${dateTime(u.created_at)} · ставка ${lc(u.input_value)} · шанс ${pct(u.chance_ppm)} · бросок ${u.roll.toLocaleString('ru-RU')} · nonce ${u.nonce}</p></div>
+        <span class="amount">${lc(u.target_price)}</span>${verify}
       </div>`;
     }).join('')
     : emptyState({ iconName: 'i-trending-up', title: 'Апгрейдов ещё не было', action: '<a class="btn btn-primary btn-sm" href="/upgrade/">Открыть апгрейдер</a>' });

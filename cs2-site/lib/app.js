@@ -12,7 +12,8 @@ import { listItems, pricesAreStale, syncCatalog } from './catalog.js';
 import { buyItem, buyPrice, finishSkinWithdrawal, listOwned, listSkinWithdrawals, pollSkinWithdrawals, sellItems, withdrawItem } from './inventory.js';
 import { listUpgrades, recentWins, runUpgrade } from './upgrade.js';
 import {
-  createCryptoDeposit, demoTopup, finishWithdraw, handleCryptoWebhook, listPayments, methodsInfo, requestWithdraw, sendCryptoCheck,
+  createCryptoDeposit, createStarsInvoice, demoTopup, finishWithdraw, handleCryptoWebhook, handlePreCheckout, handleStarsPaid,
+  listPayments, methodsInfo, requestWithdraw, sendCryptoCheck,
 } from './payments.js';
 import { getStats } from './stats.js';
 import { getLive } from './live.js';
@@ -91,7 +92,14 @@ r.post('/api/auth/telegram', async (req, res) => {
 r.post('/api/telegram/webhook', async (req) => {
   if (!config.tgBotToken || req.headers['x-telegram-bot-api-secret-token'] !== webhookSecret()) fail(401, 'unauthorized');
   const update = await readJson(req);
-  await handleUpdate(update).catch((err) => console.error('telegram update:', err.message));
+  try {
+    // Оплата звёздами: проверка перед списанием и зачисление после оплаты
+    if (update.pre_checkout_query) await handlePreCheckout(update.pre_checkout_query);
+    else if (update.message?.successful_payment) await handleStarsPaid(update.message);
+    else await handleUpdate(update);
+  } catch (err) {
+    console.error('telegram update:', err.message);
+  }
   return { ok: true };
 });
 
@@ -211,6 +219,14 @@ r.post('/api/deposit/crypto', async (req) => {
   await rateLimit(`dep:${u.id}`, 10, 600);
   const { amount } = await readJson(req);
   return createCryptoDeposit(u.id, rublesToKop(amount));
+});
+
+// Пополнение звёздами Telegram: возвращает ссылку на счёт (в Mini App открывается через openInvoice)
+r.post('/api/deposit/stars', async (req) => {
+  const u = await requireUser(req);
+  await rateLimit(`stars:${u.id}`, 20, 600);
+  const { stars } = await readJson(req);
+  return createStarsInvoice(u.id, int(stars));
 });
 
 r.post('/api/deposit/demo', async (req) => {

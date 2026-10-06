@@ -157,3 +157,6 @@ create table if not exists presence (
   seen_at timestamptz not null default now()
 );
 create index if not exists presence_seen_idx on presence (seen_at);
+
+-- LuxeCoin: цены скинов — целые LC (1 LC = 1 ₽), округление вниз. Безопасно повторять.
+update items set price = price - price % 100 where price % 100 <> 0;

@@ -1,5 +1,5 @@
 // Админка: выводы, заявки на продажу, выводы скинов, игроки, настройки экономики.
-import { $, $$, api, confirmDialog, dateTime, emptyState, esc, rub, session, toast, toastError, withLoading } from './core.js';
+import { $, $$, api, confirmDialog, dateTime, emptyState, esc, lc, rub, session, toast, toastError, withLoading } from './core.js';
 
 let tab = 'withdrawals';
 let status = 'open';
@@ -12,7 +12,7 @@ async function overview() {
   const o = await api('/api/admin/overview');
   $('[data-overview]').innerHTML = [
     ['Выводов ждут', o.withdrawals], ['Выводов скинов', o.skin_withdrawals],
-    ['Балансы игроков', rub(o.total_balance)], ['Пополнено', rub(o.deposits)], ['Выплачено', rub(o.payouts)], ['Игроков', o.users],
+    ['Балансы игроков', lc(o.total_balance)], ['Пополнено', lc(o.deposits)], ['Выплачено', lc(o.payouts)], ['Игроков', o.users],
   ].map(([l, v]) => `<div class="stat"><p class="stat-value">${esc(String(v))}</p><p class="stat-label">${l}</p></div>`).join('');
   for (const k of ['withdrawals', 'skin_withdrawals']) $(`[data-count="${k}"]`).textContent = o[k] || '';
 }
@@ -31,7 +31,7 @@ const RENDER = {
         : p.method === 'sbp' ? `СБП: <b>${esc(d.phone)}</b>, ${esc(d.bank)}` : `Крипта: ${esc(d.asset)}${d.checkUrl ? ` · <a href="${esc(d.checkUrl)}" target="_blank" rel="noopener">чек</a>` : ''}`;
       const open = ['review', 'processing', 'sending'].includes(p.status);
       return `<div class="list-item" data-id="${p.id}">
-        <div class="grow"><p><b>#${p.id} · ${rub(p.amount - p.fee, { exact: true })} к выплате</b> <span class="small muted">(списано ${rub(p.amount, { exact: true })}, комиссия ${rub(p.fee, { exact: true })})</span></p>
+        <div class="grow"><p><b>#${p.id} · ${rub(p.amount - p.fee)} к выплате</b> <span class="small muted">(списано ${lc(p.amount)}, комиссия ${rub(p.fee)})</span></p>
         <p class="small">${where}</p><p class="small muted">${user(p)} · ${dateTime(p.created_at)} · ${esc(STATUS_LABEL[p.status] || p.status)}${d.error ? ` · ошибка: ${esc(d.error)}` : ''}</p></div>
         ${open ? `${p.method === 'crypto' && p.status !== 'sending' ? btn('send', 'Отправить чек', 'btn-primary') : ''}${btn('paid', 'Выплачено', p.method === 'crypto' ? 'btn-secondary' : 'btn-primary')}${btn('reject', 'Отклонить')}` : ''}
       </div>`;
@@ -40,7 +40,7 @@ const RENDER = {
   async skins() {
     const list = await api(`/api/admin/skin-withdrawals?status=${status}`);
     return list.map((w) => `<div class="list-item" data-id="${w.id}">
-      <div class="grow"><p><b>#${w.id} · ${esc(w.hash_name)}</b> · ${rub(w.price)}</p>
+      <div class="grow"><p><b>#${w.id} · ${esc(w.hash_name)}</b> · ${lc(w.price)}</p>
       <p class="small"><a href="${esc(w.trade_url)}" target="_blank" rel="noopener">Трейд-ссылка</a>${w.error ? ` · ошибка: ${esc(w.error)}` : ''}</p>
       <p class="small muted">${user(w)} · ${dateTime(w.created_at)} · ${esc(STATUS_LABEL[w.status])}</p></div>
       ${['review', 'processing'].includes(w.status) ? `${btn('sent', 'Отправлен', 'btn-primary')}${btn('refunded', 'Вернуть на сайт')}` : ''}
@@ -51,7 +51,7 @@ const RENDER = {
     return list.map((u) => `<div class="list-item" data-id="${u.id}">
       <div class="grow"><p><b>${esc(u.name)}</b> ${u.is_banned ? '<span class="badge">Бан</span>' : ''}</p>
       <p class="small muted">ID ${u.id} · ${tgLink(u)} · был ${dateTime(u.last_seen_at)}</p></div>
-      <span class="amount">${rub(u.balance, { exact: true })}</span>
+      <span class="amount">${lc(u.balance)}</span>
       ${btn('adjust', 'Баланс ±')}${btn(u.is_banned ? 'unban' : 'ban', u.is_banned ? 'Разбанить' : 'Забанить')}
     </div>`);
   },

@@ -7,12 +7,13 @@ import { getItem, publicItem } from './catalog.js';
 import { getSettings } from './settings.js';
 import { changeBalance, lockUser } from './users.js';
 import { ROLL_MAX, computeRoll, hashSeed } from './fair.js';
+import { fmtLc, isWholeLc } from './lc.js';
 
 export async function runUpgrade(userId, { itemIds = [], balance = 0, target }) {
   const s = await getSettings();
   const ids = [...new Set(itemIds)];
   if (ids.length > s.maxUpgradeItems) fail(400, `Не больше ${s.maxUpgradeItems} скинов за раз`);
-  if (!Number.isSafeInteger(balance) || balance < 0) fail(400, 'Некорректная сумма');
+  if (!Number.isSafeInteger(balance) || balance < 0 || !isWholeLc(balance)) fail(400, 'Ставка с баланса — целое число LC');
   if (!ids.length && !balance) fail(400, 'Выбери скины или сумму с баланса');
   if (typeof target !== 'string' || !target) fail(400, 'Выбери скин, который хочешь получить');
 
@@ -32,7 +33,7 @@ export async function runUpgrade(userId, { itemIds = [], balance = 0, target }) 
     if (!targetItem) fail(404, 'Целевой скин не найден');
 
     const inputValue = items.reduce((sum, i) => sum + i.price, 0) + balance;
-    if (inputValue < s.minUpgradeValue) fail(400, `Минимальная ставка — ${s.minUpgradeValue / 100} ₽`);
+    if (inputValue < s.minUpgradeValue) fail(400, `Минимальная ставка — ${fmtLc(s.minUpgradeValue)}`);
     const raw = (inputValue / targetItem.price) * (1 - s.houseEdge);
     if (raw > s.maxChance) fail(400, `Шанс больше ${Math.round(s.maxChance * 100)}% — выбери скин дороже`);
     if (raw < s.minChance) fail(400, `Шанс меньше ${s.minChance * 100}% — выбери скин дешевле`);

@@ -28,7 +28,7 @@ test('синхронизация: консервативная цена, тол�
   assert.equal(r.updated, 2);
   const db = await getDb();
   const ak = await db.one(`select * from items where hash_name = 'AK-47 | Redline (Field-Tested)'`);
-  assert.equal(ak.price, 125050, 'меньшая из рекомендованной и минимальной цены');
+  assert.equal(ak.price, 125000, 'меньшая из рекомендованной и минимальной цены, вниз до целого LC (1250,50 → 1250 LC)');
   assert.equal(ak.rarity, 'classified');
   assert.equal(ak.name, 'AK-47 | Redline');
   assert.equal(ak.wear, 'Field-Tested');

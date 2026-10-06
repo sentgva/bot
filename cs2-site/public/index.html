@@ -56,6 +56,7 @@
         "@type": "FAQPage",
         "mainEntity": [
           { "@type": "Question", "name": "Это не развод? Почему вам можно доверять?", "acceptedAnswer": { "@type": "Answer", "text": "Вход только через официальный Telegram — без паролей и регистрации. Каждый апгрейд можно проверить на странице «Честность». Начни с малого: пополни 500 ₽ и выведи — убедись сам." } },
+          { "@type": "Question", "name": "Что такое LuxeCoin и как пополнить звёздами?", "acceptedAnswer": { "@type": "Answer", "text": "LuxeCoin (LC) — валюта сайта: 1 LC = 1 ₽ рыночной стоимости скинов. Пополнить можно звёздами Telegram (курс в профиле, округление вниз до целого LC) или криптой. Выводить LC можно на карту, по СБП и в USDT/TON." } },
           { "@type": "Question", "name": "Сколько ждать вывод на карту?", "acceptedAnswer": { "@type": "Answer", "text": "Крипта до 20 000 ₽ уходит автоматически за 1–2 минуты. Карта и СБП — в среднем 15 минут с 10:00 до 23:00 МСК. Заявки, оставленные ночью, выплачиваем утром." } },
           { "@type": "Question", "name": "Какие комиссии?", "acceptedAnswer": { "@type": "Answer", "text": "Вывод в крипту — 0%, на карту и по СБП — 3%. В маркете наценка 5% к рыночной цене. Продажа скина с сайта обратно на баланс — 95% цены. В апгрейдере комиссия 5% заложена в шанс." } },
           { "@type": "Question", "name": "Как проверить, что апгрейд честный?", "acceptedAnswer": { "@type": "Answer", "text": "До броска мы показываем хэш серверного сида. Результат считается из серверного сида, твоего клиентского сида и номера броска. После смены сида мы раскрываем его, и любой бросок можно пересчитать на странице «Честность»." } },
@@ -156,8 +157,36 @@
       <div class="stats" data-stats>
         <div class="stat reveal"><p class="stat-value" data-stat="maxChance">до 80%</p><p class="stat-label">шанс апгрейда — риск выбираешь сам</p></div>
         <div class="stat reveal"><p class="stat-value" data-stat="cryptoFee">0%</p><p class="stat-label">комиссия на вывод в USDT и TON</p></div>
-        <div class="stat reveal"><p class="stat-value" data-stat="minWithdraw">500 ₽</p><p class="stat-label">минимальный вывод на карту и в крипту</p></div>
+        <div class="stat reveal"><p class="stat-value" data-stat="minWithdraw">500 LC</p><p class="stat-label">минимальный вывод на карту и в крипту</p></div>
         <div class="stat reveal"><p class="stat-value" data-stat="sell">95%</p><p class="stat-label" data-stat-label="sell">цены вернём, если продашь скин обратно</p></div>
+      </div>
+    </section>
+
+    <!-- ===== LuxeCoin — валюта сайта ===== -->
+    <section class="section" id="luxecoin" aria-labelledby="lc-title">
+      <div class="container">
+        <div class="section-head reveal">
+          <p class="eyebrow">LuxeCoin</p>
+          <h2 class="h2" id="lc-title">LuxeCoin: 1 LC = 1 ₽ стоимости скинов</h2>
+          <p class="lead">Баланс и все цены на сайте — в LuxeCoin. Никаких дробей: цены, ставки и зачисления округляем вниз до целого LC.</p>
+        </div>
+        <div class="grid grid-3">
+          <article class="card card-hover reveal">
+            <span class="icon-tile"><svg class="icon icon-lg" aria-hidden="true"><use href="/assets/icons.svg#i-coins"/></svg></span>
+            <h3 class="h3">Цены в LC</h3>
+            <p class="muted mt-2">Скин за 1 250,90 ₽ на рынке стоит 1 250 LC. Видно сразу, сколько стоит скин и какой шанс в апгрейде.</p>
+          </article>
+          <article class="card card-hover reveal">
+            <span class="icon-tile"><svg class="icon icon-lg" aria-hidden="true"><use href="/assets/icons.svg#i-star"/></svg></span>
+            <h3 class="h3">Пополняй звёздами ⭐</h3>
+            <p class="muted mt-2">Оплата звёздами Telegram прямо в приложении. Курс: 1 ⭐ = <span data-lc-rate>1,3</span> LC — например, 250 ⭐ = <span data-lc-example>325</span> LC.</p>
+          </article>
+          <article class="card card-hover reveal">
+            <span class="icon-tile"><svg class="icon icon-lg" aria-hidden="true"><use href="/assets/icons.svg#i-banknote"/></svg></span>
+            <h3 class="h3">Выводи как рубли</h3>
+            <p class="muted mt-2">1 LC = 1 ₽ при выводе на карту и по СБП, в USDT и TON — по курсу. Скины забирай в Steam по трейд-ссылке.</p>
+          </article>
+        </div>
       </div>
     </section>
 
@@ -176,8 +205,8 @@
           </li>
           <li class="card step reveal">
             <span class="step-num" aria-hidden="true">2</span>
-            <h3 class="h3">Пополни баланс и купи скин</h3>
-            <p class="muted">USDT или TON от 100 ₽. В маркете — тысячи скинов по рыночной цене, наценка всего 5%.</p>
+            <h3 class="h3">Пополни LuxeCoin и купи скин</h3>
+            <p class="muted">Звёздами Telegram ⭐ или USDT/TON. В маркете — тысячи скинов по рыночной цене, наценка всего 5%.</p>
           </li>
           <li class="card step reveal">
             <span class="step-num" aria-hidden="true">3</span>
@@ -210,7 +239,7 @@
             <label for="calc-amount">Ставка</label>
             <div class="input-group">
               <input class="input num" id="calc-amount" name="amount" type="number" inputmode="decimal" min="10" step="10" value="1000">
-              <span class="suffix" aria-hidden="true">₽</span>
+              <span class="suffix" aria-hidden="true">LC</span>
             </div>
           </div>
           <fieldset class="field radio-group mt-5 mult-chips">
@@ -224,7 +253,7 @@
           </fieldset>
           <div class="calc-result" aria-live="polite">
             <div class="stat"><p class="stat-value" data-calc="chance">47,5%</p><p class="stat-label">шанс</p></div>
-            <div class="stat"><p class="stat-value" data-calc="target">2 000 ₽</p><p class="stat-label">цена скина-цели</p></div>
+            <div class="stat"><p class="stat-value" data-calc="target">2 000 LC</p><p class="stat-label">цена скина-цели</p></div>
           </div>
           <a class="btn btn-primary btn-block mt-5" href="/upgrade/">Подобрать скин в апгрейдере<svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-arrow-right"/></svg></a>
         </form>
@@ -361,17 +390,17 @@
         <div class="grid grid-3">
           <article class="card case reveal">
             <p class="case-flow">AK-47 | Redline <svg class="icon icon-sm accent" aria-hidden="true"><use href="/assets/icons.svg#i-arrow-right"/></svg> AWP | Asiimov</p>
-            <p class="muted small">1 250 ₽ → 9 800 ₽ · шанс 12,1% · ×7,8</p>
+            <p class="muted small">1 250 LC → 9 800 LC · шанс 12,1% · ×7,8</p>
             <p class="row"><span class="badge badge-success">Вывод на карту за 11 мин</span></p>
           </article>
           <article class="card case reveal">
             <p class="case-flow">3 скина <svg class="icon icon-sm accent" aria-hidden="true"><use href="/assets/icons.svg#i-arrow-right"/></svg> M4A1-S | Printstream</p>
-            <p class="muted small">5 400 ₽ → 11 500 ₽ · шанс 44,6% · ×2,1</p>
+            <p class="muted small">5 400 LC → 11 500 LC · шанс 44,6% · ×2,1</p>
             <p class="row"><span class="badge badge-success">Скин в Steam за 20 мин</span></p>
           </article>
           <article class="card case reveal">
             <p class="case-flow">Маркет <svg class="icon icon-sm accent" aria-hidden="true"><use href="/assets/icons.svg#i-arrow-right"/></svg> апгрейд <svg class="icon icon-sm accent" aria-hidden="true"><use href="/assets/icons.svg#i-arrow-right"/></svg> USDT</p>
-            <p class="muted small">Купил за 2 000 ₽ · апгрейд ×3 · продал за 95%</p>
+            <p class="muted small">Купил за 2 000 LC · апгрейд ×3 · продал за 95%</p>
             <p class="row"><span class="badge badge-success">Выплата за 2 мин</span></p>
           </article>
         </div>
@@ -389,6 +418,10 @@
           <details class="reveal">
             <summary>Это не развод? Почему вам можно доверять?<svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-chevron-down"/></svg></summary>
             <div class="answer"><p>Вход только через официальный Telegram — без паролей и регистрации. Каждый апгрейд проверяется на странице <a href="/fair/">«Честность»</a>. Цифры на главной считаются по реальным выплатам.</p><p>Лучшая проверка — маленькая сумма: пополни 500 ₽ и сразу выведи. Убедись сам, а потом решай.</p></div>
+          </details>
+          <details class="reveal">
+            <summary>Что такое LuxeCoin и как пополнить звёздами?<svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-chevron-down"/></svg></summary>
+            <div class="answer"><p>LuxeCoin (LC) — валюта сайта: 1 LC = 1 ₽ рыночной стоимости скинов. Пополнить можно звёздами Telegram (курс указан в профиле, округляем вниз до целого LC) или криптой.</p><p>Выводить LC можно на карту, по СБП и в USDT/TON, а скины — в Steam.</p></div>
           </details>
           <details class="reveal">
             <summary>Сколько ждать вывод на карту?<svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-chevron-down"/></svg></summary>

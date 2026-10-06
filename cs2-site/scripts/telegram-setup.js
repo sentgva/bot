@@ -10,7 +10,7 @@ if (!manual && process.env.VERCEL_ENV && process.env.VERCEL_ENV !== 'production'
 if (!config.siteUrl.startsWith('https://')) { console.log('SITE_URL должен быть https:// — Telegram открывает Mini App только по https'); process.exit(0); }
 
 try {
-  await tgApi('setWebhook', { url: `${config.siteUrl}/api/telegram/webhook`, secret_token: webhookSecret(), allowed_updates: ['message'], drop_pending_updates: true });
+  await tgApi('setWebhook', { url: `${config.siteUrl}/api/telegram/webhook`, secret_token: webhookSecret(), allowed_updates: ['message', 'pre_checkout_query'], drop_pending_updates: true }); // pre_checkout_query — для оплаты звёздами
   await tgApi('setChatMenuButton', { menu_button: { type: 'web_app', text: 'Апгрейд', web_app: { url: webAppUrl() } } });
   await tgApi('setMyCommands', { commands: [{ command: 'start', description: 'Открыть апгрейдер LuxeDrop' }] });
   await tgApi('setMyDescription', { description: 'Апгрейд скинов CS2 прямо в Telegram: шанс до 80% с проверкой каждого броска, вывод в USDT за 2 минуты и на карту.' });
