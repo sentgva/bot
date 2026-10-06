@@ -2,7 +2,9 @@
 // Всё считается по базе — ничего не выдумываем.
 //   • онлайн — сколько разных посетителей (игрок или IP) открывали сайт за последние 2 минуты;
 //   • лучший дроп — самый дорогой реальный выигрыш за 7 дней (не дороже bestDropMaxPrice); если таких нет —
-//     самый дорогой скин маркета до этого порога как «главный приз» (так и подписан на сайте).
+//     самый дорогой скин маркета до этого порога как «главный приз» (так и подписан на сайте);
+//   • цели — пока настоящих выигрышей мало, лента добирается реальными скинами каталога с подписью
+//     «Можно выбить». Это витрина, а не выигрыши: на сайте они отделены и подписаны.
 
 import { getDb } from './db.js';
 import { publicItem } from './catalog.js';
@@ -10,6 +12,7 @@ import { recentWins } from './upgrade.js';
 import { getSettings } from './settings.js';
 
 const ONLINE_WINDOW = "interval '2 minutes'";
+const FEED_SIZE = 16; // сколько карточек держим в ленте
 let cache = { at: 0, value: null };
 
 async function dropsAndBest() {
@@ -36,7 +39,14 @@ async function dropsAndBest() {
     // Минимальная ставка, с которой этот скин можно выбить (шанс не меньше минимального)
     best = top ? { type: 'top', item: publicItem(top), minStake: Math.ceil((top.price * s.minChance) / (1 - s.houseEdge)) } : null;
   }
-  cache = { at: Date.now(), value: { drops, best } };
+  // Подборка меняется раз в сутки (порядок по md5 от имени и даты), чтобы лента не прыгала при каждом опросе
+  const targets = drops.length >= FEED_SIZE ? [] : (await db.query(
+    `select * from items where quantity > 0 and image is not null and price between 30000 and $1
+       and rarity in ('gold', 'covert', 'classified')
+     order by md5(hash_name || current_date::text) limit $2`,
+    [s.bestDropMaxPrice, FEED_SIZE - drops.length],
+  )).map(publicItem);
+  cache = { at: Date.now(), value: { drops, best, targets } };
   return cache.value;
 }
 

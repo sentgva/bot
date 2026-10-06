@@ -1,4 +1,4 @@
-// Живая лента над сайтом: честный онлайн и последние выигрыши. Обновляется раз в 20 секунд,
+// Живая лента над сайтом: честный онлайн, последние выигрыши и скины «Можно выбить». Обновляется раз в 20 секунд,
 // пока вкладка открыта и видна. Главная подписывается через onLive() — запрос всё равно один.
 import { $, esc, lc, skinImage } from './core.js';
 
@@ -14,22 +14,37 @@ export function onLive(cb) {
   if (last) cb(last);
 }
 
-function renderDrops(drops) {
+const card = (item, cls, title) => `<a class="drop${cls}" href="/upgrade/" data-rarity="${esc(item.rarity || '')}" title="${esc(title)}">
+      ${skinImage(item, '').replace('<div class="skin-img">', '').replace(/<\/div>$/, '')}
+      <span class="drop-text"><span class="drop-name">${esc(item.name)}</span><span class="drop-price">${lc(item.price)}</span></span>
+    </a>`;
+
+let signature = '';
+function renderDrops(drops, targets = []) {
   const box = $('[data-live-drops]');
   if (!box) return;
-  if (!drops.length) {
+  // Перерисовываем, только если состав изменился, — иначе прокрутка дёргалась бы на каждом опросе
+  const sig = drops.map((d) => d.id).join(',') + '|' + targets.map((t) => t.hashName).join(',');
+  if (sig === signature) return;
+  signature = sig;
+  if (!drops.length && !targets.length) {
     box.innerHTML = '<p class="live-empty">Здесь появятся выигрыши игроков</p>';
     return;
   }
   const first = seen.size === 0;
-  box.innerHTML = drops.map((d) => {
-    const isNew = !first && !seen.has(d.id);
-    return `<a class="drop${isNew ? ' is-new' : ''}" href="/upgrade/" data-rarity="${esc(d.item.rarity || '')}"
-      title="${esc(d.user)} выиграл ${esc(d.item.hashName)} с шансом ${(d.chance / 10000).toFixed(1).replace('.', ',')}%">
-      ${skinImage(d.item, '').replace('<div class="skin-img">', '').replace(/<\/div>$/, '')}
-      <span class="drop-text"><span class="drop-name">${esc(d.item.name)}</span><span class="drop-price">${lc(d.item.price)}</span></span>
-    </a>`;
-  }).join('');
+  let html = drops.map((d) => card(d.item, !first && !seen.has(d.id) ? ' is-new' : '',
+    `${d.user} выиграл ${d.item.hashName} с шансом ${(d.chance / 10000).toFixed(1).replace('.', ',')}%`)).join('');
+  // Настоящих выигрышей мало — добираем реальными скинами каталога и честно подписываем
+  if (targets.length) {
+    html += '<span class="drop-sep">Можно выбить</span>'
+      + targets.map((t) => card(t, ' is-target', `Можно выбить в апгрейдере: ${t.hashName}`)).join('');
+  }
+  // Бегущая строка: содержимое дважды подряд, вторая копия скрыта от скринридеров
+  const moving = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+  box.innerHTML = `<div class="live-track${moving ? ' is-moving' : ''}"><div class="live-set">${html}</div>${moving ? `<div class="live-set" aria-hidden="true" inert>${html}</div>` : ''}</div>`;
+  const track = box.firstElementChild;
+  // Скорость постоянная (~40 px/с), сколько бы карточек ни было
+  track.style.setProperty('--marquee', `${Math.max(20, Math.round(track.firstElementChild.scrollWidth / 40))}s`);
   drops.forEach((d) => seen.add(d.id));
 }
 
@@ -47,6 +62,15 @@ function animateCount(el, to) {
   requestAnimationFrame(step);
 }
 
+// Маленький онлайн («1», «2») выглядит пусто — тогда показываем только пульсирующий значок
+const ONLINE_MIN = 10;
+function renderOnline(n) {
+  const el = $('[data-online-count]');
+  if (!el) return;
+  el.hidden = n < ONLINE_MIN;
+  if (!el.hidden) animateCount(el, n);
+}
+
 async function poll() {
   clearTimeout(timer);
   try {
@@ -54,8 +78,8 @@ async function poll() {
     if (res.ok) {
       last = await res.json();
       if (strip) {
-        animateCount($('[data-online-count]'), last.online);
-        renderDrops(last.drops);
+        renderOnline(last.online);
+        renderDrops(last.drops, last.targets);
       }
       listeners.forEach((cb) => cb(last));
     }

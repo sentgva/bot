@@ -815,6 +815,16 @@ h3, .h3 { font-weight: 600; letter-spacing: -.01em; font-size: clamp(17px, 1.8vw
 .drop-name { font-size: 11px; font-weight: 600; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .drop-price { font-family: var(--font-display); font-weight: 600; font-size: 12px; color: var(--accent-text); white-space: nowrap; }
 .drop.is-new { animation: drop-in 700ms var(--ease) both; }
+/* Бегущая строка: две одинаковые копии, сдвиг на половину — шов не виден */
+.live-track { display: flex; width: max-content; }
+.live-set { display: flex; gap: var(--s2); padding-right: var(--s2); }
+.live-track.is-moving { animation: marquee var(--marquee, 60s) linear infinite; }
+.live-drops:hover .live-track, .live-drops:focus-within .live-track { animation-play-state: paused; }
+.drop-sep {
+  flex: none; align-self: center; padding: 6px 10px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--border));
+  font-family: var(--font-display); font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--accent-text); white-space: nowrap;
+}
+.drop.is-target { border-style: dashed; }
 @media (max-width: 559px) {
   .live-inner { height: 64px; gap: var(--s2); }
   .online { padding: 0 10px; height: 40px; font-size: 13px; }
@@ -823,6 +833,7 @@ h3, .h3 { font-weight: 600; letter-spacing: -.01em; font-size: clamp(17px, 1.8vw
 }
 @keyframes online-pulse { 0% { box-shadow: 0 0 0 0 rgba(74, 222, 128, .6); } 100% { box-shadow: 0 0 0 8px rgba(74, 222, 128, 0); } }
 @keyframes drop-in { from { transform: translateX(-30px) scale(.9); opacity: 0; } }
+@keyframes marquee { to { transform: translateX(-50%); } }
 
 /* ---------- Лучший дроп на главной ---------- */
 .best {

@@ -24,6 +24,9 @@ test('лучший дроп: пока выигрышей нет — «главн
   assert.ok(before.best.item.price <= 15_000_000);
   assert.ok(before.best.minStake > 0);
   assert.deepEqual(before.drops, []);
+  // Пустую ленту добирают реальные скины каталога (подписаны на сайте как «Можно выбить»), а не выдуманные выигрыши
+  assert.ok(before.targets.length > 0);
+  assert.ok(before.targets.every((t) => t.price >= 30000 && t.price <= 15_000_000 && !('user' in t)));
 
   // Выигрываем: ставка почти на максимальный шанс, пока не повезёт
   const u = await makeUser(10_000_000);
