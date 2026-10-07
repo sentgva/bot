@@ -1027,3 +1027,7 @@ h3, .h3 { font-weight: 600; letter-spacing: -.01em; font-size: clamp(17px, 1.8vw
 .adm-group { border: 1px solid var(--border); }
 .adm-group legend { padding: 0 6px; }
 .adm-save { position: sticky; bottom: 16px; display: flex; justify-content: flex-end; }
+.case-new {
+  position: absolute; z-index: 3; top: 10px; left: 10px; padding: 3px 9px; border-radius: 999px; font-family: var(--font-display); font-size: 10px; font-weight: 700;
+  letter-spacing: .05em; text-transform: uppercase; background: var(--case); color: #0b0a07; box-shadow: 0 0 16px -2px var(--case);
+}

@@ -23,16 +23,29 @@ const SNIPERS = ['AWP', 'SSG 08', 'SCAR-20', 'G3SG1'];
 
 // where — SQL-условие по таблице items (только константы из кода, без ввода игрока); min/max — цена в LC
 export const CASES = [
+  { slug: 'bratan', name: 'Братан', fresh: true, price: 19, color: '#f97316', groups: [{ where: "rarity <> 'gold'", min: 2, max: 250, n: 14 }] },
   { slug: 'starter', name: 'Стартовый', price: 29, color: '#7d9cc0', groups: [{ where: "rarity <> 'gold'", min: 3, max: 400, n: 14 }] },
   { slug: 'smg', name: 'Пулемётчик', price: 49, color: '#8847ff', groups: [{ where: 'weapon = any($weapons)', weapons: SMGS, min: 4, max: 2500, n: 14 }] },
   { slug: 'pistol', name: 'Пистолетный', price: 69, color: '#4b69ff', groups: [{ where: 'weapon = any($weapons)', weapons: PISTOLS, min: 5, max: 4000, n: 14 }] },
+  { slug: 'kobildzhon', name: 'Кобилджон', fresh: true, price: 119, color: '#84cc16', groups: [{ where: 'weapon = any($weapons)', weapons: ['AWP', 'Desert Eagle'], min: 7, max: 10000, n: 14 }] },
   { slug: 'rifle', name: 'Калаш и эмка', price: 149, color: '#d32ce6', groups: [{ where: 'weapon = any($weapons)', weapons: RIFLES, min: 10, max: 12000, n: 14 }] },
   { slug: 'sniper', name: 'Снайперский', price: 249, color: '#2fb37a', groups: [{ where: 'weapon = any($weapons)', weapons: SNIPERS, min: 10, max: 30000, n: 14 }] },
   { slug: 'factory', name: 'С завода', price: 299, color: '#38bdf8', groups: [{ where: "wear = 'Factory New' and rarity <> 'gold'", min: 20, max: 25000, n: 14 }] },
   { slug: 'stattrak', name: 'StatTrak™', price: 399, color: '#cf6a32', groups: [{ where: "stattrak and rarity <> 'gold'", min: 30, max: 30000, n: 14 }] },
   {
+    slug: 'pantera', name: 'Пантера', fresh: true, price: 549, color: '#a855f7',
+    groups: [
+      { where: "rarity <> 'gold' and name ~* '(black|night|dark|onyx|obsidian|shadow|noir|midnight|panther|graphite|carbon)'", min: 10, max: 32000, n: 12 },
+      { where: "rarity = 'gold' and name ~* '(night|black|ultraviolet|dark|shadow)'", min: 3000, max: 40000, n: 3 },
+    ],
+  },
+  {
     slug: 'covert', name: 'Тайный', price: 790, color: '#eb4b4b',
     groups: [{ where: "rarity = 'covert'", min: 500, max: 45000, n: 10 }, { where: "rarity = 'classified'", min: 60, max: 600, n: 6 }],
+  },
+  {
+    slug: 'koch', name: 'Коч', fresh: true, price: 1490, color: '#22d3ee',
+    groups: [{ where: "rarity = 'gold' and (weapon ilike '%gloves%' or weapon = 'Hand Wraps')", min: 1700, max: 30000, n: 8 }, { where: "rarity in ('covert', 'classified')", min: 50, max: 1500, n: 8 }],
   },
   {
     slug: 'knife', name: 'Ножевой', price: 2990, color: '#e4ae39',
@@ -98,11 +111,11 @@ async function buildCase(q, def, edge) {
   const ppm = solveOdds(rows.map((r) => r.price), price * (1 - edge));
   if (!ppm) return null;
   const items = rows.map((r, i) => ({ row: r, ppm: ppm[i] })).sort((a, b) => b.row.price - a.row.price);
-  return { slug: def.slug, name: def.name, price, color: def.color, items };
+  return { slug: def.slug, name: def.name, price, color: def.color, fresh: Boolean(def.fresh), items };
 }
 
 const pub = (c) => ({
-  slug: c.slug, name: c.name, price: c.price, color: c.color,
+  slug: c.slug, name: c.name, price: c.price, color: c.color, fresh: c.fresh,
   items: c.items.map(({ row, ppm }) => ({ ...publicItem(row), ppm })),
 });
 

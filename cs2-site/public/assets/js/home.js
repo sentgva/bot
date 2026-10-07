@@ -89,7 +89,7 @@ onLive(({ best }) => {
 // ── Кейсы: по одному из каждой ценовой ступени ─────────────
 api('/api/cases').then((list) => {
   if (!list.length) return;
-  const pick = ['starter', 'rifle', 'covert', 'knife', 'luxe'].map((slug) => list.find((c) => c.slug === slug)).filter(Boolean);
+  const pick = ['bratan', 'kobildzhon', 'pantera', 'koch', 'luxe'].map((slug) => list.find((c) => c.slug === slug)).filter(Boolean);
   const box = $('[data-home-cases-grid]');
   box.innerHTML = (pick.length >= 3 ? pick : list.slice(0, 5)).map(caseCard).join('');
   paint(box);

@@ -44,6 +44,7 @@ export const caseArt = (c, big = false) => {
 
 export const caseCard = (c) => `
     <a class="case-card" href="/cases/?c=${esc(c.slug)}" data-case="${esc(c.slug)}" data-case-color="${esc(c.color)}">
+      ${c.fresh ? '<span class="case-new">Новый</span>' : ''}
       ${caseArt(c)}
       <span class="case-name">${esc(c.name)}</span>
       <span class="case-top">до ${lc(c.items[0].price)}</span>
