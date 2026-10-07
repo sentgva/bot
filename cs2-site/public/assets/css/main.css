@@ -728,7 +728,7 @@ html.tg .tg-tabs {
 }
 .tg-tabs a[aria-current="page"] { color: var(--accent-text); }
 /* В Telegram кнопку броска заменяет нативная MainButton */
-html.tg [data-go] { display: none; }
+/* Кнопка «Апгрейдить» в Telegram — та же, что под колесом (нативная MainButton не нужна) */
 
 /* ==========================================================================
    Золотой стиль: типографика, кнопки, свечение, лента дропов, лучший дроп, колесо
@@ -1090,7 +1090,6 @@ h3, .h3 { font-weight: 600; letter-spacing: -.01em; font-size: clamp(17px, 1.8vw
 
   .upg-panel { padding: var(--s3); }
   .upg-center .upg-summary { display: none; }
-  .upg-center [data-go] { display: none; } /* кнопка — в нижней панели */
   .upg-center .hint { margin-top: 0; }
   .wheel { width: min(230px, 64vw); margin: 4px auto var(--s2); }
   .wheel-chance { font-size: 30px; }
@@ -1133,3 +1132,9 @@ textarea.input { min-height: 84px; resize: vertical; padding-block: 10px; }
 
 /* В круге апгрейдера — только шанс (подпись и номер броска скрыты) */
 .wheel .wheel-label, .wheel .wheel-roll { display: none; }
+
+/* Кнопка «Апгрейдить» — прямо под колесом на всех экранах; нижняя панель-дубль больше не нужна */
+.sticky-bar { display: none !important; }
+.has-sticky-bar .site-footer { padding-bottom: 0; }
+.has-sticky-bar .toasts { bottom: 16px; }
+.upg-center [data-go] { margin-top: var(--s2); }

@@ -199,6 +199,8 @@ el.targets.addEventListener('click', (e) => {
   $$('[data-target]', el.targets).forEach((c) => c.setAttribute('aria-pressed', String(c.dataset.target === state.target?.hashName)));
   el.result.innerHTML = '';
   render();
+  // На узком экране колесо с кнопкой выше списка — прокручиваем к нему, чтобы сразу нажать «Апгрейдить»
+  if (state.target && matchMedia('(max-width: 1099px)').matches) el.wheel.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'center' });
 });
 el.more.querySelector('button').addEventListener('click', () => loadTargets(false));
 

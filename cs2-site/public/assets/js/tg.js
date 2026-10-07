@@ -97,23 +97,9 @@ function setupBackButton() {
   tg.BackButton.onClick(() => { if (history.length > 1) history.back(); else location.href = '/'; });
 }
 
-// На странице апгрейдера кнопка «Апгрейдить» — нативная кнопка Telegram внизу
+// Кнопка «Апгрейдить» прямо под колесом и в Telegram — нативную MainButton не показываем
 function setupMainButton() {
-  const go = $('[data-go]');
-  const chance = $('[data-chance]');
-  if (!go || !chance) { tg.MainButton.hide(); return; }
-  const sync = () => {
-    if (go.getAttribute('aria-busy') === 'true') { tg.MainButton.showProgress(false); return; }
-    tg.MainButton.hideProgress();
-    if (go.disabled) { tg.MainButton.hide(); return; }
-    tg.MainButton.setText(`Апгрейдить · ${chance.textContent}`);
-    tg.MainButton.enable();
-    tg.MainButton.show();
-  };
-  tg.MainButton.onClick(() => { if (!go.disabled) go.click(); });
-  new MutationObserver(sync).observe(go, { attributes: true, attributeFilter: ['disabled', 'aria-busy'] });
-  new MutationObserver(sync).observe(chance, { childList: true, characterData: true, subtree: true });
-  sync();
+  tg.MainButton.hide();
 }
 
 // Вибрация: выбор скина и результат броска
