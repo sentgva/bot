@@ -97,9 +97,19 @@ test('вебхук бота: без секрета — отказ; /start — к
   let sent;
   const fakeFetch = async (url, init) => { sent = { url, body: JSON.parse(init.body) }; return new Response(JSON.stringify({ ok: true, result: {} })); };
   await handleUpdate({ message: { chat: { id: 5, type: 'private' }, from: { first_name: 'Артём' }, text: '/start' } }, fakeFetch);
-  assert.match(sent.url, /\/sendMessage$/);
+  // Баннер с подписью и двумя кнопками: приложение и поддержка
+  assert.match(sent.url, /\/sendPhoto$/);
   assert.equal(sent.body.chat_id, 5);
+  assert.equal(sent.body.photo, `${base}/assets/img/bot-welcome.jpg`);
+  assert.match(sent.body.caption, /Привет, Артём!.*LuxeDrop/s);
+  assert.match(sent.body.caption, /1\s000 LC/);
   assert.equal(sent.body.reply_markup.inline_keyboard[0][0].web_app.url, `${base}/`);
+  assert.equal(sent.body.reply_markup.inline_keyboard[1][0].callback_data, 'support');
+  // Картинка не отправилась — то же приветствие текстом
+  const calls = [];
+  const flaky = async (url, init) => { calls.push(url); return new Response(JSON.stringify(url.endsWith('/sendPhoto') ? { ok: false, description: 'bad photo' } : { ok: true, result: {} })); };
+  await handleUpdate({ message: { chat: { id: 5, type: 'private' }, from: { first_name: '<b>' }, text: '/start' } }, flaky);
+  assert.match(calls.at(-1), /\/sendMessage$/);
   const group = await handleUpdate({ message: { chat: { id: -1, type: 'group' }, text: '/start' } }, fakeFetch);
   assert.equal(group.skipped, true, 'в группах бот молчит');
 });

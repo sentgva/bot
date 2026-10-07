@@ -7,7 +7,7 @@ import {
 } from './http.js';
 import { endSession, sessionUserId, startSession } from './session.js';
 import { getUser, isAdmin, ledgerOf, publicUser, rotateSeed, setClientSeed, setTradeUrl, upsertTelegramUser } from './users.js';
-import { botId, handleUpdate, tgApi, verifyInitData, verifyLoginWidget, webhookSecret } from './telegram.js';
+import { SUPPORT_TEXT, botId, handleUpdate, tgApi, verifyInitData, verifyLoginWidget, webhookSecret } from './telegram.js';
 import { listItems, pricesAreStale, syncCatalog } from './catalog.js';
 import { buyPrice, finishSkinWithdrawal, listOwned, listSkinWithdrawals, pollSkinWithdrawals, sellItems, withdrawItem } from './inventory.js';
 import { listUpgrades, recentWins, runUpgrade } from './upgrade.js';
@@ -105,7 +105,14 @@ r.post('/api/telegram/webhook', async (req) => {
     else if (update.message?.successful_payment) await handleStarsPaid(update.message);
     else if (update.callback_query) {
       await rememberBotUser(update.callback_query.from);
-      await handleBroadcastCallback(update.callback_query, { schedule: (p) => waitUntil(p.catch((err) => console.error('broadcast:', err.message))) });
+      const cq = update.callback_query;
+      if (cq.data === 'support') {
+        // Кнопка «Поддержка» под приветствием
+        await tgApi('answerCallbackQuery', { callback_query_id: cq.id });
+        await tgApi('sendMessage', { chat_id: cq.from.id, text: SUPPORT_TEXT });
+      } else {
+        await handleBroadcastCallback(cq, { schedule: (p) => waitUntil(p.catch((err) => console.error('broadcast:', err.message))) });
+      }
     } else if (update.message?.chat?.type === 'private' && update.message.from) await handlePrivateMessage(update);
     else await handleUpdate(update);
   } catch (err) {
@@ -130,7 +137,7 @@ async function handlePrivateMessage(update) {
     }
   }
   if (command === '/support' || command === '/help') {
-    await tgApi('sendMessage', { chat_id: msg.chat.id, text: '💬 Поддержка LuxeDrop: напиши вопрос сюда одним сообщением — передадим админам, ответ придёт в этот чат.' });
+    await tgApi('sendMessage', { chat_id: msg.chat.id, text: SUPPORT_TEXT });
     return;
   }
   if (!command) {
@@ -138,7 +145,7 @@ async function handlePrivateMessage(update) {
     await userMessage(msg.from, text);
     return;
   }
-  await handleUpdate(update);
+  await handleUpdate(update, fetch, { bonusLc: Math.floor((await getSettings()).signupBonus / 100) });
 }
 
 r.post('/api/auth/logout', async (req, res) => {

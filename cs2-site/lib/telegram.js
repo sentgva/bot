@@ -90,17 +90,45 @@ export async function tgApi(method, body, fetchImpl = fetch) {
 const openButton = (text = '🎯 Открыть LuxeDrop', ref = null) => ({
   inline_keyboard: [[{ text, web_app: { url: ref ? `${webAppUrl()}?ref=${encodeURIComponent(ref)}` : webAppUrl() } }]],
 });
+// Приветствие: открыть приложение + поддержка (кнопка «Поддержка» обрабатывается в lib/app.js, callback_data = support)
+const welcomeKeyboard = (ref) => ({ inline_keyboard: [...openButton(undefined, ref).inline_keyboard, [{ text: '💬 Поддержка', callback_data: 'support' }]] });
 
-// Обработка входящего сообщения боту. Отвечаем на любое сообщение в личке кнопкой Mini App.
-export async function handleUpdate(update, fetchImpl = fetch) {
+export const SUPPORT_TEXT = '💬 Поддержка LuxeDrop\n\nНапиши вопрос сюда одним сообщением — передадим админам, ответ придёт в этот чат.';
+export const welcomeImageUrl = () => `${config.siteUrl}/assets/img/bot-welcome.jpg`;
+const escHtml = (v) => String(v ?? '').replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
+
+export function welcomeCaption(firstName, bonusLc = 1000) {
+  return [
+    `Привет, ${escHtml(firstName || 'игрок')}! 👋 Это <b>LuxeDrop</b> — кейсы и апгрейд скинов CS2 прямо в Telegram.`,
+    '',
+    bonusLc > 0 ? `🎁 <b>${bonusLc.toLocaleString('ru-RU')} LC</b> на баланс при первом входе` : null,
+    '📦 20 кейсов: настоящие кейсы CS2 и наши',
+    '🎯 Апгрейд на любой скин — шанс до 80%',
+    '',
+    'Жми кнопку ниже и открывай первый кейс 👇',
+  ].filter((l) => l !== null).join('\n');
+}
+
+// Обработка входящего сообщения боту: на /start — баннер с приветствием и кнопками, на прочие команды — кнопка приложения
+export async function handleUpdate(update, fetchImpl = fetch, { bonusLc = 1000 } = {}) {
   const msg = update?.message;
   if (!msg?.chat || msg.chat.type !== 'private') return { skipped: true };
   const isStart = typeof msg.text === 'string' && msg.text.startsWith('/start');
-  const text = isStart
-    ? `Привет, ${msg.from?.first_name || 'игрок'}! Это LuxeDrop — апгрейд скинов CS2.\n\n`
-      + '• Ставь немного — выигрывай много: шанс до 80%\n• Пополнение звёздами ⭐ — баланс в LuxeCoin (1 LC = 1 ₽)\n• Вывод в USDT за 2 минуты, на карту — в среднем за 15\n\nЖми кнопку ниже — LuxeDrop откроется прямо в Telegram.\n\nЕсть вопрос? Просто напиши его сюда — ответит поддержка.'
-    : 'LuxeDrop открывается кнопкой ниже 👇\nЕсть вопрос? Просто напиши его сюда — ответит поддержка.';
   const ref = isStart ? (msg.text.split(/\s+/)[1] || '').match(/^[0-9A-Za-z]{2,12}$/)?.[0] || null : null;
-  await tgApi('sendMessage', { chat_id: msg.chat.id, text, reply_markup: openButton(undefined, ref) }, fetchImpl);
+  if (isStart) {
+    const caption = welcomeCaption(msg.from?.first_name, bonusLc);
+    try {
+      await tgApi('sendPhoto', { chat_id: msg.chat.id, photo: welcomeImageUrl(), caption, parse_mode: 'HTML', reply_markup: welcomeKeyboard(ref) }, fetchImpl);
+    } catch {
+      // Картинка недоступна — то же приветствие текстом
+      await tgApi('sendMessage', { chat_id: msg.chat.id, text: caption, parse_mode: 'HTML', reply_markup: welcomeKeyboard(ref) }, fetchImpl);
+    }
+    return { ok: true };
+  }
+  await tgApi('sendMessage', {
+    chat_id: msg.chat.id,
+    text: 'LuxeDrop открывается кнопкой ниже 👇\nЕсть вопрос? Просто напиши его сюда — ответит поддержка.',
+    reply_markup: welcomeKeyboard(null),
+  }, fetchImpl);
   return { ok: true };
 }
