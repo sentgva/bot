@@ -36,9 +36,11 @@ export async function upsertTelegramUser(tg, { ref = null } = {}) {
   });
 }
 
-// Админ — Telegram ID из ADMIN_TG_IDS
-export const isAdmin = (u) => Boolean(u?.telegram_id) && (config.adminTgIds.includes(String(u.telegram_id))
+// Владелец — Telegram ID из ADMIN_TG_IDS или ник из ADMIN_TG_USERNAMES: может назначать и снимать админов.
+// Админ — владелец или игрок, которому владелец выдал права в админ-панели (users.is_admin).
+export const isOwner = (u) => Boolean(u?.telegram_id) && (config.adminTgIds.includes(String(u.telegram_id))
   || (Boolean(u.tg_username) && config.adminTgUsernames.includes(String(u.tg_username).toLowerCase())));
+export const isAdmin = (u) => isOwner(u) || Boolean(u?.is_admin);
 
 export async function getUser(id) {
   if (!id) return null;
@@ -55,6 +57,7 @@ export const publicUser = (u) => ({
   balance: u.balance,
   tradeUrl: u.trade_url,
   isAdmin: isAdmin(u),
+  isOwner: isOwner(u),
   fair: { serverSeedHash: hashSeed(u.server_seed), clientSeed: u.client_seed, nonce: u.nonce },
 });
 

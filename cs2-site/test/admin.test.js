@@ -63,3 +63,26 @@ test('апгрейд на любой скин: 10 LC на самый дорог�
   assert.ok(r.chance >= 1 && r.chance < 1000, `шанс ${r.chance} ppm`);
   assert.equal(r.balance, 0);
 });
+
+test('админка: владелец выдаёт и снимает права, выданный админ не может раздавать их дальше', async () => {
+  const { config } = await import('../lib/config.js');
+  const { isAdmin, isOwner } = await import('../lib/users.js');
+  const owner = await makeUser(0);
+  config.adminTgIds = [String(owner.telegram_id)];
+  try {
+    const helper = await makeUser(0);
+    const other = await makeUser(0);
+    assert.ok(isOwner(owner) && !isAdmin(helper));
+    await updateUser(helper.id, { action: 'make_admin' }, owner);
+    const db = await getDb();
+    const h = await db.one('select * from users where id = $1', [helper.id]);
+    assert.ok(isAdmin(h) && !isOwner(h));
+    await assert.rejects(updateUser(other.id, { action: 'make_admin' }, h), /только владелец/);
+    await assert.rejects(updateUser(owner.id, { action: 'remove_admin' }, owner), /Владельца нельзя/);
+    await assert.rejects(updateUser(owner.id, { action: 'ban' }, h), /Владельца забанить нельзя/);
+    await updateUser(helper.id, { action: 'remove_admin' }, owner);
+    assert.ok(!isAdmin(await db.one('select * from users where id = $1', [helper.id])));
+  } finally {
+    config.adminTgIds = [];
+  }
+});

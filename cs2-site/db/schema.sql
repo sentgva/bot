@@ -126,6 +126,9 @@ create table if not exists promo_redemptions (
   primary key (code, user_id)
 );
 
+-- Админы, назначенные владельцем из админ-панели (владельцы — ADMIN_TG_IDS / ADMIN_TG_USERNAMES в окружении)
+alter table users add column if not exists is_admin boolean not null default false;
+
 -- Рефералы (lib/referrals.js): кто пригласил игрока
 alter table users add column if not exists referred_by bigint references users(id);
 create index if not exists users_referred_by_idx on users (referred_by) where referred_by is not null;

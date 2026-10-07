@@ -31,6 +31,7 @@ const tgLink = (r) => (r.tg_username ? `<a href="https://t.me/${esc(r.tg_usernam
 const user = (r) => `${esc(r.user_name || 'гость')} ${tgLink(r)}`;
 const btn = (action, label, cls = 'btn-secondary') => `<button class="btn ${cls} btn-sm" type="button" data-action="${action}">${label}</button>`;
 
+const roleBadge = (u) => (u.is_owner ? ' <span class="badge badge-accent">Владелец</span>' : u.is_admin ? ' <span class="badge badge-accent">Админ</span>' : '');
 const RENDER = {
   async promos() {
     const list = await api('/api/admin/promos');
@@ -71,7 +72,7 @@ const RENDER = {
   async users() {
     const list = await api(`/api/admin/users?q=${encodeURIComponent($('#u-q').value)}`);
     return list.map((u) => `<button type="button" class="list-item adm-row${String(u.id) === String(currentUserId) ? ' is-active' : ''}" data-user="${u.id}">
-      <div class="grow"><p><b>${esc(u.name)}</b> ${u.is_banned ? '<span class="badge">Бан</span>' : ''}</p>
+      <div class="grow"><p><b>${esc(u.name)}</b>${roleBadge(u)} ${u.is_banned ? '<span class="badge">Бан</span>' : ''}</p>
       <p class="small muted">ID ${u.id} · ${u.tg_username ? '@' + esc(u.tg_username) : 'TG ' + esc(u.telegram_id || '—')} · был ${dateTime(u.last_seen_at)}</p></div>
       <span class="amount">${lc(u.balance)}</span>
     </button>`);
@@ -105,7 +106,7 @@ async function openUser(id) {
     card.innerHTML = `
       <div class="adm-user-head">
         ${u.avatar ? `<img class="avatar" src="${esc(u.avatar)}" alt="" width="48" height="48">` : `<span class="avatar avatar-fallback" aria-hidden="true">${esc(u.name.slice(0, 1).toUpperCase())}</span>`}
-        <div class="grow"><p class="h3">${esc(u.name)} ${u.is_banned ? '<span class="badge">Бан</span>' : ''}${me && String(me.id) === String(u.id) ? ' <span class="badge badge-success">Это вы</span>' : ''}</p>
+        <div class="grow"><p class="h3">${esc(u.name)}${roleBadge(u)} ${u.is_banned ? '<span class="badge">Бан</span>' : ''}${me && String(me.id) === String(u.id) ? ' <span class="badge badge-success">Это вы</span>' : ''}</p>
         <p class="small muted">ID ${u.id} · ${u.tg_username ? `<a href="https://t.me/${esc(u.tg_username)}" target="_blank" rel="noopener">@${esc(u.tg_username)}</a>` : 'без ника'} · TG ${esc(u.telegram_id || '—')}</p></div>
       </div>
       <p class="adm-balance">${lc(u.balance)}</p>
@@ -118,7 +119,8 @@ async function openUser(id) {
         <div class="row">
           <button class="btn btn-primary" type="submit" data-sign="1" data-loading="Начисляем…">Начислить</button>
           <button class="btn btn-secondary" type="submit" data-sign="-1" data-loading="Списываем…">Списать</button>
-          <button class="btn btn-ghost" type="button" data-ban="${u.is_banned ? 'unban' : 'ban'}">${u.is_banned ? 'Разбанить' : 'Забанить'}</button>
+          ${u.is_owner ? '' : `<button class="btn btn-ghost" type="button" data-ban="${u.is_banned ? 'unban' : 'ban'}">${u.is_banned ? 'Разбанить' : 'Забанить'}</button>`}
+          ${me?.isOwner && !u.is_owner ? `<button class="btn btn-ghost" type="button" data-role="${u.is_admin ? 'remove_admin' : 'make_admin'}">${u.is_admin ? 'Снять админку' : 'Сделать админом'}</button>` : ''}
         </div>
       </form>
       <dl class="adm-facts">
@@ -138,6 +140,20 @@ async function openUser(id) {
 $('[data-user-card]').addEventListener('click', async (e) => {
   const q = e.target.closest('[data-quick]');
   if (q) { $('[data-grant]').elements.amount.value = q.dataset.quick; return; }
+  const role = e.target.closest('[data-role]');
+  if (role) {
+    const make = role.dataset.role === 'make_admin';
+    const ok = await confirmDialog({
+      title: make ? 'Сделать админом?' : 'Снять админку?',
+      html: make ? '<p>Игрок получит доступ к админ-панели: выдача LC, выводы, промокоды, настройки. Раздавать админку он не сможет.</p>' : '<p>Игрок потеряет доступ к админ-панели.</p>',
+      confirm: make ? 'Сделать админом' : 'Снять',
+    });
+    if (!ok) return;
+    await withLoading(role, async () => {
+      try { await api(`/api/admin/users/${currentUserId}`, { method: 'POST', body: { action: role.dataset.role } }); toast(make ? 'Теперь это админ' : 'Админка снята', 'success'); openUser(currentUserId); load(); } catch (err) { toastError(err); }
+    });
+    return;
+  }
   const ban = e.target.closest('[data-ban]');
   if (!ban) return;
   if (ban.dataset.ban === 'ban' && !(await confirmDialog({ title: 'Забанить игрока?', html: '<p>Он не сможет войти, пока вы его не разбаните.</p>', confirm: 'Забанить' }))) return;
@@ -166,6 +182,7 @@ $('[data-user-card]').addEventListener('submit', async (e) => {
 });
 $('[data-list="users"]').addEventListener('click', (e) => { const r = e.target.closest('[data-user]'); if (r) openUser(r.dataset.user); });
 $('[data-me]').addEventListener('click', () => { if (me) openUser(me.id); });
+$('[data-admins]').addEventListener('click', () => { $('#u-q').value = 'admins'; load(); });
 
 // Действия по кнопкам в списках
 document.addEventListener('click', async (e) => {

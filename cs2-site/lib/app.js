@@ -319,10 +319,10 @@ r.post('/api/admin/skin-withdrawals/:id', async (req, res, { params }) => {
 r.get('/api/admin/users', async (req, res, { url }) => { await requireAdmin(req); return admin.findUsers(url.searchParams.get('q')); });
 r.get('/api/admin/users/:id', async (req, res, { params }) => { await requireAdmin(req); return admin.userDetail(int(params.id)); });
 r.post('/api/admin/users/:id', async (req, res, { params }) => {
-  await requireAdmin(req);
+  const me = await requireAdmin(req);
   const b = await readJson(req);
   const amount = b.amount === undefined ? undefined : Math.round(Number(b.amount) * 100);
-  return admin.updateUser(int(params.id), { action: b.action, amount, note: str(b.note, 200) });
+  return admin.updateUser(int(params.id), { action: b.action, amount, note: str(b.note, 200) }, me);
 });
 r.get('/api/admin/promos', async (req) => { await requireAdmin(req); return listPromos(); });
 r.post('/api/admin/promos', async (req) => {

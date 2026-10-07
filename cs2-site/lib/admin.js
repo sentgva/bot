@@ -1,8 +1,9 @@
 // Запросы для админки. Доступ проверяется в lib/app.js (requireAdmin: ADMIN_TG_IDS / ADMIN_TG_USERNAMES).
 
 import { getDb } from './db.js';
+import { config } from './config.js';
 import { fail } from './http.js';
-import { changeBalance } from './users.js';
+import { changeBalance, isOwner } from './users.js';
 import { isWholeLc } from './lc.js';
 import { revealCard } from './payments.js';
 
@@ -54,24 +55,33 @@ export async function listSkinWithdrawals(status = 'open') {
 export async function findUsers(query) {
   const db = await getDb();
   const q = String(query || '').trim();
-  return db.query(
-    `select id, telegram_id, tg_username, name, avatar, balance, is_banned, trade_url, created_at, last_seen_at from users
-     where $1 = '' or telegram_id = $1 or tg_username = ltrim($1, '@') or name ilike $2 or id::text = $1
-     order by last_seen_at desc limit 50`,
-    [q, `%${q.replace(/[%_\\]/g, '\\$&')}%`],
-  );
+  const cols = 'id, telegram_id, tg_username, name, avatar, balance, is_banned, is_admin, trade_url, created_at, last_seen_at';
+  // «admins» — список админов: назначенные в панели и владельцы из настроек
+  const rows = q === 'admins'
+    ? await db.query(
+      `select ${cols} from users where is_admin or telegram_id = any($1) or lower(tg_username) = any($2) order by last_seen_at desc limit 100`,
+      [config.adminTgIds, config.adminTgUsernames],
+    )
+    : await db.query(
+      `select ${cols} from users
+       where $1 = '' or telegram_id = $1 or tg_username = ltrim($1, '@') or name ilike $2 or id::text = $1
+       order by last_seen_at desc limit 50`,
+      [q, `%${q.replace(/[%_\\]/g, '\\$&')}%`],
+    );
+  return rows.map((r) => ({ ...r, is_owner: isOwner(r) }));
 }
 
 // Карточка игрока: профиль, сводка и последние операции по балансу
 export async function userDetail(id) {
   const db = await getDb();
   const user = await db.one(
-    `select u.id, u.telegram_id, u.tg_username, u.name, u.avatar, u.balance, u.is_banned, u.trade_url, u.created_at, u.last_seen_at,
+    `select u.id, u.telegram_id, u.tg_username, u.name, u.avatar, u.balance, u.is_banned, u.is_admin, u.trade_url, u.created_at, u.last_seen_at,
             r.id as referrer_id, r.name as referrer_name
      from users u left join users r on r.id = u.referred_by where u.id = $1`,
     [id],
   );
   if (!user) fail(404, 'Пользователь не найден');
+  user.is_owner = isOwner(user);
   const stats = await db.one(`
     select
       (select coalesce(sum(amount), 0)::bigint from payments where user_id = $1 and direction = 'in' and status = 'paid' and method <> 'demo') as deposits,
@@ -91,9 +101,23 @@ export async function userDetail(id) {
   return { user, stats, ledger };
 }
 
-export async function updateUser(id, { action, amount, note }) {
+export async function updateUser(id, { action, amount, note }, actor = null) {
   const db = await getDb();
+  // Выдать или снять админку может только владелец
+  if (action === 'make_admin' || action === 'remove_admin') {
+    if (!isOwner(actor)) fail(403, 'Выдавать и снимать админку может только владелец');
+    const target = await db.one('select * from users where id = $1', [id]);
+    if (!target) fail(404, 'Пользователь не найден');
+    if (action === 'remove_admin' && isOwner(target)) fail(400, 'Владельца нельзя лишить прав из панели — он задан в настройках Vercel');
+    await db.query('update users set is_admin = $2 where id = $1', [id, action === 'make_admin']);
+    return { id, isAdmin: action === 'make_admin' || isOwner(target) };
+  }
   if (action === 'ban' || action === 'unban') {
+    if (action === 'ban') {
+      const target = await db.one('select * from users where id = $1', [id]);
+      if (isOwner(target)) fail(400, 'Владельца забанить нельзя');
+      if (target?.is_admin && !isOwner(actor)) fail(403, 'Админа может забанить только владелец');
+    }
     const r = await db.one('update users set is_banned = $2 where id = $1 returning id', [id, action === 'ban']);
     if (!r) fail(404, 'Пользователь не найден');
     return { id };
