@@ -58,3 +58,15 @@ test('рефералы: код ↔ игрок, закрепление при п�
 test('стартовый бонус по умолчанию — 1 000 LC', () => {
   assert.equal(DEFAULTS.signupBonus, 100_000);
 });
+
+test('промокод с точным временем окончания («до 6 утра»)', async () => {
+  const soon = new Date(Date.now() + 3600_000).toISOString();
+  const p = await createPromo({ code: 'NIGHT', amount: 5_000, maxUses: 10, until: soon });
+  assert.equal(new Date(p.expires_at).toISOString(), soon);
+  await assert.rejects(createPromo({ code: 'PAST', amount: 5_000, maxUses: 10, until: new Date(Date.now() - 1000).toISOString() }), /уже прошло/);
+  const u = await makeUser(0);
+  assert.equal((await redeemPromo(u.id, 'night')).amount, 5_000);
+  const db = await getDb();
+  await db.query("update promo_codes set expires_at = now() - interval '1 minute' where code = 'NIGHT'");
+  await assert.rejects(redeemPromo((await makeUser(0)).id, 'NIGHT'), /истёк/);
+});

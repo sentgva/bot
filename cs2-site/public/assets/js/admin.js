@@ -276,7 +276,9 @@ promoForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   $$('[data-err]', promoForm).forEach((el) => { el.textContent = ''; });
   const f = promoForm.elements;
-  const body = { code: f.code.value.trim().toUpperCase(), amount: Number(f.amount.value), maxUses: Number(f.maxUses.value), days: f.days.value };
+  // Время окончания — в часовом поясе админа, на сервер уходит в ISO (UTC)
+  const until = f.until.value ? new Date(f.until.value).toISOString() : null;
+  const body = { code: f.code.value.trim().toUpperCase(), amount: Number(f.amount.value), maxUses: Number(f.maxUses.value), days: until ? '' : f.days.value, until };
   await withLoading(e.submitter, async () => {
     try {
       const r = await api('/api/admin/promos', { method: 'POST', body });
@@ -289,6 +291,17 @@ promoForm.addEventListener('submit', async (e) => {
       if (field && $(`[data-err="${field}"]`, promoForm)) $(`[data-err="${field}"]`, promoForm).textContent = err.message; else toastError(err);
     }
   });
+});
+// Быстрый выбор окончания: ближайшие 6:00 утра или через N часов
+const toLocalInput = (d) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+promoForm.addEventListener('click', (e) => {
+  const at = e.target.closest('[data-until]');
+  const plus = e.target.closest('[data-until-hours]');
+  if (!at && !plus) return;
+  const d = new Date();
+  if (at) { d.setHours(Number(at.dataset.until), 0, 0, 0); if (d <= new Date()) d.setDate(d.getDate() + 1); } else d.setTime(d.getTime() + Number(plus.dataset.untilHours) * 3600_000);
+  promoForm.elements.until.value = toLocalInput(d);
+  promoForm.elements.days.value = '';
 });
 $('[data-promo-random]').addEventListener('click', () => {
   const abc = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';

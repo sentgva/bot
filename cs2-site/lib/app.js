@@ -401,6 +401,7 @@ r.post('/api/admin/promos', async (req) => {
   return createPromo({
     code: str(b.code, 40), amount: Math.round(Number(b.amount) * 100), maxUses: int(b.maxUses),
     days: b.days === '' || b.days == null ? null : int(b.days),
+    until: typeof b.until === 'string' && b.until ? str(b.until, 40) : null,
   });
 });
 r.post('/api/admin/promos/:code', async (req, res, { params }) => {

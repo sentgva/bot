@@ -128,7 +128,9 @@
             <div class="field"><label for="pr-amount">Сумма</label><div class="input-group"><input class="input num" id="pr-amount" name="amount" type="number" min="1" step="1" placeholder="100" required><span class="suffix" aria-hidden="true">LC</span></div><p class="error" data-err="amount"></p></div>
             <div class="field"><label for="pr-uses">Активаций</label><input class="input num" id="pr-uses" name="maxUses" type="number" min="1" step="1" value="100" required><p class="error" data-err="maxUses"></p></div>
             <div class="field"><label for="pr-days">Срок, дней</label><input class="input num" id="pr-days" name="days" type="number" min="1" step="1" placeholder="без срока"><p class="error" data-err="days"></p></div>
+            <div class="field"><label for="pr-until">Или действует до</label><input class="input" id="pr-until" name="until" type="datetime-local"><p class="error" data-err="until"></p></div>
           </div>
+          <div class="chips mb-4"><button type="button" class="chip" data-until="6">До 6:00 утра</button><button type="button" class="chip" data-until-hours="3">+3 часа</button><button type="button" class="chip" data-until-hours="24">+24 часа</button></div>
           <div class="row"><button class="btn btn-primary" type="submit" data-loading="Создаём…">Создать промокод</button><button class="btn btn-ghost" type="button" data-promo-random>Случайный код</button></div>
         </form>
         <div class="list" data-list="promos"></div>

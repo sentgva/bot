@@ -8,18 +8,26 @@ import { isWholeLc } from './lc.js';
 const normalize = (code) => String(code || '').trim().toUpperCase();
 export const isValidCode = (code) => /^[A-Z0-9_-]{3,32}$/.test(code);
 
-export async function createPromo({ code, amount, maxUses, days }) {
+// Срок: days (через N дней) или until (точная дата и время, например «сегодня до 6:00»)
+export async function createPromo({ code, amount, maxUses, days, until }) {
   code = normalize(code);
   if (!isValidCode(code)) fail(400, 'Код: 3–32 символа, латиница, цифры, - и _', { field: 'code' });
   if (!Number.isSafeInteger(amount) || amount <= 0 || !isWholeLc(amount)) fail(400, 'Сумма — целое число LC больше нуля', { field: 'amount' });
   if (amount > 100_000_000) fail(400, 'Не больше 1 000 000 LC за код', { field: 'amount' });
   if (!Number.isSafeInteger(maxUses) || maxUses < 1 || maxUses > 1_000_000) fail(400, 'Активаций — от 1 до 1 000 000', { field: 'maxUses' });
   if (days != null && (!Number.isSafeInteger(days) || days < 1 || days > 3650)) fail(400, 'Срок — от 1 до 3650 дней', { field: 'days' });
+  let expiresAt = days != null ? new Date(Date.now() + days * 86_400_000) : null;
+  if (until != null) {
+    expiresAt = new Date(until);
+    if (Number.isNaN(expiresAt.getTime())) fail(400, 'Проверь дату и время окончания', { field: 'until' });
+    if (expiresAt <= new Date()) fail(400, 'Время окончания уже прошло', { field: 'until' });
+    if (expiresAt - Date.now() > 3650 * 86_400_000) fail(400, 'Не дольше 10 лет', { field: 'until' });
+  }
   const db = await getDb();
   const row = await db.one(
-    `insert into promo_codes (code, amount, max_uses, expires_at) values ($1, $2, $3, case when $4::int is null then null else now() + make_interval(days => $4::int) end)
+    `insert into promo_codes (code, amount, max_uses, expires_at) values ($1, $2, $3, $4)
      on conflict (code) do nothing returning *`,
-    [code, amount, maxUses, days ?? null],
+    [code, amount, maxUses, expiresAt],
   );
   if (!row) fail(409, 'Такой код уже есть', { field: 'code' });
   return row;
