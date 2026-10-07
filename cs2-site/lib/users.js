@@ -42,6 +42,14 @@ export const isOwner = (u) => Boolean(u?.telegram_id) && (config.adminTgIds.incl
   || (Boolean(u.tg_username) && config.adminTgUsernames.includes(String(u.tg_username).toLowerCase())));
 export const isAdmin = (u) => isOwner(u) || Boolean(u?.is_admin);
 
+// Действующий бан: { reason, until } или null (не забанен или срок вышел)
+export function activeBan(u) {
+  if (!u?.is_banned) return null;
+  if (u.banned_until && new Date(u.banned_until) <= new Date()) return null;
+  return { reason: u.ban_reason || null, until: u.banned_until ? new Date(u.banned_until).toISOString() : null };
+}
+export const banMessage = (ban) => `Аккаунт заблокирован ${ban.until ? `до ${new Date(ban.until).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })} (МСК)` : 'навсегда'}${ban.reason ? `. Причина: ${ban.reason}` : ''}`;
+
 export async function getUser(id) {
   if (!id) return null;
   const db = await getDb();
@@ -58,6 +66,7 @@ export const publicUser = (u) => ({
   tradeUrl: u.trade_url,
   isAdmin: isAdmin(u),
   isOwner: isOwner(u),
+  ban: activeBan(u),
   fair: { serverSeedHash: hashSeed(u.server_seed), clientSeed: u.client_seed, nonce: u.nonce },
 });
 
@@ -65,7 +74,8 @@ export const publicUser = (u) => ({
 export async function lockUser(q, userId) {
   const u = await q.one('select * from users where id = $1 for update', [userId]);
   if (!u) fail(401, 'Войди через Steam');
-  if (u.is_banned) fail(403, 'Аккаунт заблокирован. Напиши в поддержку');
+  const ban = activeBan(u);
+  if (ban) fail(403, banMessage(ban), { ban });
   return u;
 }
 

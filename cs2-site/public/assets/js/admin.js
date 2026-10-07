@@ -133,6 +133,18 @@ async function openUser(id) {
           ${me?.isOwner && !u.is_owner ? `<button class="btn btn-ghost" type="button" data-role="${u.is_admin ? 'remove_admin' : 'make_admin'}">${u.is_admin ? 'Снять админку' : 'Сделать админом'}</button>` : ''}
         </div>
       </form>
+      ${u.ban ? `<div class="callout callout-danger">⛔ <div><p><b>Забанен ${u.ban.until ? `до ${dateTime(u.ban.until)}` : 'навсегда'}</b></p>${u.ban.reason ? `<p class="small">Причина: ${esc(u.ban.reason)}</p>` : ''}</div></div>` : ''}
+      <form class="adm-grant" data-ban-form hidden novalidate>
+        <p class="legend">Бан: срок и причина</p>
+        <div class="chips">
+          <button type="button" class="chip" data-ban-days="1" aria-pressed="true">1 день</button>
+          <button type="button" class="chip" data-ban-days="7" aria-pressed="false">7 дней</button>
+          <button type="button" class="chip" data-ban-days="30" aria-pressed="false">30 дней</button>
+          <button type="button" class="chip" data-ban-days="forever" aria-pressed="false">Навсегда</button>
+        </div>
+        <input class="input" name="reason" type="text" maxlength="200" placeholder="Причина — игрок увидит её на сайте" aria-label="Причина бана">
+        <div class="row"><button class="btn btn-danger" type="submit" data-loading="Баним…">Забанить</button></div>
+      </form>
       <dl class="adm-facts">
         ${row('Пополнил', lc(st.deposits))}${row('Вывел', lc(st.withdrawn))}${row('Выдано админом и бонусами', lc(st.granted))}
         ${row('Пригласил друзей', `${st.invited} · заработал ${lc(st.ref_earned)}`)}${row('Пришёл от', u.referrer_id ? `${esc(u.referrer_name)} (ID ${u.referrer_id})` : '—')}
@@ -164,13 +176,43 @@ $('[data-user-card]').addEventListener('click', async (e) => {
     });
     return;
   }
+  // Срок бана в форме
+  const term = e.target.closest('[data-ban-days]');
+  if (term) {
+    $$('[data-ban-days]', term.parentElement).forEach((c) => c.setAttribute('aria-pressed', String(c === term)));
+    return;
+  }
   const ban = e.target.closest('[data-ban]');
   if (!ban) return;
-  if (ban.dataset.ban === 'ban' && !(await confirmDialog({ title: 'Забанить игрока?', html: '<p>Он не сможет войти, пока вы его не разбаните.</p>', confirm: 'Забанить' }))) return;
+  if (ban.dataset.ban === 'ban') {
+    // Показать форму: срок и причина
+    const form = $('[data-ban-form]');
+    form.hidden = !form.hidden;
+    if (!form.hidden) form.elements.reason.focus();
+    return;
+  }
   await withLoading(ban, async () => {
-    try { await api(`/api/admin/users/${currentUserId}`, { method: 'POST', body: { action: ban.dataset.ban } }); toast('Готово', 'success'); openUser(currentUserId); load(); } catch (err) { toastError(err); }
+    try { await api(`/api/admin/users/${currentUserId}`, { method: 'POST', body: { action: 'unban' } }); toast('Бан снят', 'success'); openUser(currentUserId); load(); } catch (err) { toastError(err); }
   });
 });
+$('[data-user-card]').addEventListener('submit', async (e) => {
+  const form = e.target.closest('[data-ban-form]');
+  if (!form) return;
+  e.preventDefault();
+  e.stopImmediatePropagation();
+  const reason = form.elements.reason.value.trim();
+  if (!reason) { toast('Укажи причину бана', 'error'); form.elements.reason.focus(); return; }
+  const picked = $('[data-ban-days][aria-pressed="true"]', form);
+  const days = picked.dataset.banDays === 'forever' ? null : Number(picked.dataset.banDays);
+  await withLoading(e.submitter, async () => {
+    try {
+      await api(`/api/admin/users/${currentUserId}`, { method: 'POST', body: { action: 'ban', days, note: reason } });
+      toast(days ? `Забанен на ${days} дн.` : 'Забанен навсегда', 'success');
+      openUser(currentUserId);
+      load();
+    } catch (err) { toastError(err); }
+  });
+}, true);
 $('[data-user-card]').addEventListener('submit', async (e) => {
   e.preventDefault();
   const form = e.target.closest('[data-grant]');

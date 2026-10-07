@@ -280,6 +280,43 @@ export function renderAuth(user) {
     <a class="avatar-link" href="/profile/" aria-label="Профиль: ${esc(user.name)}">${avatar}</a>`;
 }
 
+// ── Плашка бана: нельзя закрыть, исчезает только после разбана или окончания срока ──
+
+const fmtLeft = (ms) => {
+  const m = Math.max(1, Math.ceil(ms / 60000));
+  const d = Math.floor(m / 1440); const h = Math.floor((m % 1440) / 60); const mm = m % 60;
+  return [d ? `${d} дн.` : '', h ? `${h} ч` : '', !d && mm ? `${mm} мин` : ''].filter(Boolean).join(' ');
+};
+export function renderBan(ban) {
+  if (!ban) return;
+  const until = ban.until ? new Date(ban.until) : null;
+  const build = () => {
+    const bar = document.createElement('div');
+    bar.className = 'ban-bar';
+    bar.setAttribute('role', 'alert');
+    bar.dataset.banBar = '';
+    const when = until
+      ? `до ${until.toLocaleString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })} · осталось <b data-ban-left>${fmtLeft(until - Date.now())}</b>`
+      : '<b>навсегда</b>';
+    bar.innerHTML = `<span class="ban-icon" aria-hidden="true">⛔</span><div><p><b>Аккаунт заблокирован</b> ${when}</p>${ban.reason ? `<p class="ban-reason">Причина: ${esc(ban.reason)}</p>` : ''}<p class="ban-hint">Играть и выводить нельзя. Вопросы — в поддержку в нашем Telegram-боте.</p></div>`;
+    document.body.prepend(bar);
+    return bar;
+  };
+  let bar = build();
+  document.documentElement.classList.add('is-banned');
+  // Удалили плашку (например, через инструменты разработчика) — возвращаем
+  new MutationObserver(() => { if (!document.body.contains(bar)) bar = build(); }).observe(document.body, { childList: true });
+  if (until) {
+    const tick = () => {
+      const left = until - Date.now();
+      if (left <= 0) { location.reload(); return; } // срок вышел — бан снимется на сервере сам
+      const el = bar.querySelector('[data-ban-left]');
+      if (el) el.textContent = fmtLeft(left);
+    };
+    setInterval(tick, 30_000);
+  }
+}
+
 // Обновить баланс в шапке без перезагрузки
 export function setBalance(kop) {
   $$('[data-balance]').forEach((el) => { el.textContent = lc(kop); });
@@ -317,5 +354,5 @@ initTheme();
 initNav();
 initReveal();
 loginNotice();
-session().then((s) => renderAuth(s.user));
+session().then((s) => { renderAuth(s.user); renderBan(s.user?.ban); });
 import('./live.js'); // живая лента: онлайн и выигрыши

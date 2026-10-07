@@ -86,3 +86,28 @@ test('админка: владелец выдаёт и снимает права
     config.adminTgIds = [];
   }
 });
+
+test('бан: срок 1/7/30 дней или навсегда, с причиной; истёкший бан не действует; действия забаненного заблокированы', async () => {
+  const { activeBan } = await import('../lib/users.js');
+  const { openCase, listCases } = await import('../lib/cases.js');
+  const db = await getDb();
+  const u = await makeUser(1_000_000);
+  await assert.rejects(updateUser(u.id, { action: 'ban', days: 7 }), /причину/);
+  await assert.rejects(updateUser(u.id, { action: 'ban', days: 3, note: 'x' }), /1, 7, 30/);
+  await updateUser(u.id, { action: 'ban', days: 7, note: 'Мультиаккаунт' });
+  let row = await db.one('select * from users where id = $1', [u.id]);
+  const ban = activeBan(row);
+  assert.equal(ban.reason, 'Мультиаккаунт');
+  assert.ok(new Date(ban.until) - Date.now() > 6.9 * 86_400_000);
+  const [c] = await listCases();
+  await assert.rejects(openCase(u.id, c.slug), /заблокирован.*Мультиаккаунт/);
+  // Срок вышел — бан не действует
+  await db.query("update users set banned_until = now() - interval '1 minute' where id = $1", [u.id]);
+  assert.equal(activeBan(await db.one('select * from users where id = $1', [u.id])), null);
+  // Навсегда
+  await updateUser(u.id, { action: 'ban', days: null, note: 'Мошенничество' });
+  row = await db.one('select * from users where id = $1', [u.id]);
+  assert.deepEqual(activeBan(row), { reason: 'Мошенничество', until: null });
+  await updateUser(u.id, { action: 'unban' });
+  assert.equal(activeBan(await db.one('select * from users where id = $1', [u.id])), null);
+});

@@ -6,7 +6,7 @@ import {
   HttpError, assertSameOrigin, createRouter, fail, int, ipKey, rateLimit, readBody, readJson, redirect, sendJson, str,
 } from './http.js';
 import { endSession, sessionUserId, startSession } from './session.js';
-import { getUser, isAdmin, ledgerOf, publicUser, rotateSeed, setClientSeed, setTradeUrl, upsertTelegramUser } from './users.js';
+import { activeBan, banMessage, getUser, isAdmin, ledgerOf, publicUser, rotateSeed, setClientSeed, setTradeUrl, upsertTelegramUser } from './users.js';
 import { SUPPORT_TEXT, botId, handleUpdate, tgApi, verifyInitData, verifyLoginWidget, webhookSecret } from './telegram.js';
 import { listItems, pricesAreStale, syncCatalog } from './catalog.js';
 import { buyPrice, finishSkinWithdrawal, listOwned, listSkinWithdrawals, pollSkinWithdrawals, sellItems, withdrawItem } from './inventory.js';
@@ -34,12 +34,14 @@ const r = createRouter();
 
 async function currentUser(req) {
   const u = await getUser(sessionUserId(req));
-  return u && !u.is_banned ? u : null;
+  return u || null; // забаненный остаётся в сессии — сайт покажет ему плашку бана
 }
 
 async function requireUser(req) {
   const u = await currentUser(req);
   if (!u) fail(401, 'Войди через Telegram, чтобы продолжить');
+  const ban = activeBan(u);
+  if (ban) fail(403, banMessage(ban), { ban });
   return u;
 }
 
@@ -69,7 +71,7 @@ r.post('/api/auth/telegram-widget', async (req, res) => {
   const tg = verifyLoginWidget(data);
   if (!tg) fail(401, 'Не получилось войти через Telegram. Попробуй ещё раз');
   const user = await upsertTelegramUser(tg, { ref: str(ref, 12) });
-  if (user.is_banned) fail(403, 'Аккаунт заблокирован. Напиши в поддержку');
+  // Забаненного тоже впускаем: сайт покажет плашку с причиной и сроком, а действия заблокирует сервер
   startSession(res, user.id);
   return { user: publicUser(user) };
 });
@@ -91,7 +93,7 @@ r.post('/api/auth/telegram', async (req, res) => {
   if (!tg) fail(401, 'Не получилось войти через Telegram. Закрой и снова открой приложение из бота');
   // Код пригласившего: из ссылки на сайт (?ref=) или из подписанного start_param (t.me/бот?startapp=КОД)
   const user = await upsertTelegramUser(tg, { ref: str(ref, 12) || new URLSearchParams(str(initData, 4096)).get('start_param') });
-  if (user.is_banned) fail(403, 'Аккаунт заблокирован. Напиши в поддержку');
+  // Забаненного тоже впускаем: сайт покажет плашку с причиной и сроком, а действия заблокирует сервер
   return { token: startSession(res, user.id), user: publicUser(user) };
 });
 
@@ -387,7 +389,8 @@ r.post('/api/admin/users/:id', async (req, res, { params }) => {
   const me = await requireAdmin(req);
   const b = await readJson(req);
   const amount = b.amount === undefined ? undefined : Math.round(Number(b.amount) * 100);
-  return admin.updateUser(int(params.id), { action: b.action, amount, note: str(b.note, 200) }, me);
+  const days = b.days === null || b.days === undefined || b.days === '' ? null : int(b.days);
+  return admin.updateUser(int(params.id), { action: b.action, amount, note: str(b.note, 200), days }, me);
 });
 r.get('/api/admin/tickets', async (req, res, { url }) => { await requireAdmin(req); return listTickets(url.searchParams.get('status') || 'open'); });
 r.get('/api/admin/tickets/:id', async (req, res, { params }) => { await requireAdmin(req); return getTicket(int(params.id)); });
