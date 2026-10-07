@@ -5,6 +5,7 @@ import { config } from './config.js';
 import { fail } from './http.js';
 import { activeBan, banMessage, changeBalance, isOwner } from './users.js';
 import { tgApi } from './telegram.js';
+import { vipInfo } from './vip.js';
 
 // Сообщить игроку в Telegram (если бот может ему писать) — ошибки не мешают самому действию
 const tellUser = (telegramId, text) => (telegramId && config.tgBotToken ? tgApi('sendMessage', { chat_id: telegramId, text }).catch(() => {}) : null);
@@ -81,13 +82,14 @@ export async function findUsers(query) {
 export async function userDetail(id) {
   const db = await getDb();
   const user = await db.one(
-    `select u.id, u.telegram_id, u.tg_username, u.name, u.avatar, u.balance, u.is_banned, u.ban_reason, u.banned_until, u.is_admin, u.trade_url, u.created_at, u.last_seen_at,
+    `select u.id, u.telegram_id, u.tg_username, u.name, u.avatar, u.balance, u.is_banned, u.ban_reason, u.banned_until, u.is_admin, u.xp, u.trade_url, u.created_at, u.last_seen_at,
             r.id as referrer_id, r.name as referrer_name
      from users u left join users r on r.id = u.referred_by where u.id = $1`,
     [id],
   );
   if (!user) fail(404, 'Пользователь не найден');
   user.is_owner = isOwner(user);
+  user.vip = vipInfo(user);
   user.ban = activeBan(user);
   user.is_banned = Boolean(user.ban);
   const stats = await db.one(`

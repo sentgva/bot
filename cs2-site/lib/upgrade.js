@@ -8,6 +8,7 @@ import { getSettings } from './settings.js';
 import { changeBalance, lockUser } from './users.js';
 import { ROLL_MAX, computeRoll, hashSeed } from './fair.js';
 import { fmtLc, isWholeLc } from './lc.js';
+import { addXp, tierFor } from './vip.js';
 
 export async function runUpgrade(userId, { itemIds = [], balance = 0, target }) {
   const s = await getSettings();
@@ -37,7 +38,8 @@ export async function runUpgrade(userId, { itemIds = [], balance = 0, target }) 
     const raw = (inputValue / targetItem.price) * (1 - s.houseEdge);
     if (raw > s.maxChance) fail(400, `Шанс больше ${Math.round(s.maxChance * 100)}% — выбери скин дороже`);
     if (raw < s.minChance) fail(400, `Шанс меньше ${s.minChance * 100}% — выбери скин дешевле`);
-    const chance = Math.floor(raw * ROLL_MAX);
+    // Бонус уровня: шанс × (1 + N%), но не выше максимального
+    const chance = Math.floor(Math.min(raw * (1 + tierFor(u.xp).upgrade), s.maxChance) * ROLL_MAX);
     if (chance < 1) fail(400, 'Шанс слишком мал — добавь ставку или выбери скин дешевле');
 
     const nonce = u.nonce;
@@ -45,6 +47,7 @@ export async function runUpgrade(userId, { itemIds = [], balance = 0, target }) 
     const won = roll < chance;
 
     await q.query('update users set nonce = nonce + 1 where id = $1', [userId]);
+    await addXp(q, userId, inputValue, 'upgrade');
     if (items.length) await q.query(`update user_items set status = 'burned', updated_at = now() where id = any($1)`, [ids]);
 
     let resultItemId = null;

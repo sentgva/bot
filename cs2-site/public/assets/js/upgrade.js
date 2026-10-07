@@ -48,7 +48,8 @@ function calc() {
   if (value < state.cfg.minValue) return { value, chance: raw, ok: false, reason: `Минимальная ставка — ${lc(state.cfg.minValue)}` };
   if (raw > state.cfg.maxChance) return { value, chance: raw, ok: false, reason: `Шанс выше ${Math.round(state.cfg.maxChance * 100)}% — выбери цель дороже` };
   if (raw < state.cfg.minChance || raw * 1_000_000 < 1) return { value, chance: raw, ok: false, reason: `Шанс меньше ${fmtChance(Math.max(1, Math.round(state.cfg.minChance * 1_000_000)))} — выбери цель дешевле или добавь ставку` };
-  return { value, chance: raw, ok: true, reason: '' };
+  const boost = state.user?.vip?.bonus?.upgrade || 0; // бонус уровня: шанс × (1 + N%), не выше максимального
+  return { value, chance: Math.min(raw * (1 + boost), state.cfg.maxChance), ok: true, reason: '' };
 }
 
 function render() {

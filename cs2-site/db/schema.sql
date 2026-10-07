@@ -128,6 +128,8 @@ create table if not exists promo_redemptions (
 
 -- Админы, назначенные владельцем из админ-панели (владельцы — ADMIN_TG_IDS / ADMIN_TG_USERNAMES в окружении)
 alter table users add column if not exists is_admin boolean not null default false;
+-- Уровни (lib/vip.js): опыт в сотых долях очка
+alter table users add column if not exists xp bigint not null default 0;
 -- Бан: причина и срок (null — навсегда); после banned_until бан снимается сам
 alter table users add column if not exists ban_reason text;
 alter table users add column if not exists banned_until timestamptz;

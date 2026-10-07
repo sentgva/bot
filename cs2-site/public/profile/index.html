@@ -93,7 +93,7 @@
           <div class="profile-user">
             <span data-avatar></span>
             <div>
-              <p class="h3" data-name></p>
+              <p class="h3" data-name></p> <span class="tier-badge" data-tier hidden></span>
               <p class="small muted mono" data-account></p>
             </div>
           </div>
@@ -116,6 +116,7 @@
           <button class="tab" role="tab" id="tab-wallet" aria-controls="panel-wallet" aria-selected="false" tabindex="-1" data-tab="wallet"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-wallet"/></svg>Кошелёк</button>
           <button class="tab" role="tab" id="tab-history" aria-controls="panel-history" aria-selected="false" tabindex="-1" data-tab="history"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-history"/></svg>История</button>
           <button class="tab" role="tab" id="tab-upgrades" aria-controls="panel-upgrades" aria-selected="false" tabindex="-1" data-tab="upgrades"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-trending-up"/></svg>Апгрейды</button>
+          <button class="tab" role="tab" id="tab-vip" aria-controls="panel-vip" aria-selected="false" tabindex="-1" data-tab="vip"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-crown"/></svg>Уровень</button>
           <button class="tab" role="tab" id="tab-referrals" aria-controls="panel-referrals" aria-selected="false" tabindex="-1" data-tab="referrals"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-users"/></svg>Друзья</button>
           <button class="tab" role="tab" id="tab-settings" aria-controls="panel-settings" aria-selected="false" tabindex="-1" data-tab="settings"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-settings"/></svg>Настройки</button>
         </div>
@@ -210,6 +211,11 @@
         <!-- Апгрейды -->
         <section role="tabpanel" id="panel-upgrades" aria-labelledby="tab-upgrades" tabindex="0" hidden>
           <div class="list" data-upgrades></div>
+        </section>
+
+        <!-- Уровень (VIP) -->
+        <section role="tabpanel" id="panel-vip" aria-labelledby="tab-vip" tabindex="0" hidden>
+          <div data-vip></div>
         </section>
 
         <!-- Друзья (рефералы) -->

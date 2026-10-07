@@ -276,7 +276,7 @@ export function renderAuth(user) {
     ? `<img class="avatar" src="${esc(user.avatar)}" alt="" width="44" height="44">`
     : `<span class="avatar avatar-fallback" aria-hidden="true">${initials}</span>`;
   box.innerHTML = `
-    <a class="balance-chip" href="/profile/#wallet" aria-label="Баланс ${lc(user.balance)}, пополнить или вывести">${icon('i-coins')}<span data-balance>${lc(user.balance)}</span></a>
+    <a class="balance-chip" href="/profile/#wallet" aria-label="Баланс ${lc(user.balance)}, пополнить или вывести">${icon('i-crown', 'icon lc-crown')}<span data-balance>${lc(user.balance)}</span></a>
     <a class="avatar-link" href="/profile/" aria-label="Профиль: ${esc(user.name)}">${avatar}</a>`;
 }
 

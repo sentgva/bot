@@ -14,6 +14,8 @@ import { getSettings } from './settings.js';
 import { changeBalance, lockUser } from './users.js';
 import { ROLL_MAX, computeRoll, hashSeed } from './fair.js';
 import { sellPrice } from './inventory.js';
+import { addXp } from './vip.js';
+import { floorLc } from './lc.js';
 import fs from 'node:fs';
 
 const LC = 100; // сотых долей в 1 LC
@@ -189,7 +191,11 @@ export async function openCase(userId, slug, count = 1, expectedPrice = null) {
     if (expectedPrice != null && expectedPrice !== c.price) fail(409, `Цена кейса обновилась: теперь ${c.price / LC} LC. Нажми ещё раз`, { price: c.price });
     const total = c.price * count;
     if (u.balance < total) fail(400, count > 1 ? `Недостаточно LC: нужно ${total / 100} LC за ${count} кейса` : 'Недостаточно LC на балансе');
-    const balance = await changeBalance(q, userId, -total, 'case', { note: `Кейс «${c.name}»${count > 1 ? ` ×${count}` : ''}` });
+    let balance = await changeBalance(q, userId, -total, 'case', { note: `Кейс «${c.name}»${count > 1 ? ` ×${count}` : ''}` });
+    // Уровень: кэшбэк с цены кейсов (по уровню до этого открытия) и опыт
+    const { before } = await addXp(q, userId, total, 'case');
+    const cashback = floorLc(Math.floor(total * before.cashback));
+    if (cashback > 0) balance = await changeBalance(q, userId, cashback, 'vip', { note: `${before.name}: кэшбэк ${String(before.cashback * 100).replace('.', ',')}% за кейсы` });
 
     const ascending = [...c.items].reverse(); // сначала дешёвые: бросок 0…N — самый частый скин
     const drops = [];
@@ -212,7 +218,7 @@ export async function openCase(userId, slug, count = 1, expectedPrice = null) {
     }
     await q.query('update users set nonce = nonce + $2 where id = $1', [userId, count]);
     // Для совместимости с одиночным открытием — поля первого дропа на верхнем уровне
-    return { ...drops[0], drops, balance };
+    return { ...drops[0], drops, balance, cashback };
   });
 }
 

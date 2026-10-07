@@ -7,6 +7,7 @@ import { fail } from './http.js';
 import { hashSeed, newClientSeed, newServerSeed } from './fair.js';
 import { getSettings } from './settings.js';
 import { floorLc } from './lc.js';
+import { vipInfo } from './vip.js';
 import { config } from './config.js';
 
 // Вход через Telegram (Mini App или Telegram Login на сайте): аккаунт привязан к Telegram ID
@@ -67,6 +68,7 @@ export const publicUser = (u) => ({
   isAdmin: isAdmin(u),
   isOwner: isOwner(u),
   ban: activeBan(u),
+  vip: vipInfo(u),
   fair: { serverSeedHash: hashSeed(u.server_seed), clientSeed: u.client_seed, nonce: u.nonce },
 });
 

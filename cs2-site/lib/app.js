@@ -23,6 +23,7 @@ import { parseTradeUrl, rublesToKop } from './validate.js';
 import * as admin from './admin.js';
 import { getCase, listCases, openCase } from './cases.js';
 import { previewContract, signContract } from './contracts.js';
+import { TIERS, XP_WEIGHT, vipInfo } from './vip.js';
 import { createPromo, listPromos, redeemPromo, setPromoActive } from './promo.js';
 import { referralStats } from './referrals.js';
 import { handleBroadcastCallback, isOwnerTelegram, ownerBotMessage, rememberBotUser, runBroadcast } from './broadcast.js';
@@ -167,6 +168,7 @@ r.get('/api/me', async (req) => {
       upgrade: { houseEdge: s.houseEdge, maxChance: s.maxChance, minChance: s.minChance, maxItems: s.maxUpgradeItems, minValue: s.minUpgradeValue },
       market: { markup: s.marketMarkup, sellRate: s.siteSellRate },
       cases: { edge: s.caseEdge },
+      vip: { tiers: TIERS, weights: XP_WEIGHT },
       contracts: { edge: s.contractEdge, minMult: s.contractMinMult, maxMult: s.contractMaxMult, minItems: s.contractMinItems, maxItems: s.contractMaxItems },
       // Для страницы входа: ID и имя бота LuxeDrop (не секретные), тестовый вход — только локально
       auth: { telegramBotId: botId(), botUsername: config.tgBotUsername || null, devLogin: config.devLogin },

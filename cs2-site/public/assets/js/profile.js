@@ -56,6 +56,8 @@ function renderHead() {
   updateBalance(user.balance);
   $('[data-no-trade]').hidden = Boolean(user.tradeUrl);
   $('[data-admin-link]').hidden = !user.isAdmin;
+  const tier = $('[data-tier]');
+  if (tier && user.vip) { tier.hidden = false; tier.dataset.tier = user.vip.key; tier.textContent = user.vip.name; }
 }
 
 function updateBalance(kop) {
@@ -387,6 +389,35 @@ $('#promo-form').addEventListener('submit', async (e) => {
   });
 });
 
+// ── Уровень (VIP) ──────────────────────────────────────────
+
+const pctNum = (x) => `${String(Math.round(x * 1000) / 10).replace('.', ',')}%`;
+loaders.vip = () => {
+  const v = user.vip;
+  const tiers = cfg.vip?.tiers || [];
+  const perks = (t) => [t.deposit ? `+${pctNum(t.deposit)} к пополнению` : null, t.upgrade ? `+${pctNum(t.upgrade)} к шансу апгрейда` : null, t.cashback ? `кэшбэк ${pctNum(t.cashback)} за кейсы` : null].filter(Boolean);
+  $('[data-vip]').innerHTML = `
+    <div class="card vip-card" data-tier="${esc(v.key)}">
+      <div class="vip-head">
+        <span class="tier-badge tier-badge-lg" data-tier="${esc(v.key)}">${esc(v.name)}</span>
+        <div class="grow"><p class="h3">Твой уровень — ${esc(v.name)}</p><p class="muted small">${v.points.toLocaleString('ru-RU')} очков опыта</p></div>
+      </div>
+      ${v.next ? `<div class="vip-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(v.progress * 100)}" aria-label="Прогресс до ${esc(v.next.name)}"><span data-progress="${Math.round(v.progress * 100)}"></span></div>
+        <p class="small muted mt-2">До <b>${esc(v.next.name)}</b> — ещё ${v.next.left.toLocaleString('ru-RU')} очков</p>` : '<p class="mt-2"><b>Максимальный уровень</b> — ты на вершине 👑</p>'}
+      <p class="mt-4"><b>Твои бонусы:</b> ${perks(tiers[v.level] || {}).join(' · ') || 'появятся с уровня VIP'}</p>
+      <p class="small muted mt-2">Опыт: пополнение — 1 очко за 1 LC, кейсы и апгрейд — 0,1 очка за 1 LC, контракты — 0,05 очка за 1 LC.</p>
+    </div>
+    <div class="vip-tiers mt-4">${tiers.map((t, i) => `
+      <div class="vip-tier${i === v.level ? ' is-current' : ''}${i < v.level ? ' is-done' : ''}" data-tier="${esc(t.key)}">
+        <span class="tier-badge" data-tier="${esc(t.key)}">${esc(t.name)}</span>
+        <p class="small muted">от ${t.xp.toLocaleString('ru-RU')} очков</p>
+        <ul class="vip-perks">${(perks(t).length ? perks(t) : ['без бонусов']).map((p) => `<li>${p}</li>`).join('')}</ul>
+      </div>`).join('')}</div>`;
+  // Ширина полосы прогресса — через CSSOM (inline-стили запрещены CSP)
+  const bar = $('[data-progress]');
+  if (bar) bar.style.setProperty('width', `${bar.dataset.progress}%`);
+};
+
 // ── Друзья: реферальная ссылка ─────────────────────────────
 
 loaders.referrals = async () => {
@@ -417,7 +448,7 @@ $('[data-referrals]').addEventListener('click', async (e) => {
 
 const KIND = {
   deposit: 'Пополнение', withdraw: 'Вывод', refund: 'Возврат', buy: 'Покупка скина', sell: 'Продажа скина',
-  upgrade: 'Ставка в апгрейде', buyback: 'Выкуп скинов', admin: 'Корректировка', demo: 'Тестовое пополнение', bonus: 'Бонус', case: 'Открытие кейса', promo: 'Промокод', referral: 'Реферальные',
+  upgrade: 'Ставка в апгрейде', buyback: 'Выкуп скинов', admin: 'Корректировка', demo: 'Тестовое пополнение', bonus: 'Бонус', case: 'Открытие кейса', promo: 'Промокод', referral: 'Реферальные', vip: 'Бонус уровня',
 };
 loaders.history = async () => {
   const list = await api('/api/me/ledger').catch(() => []);

@@ -1153,3 +1153,42 @@ html.is-banned .site-header { top: auto; }
 .btn-danger { --btn-bg: #c62828; background: #c62828; color: #fff; border-color: #c62828; }
 .btn-danger:hover { background: #e53935; }
 .callout-danger { border-color: color-mix(in srgb, var(--danger) 55%, var(--border)); background: color-mix(in srgb, var(--danger) 12%, var(--surface)); }
+
+/* Иконка LuxeCoin — золотая корона */
+.lc-crown { color: #f2c94c; filter: drop-shadow(0 0 6px rgba(242, 190, 60, .55)); }
+
+/* ---------- Уровни (VIP) ---------- */
+.tier-badge {
+  display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 999px; vertical-align: middle;
+  font-family: var(--font-display); font-weight: 700; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; white-space: nowrap;
+  color: #1a1203; background: #8b8b8b; border: 1px solid rgba(255, 255, 255, .15);
+}
+.tier-badge-lg { font-size: 14px; padding: 8px 16px; }
+.tier-badge[data-tier="newbie"] { background: var(--surface-2); color: var(--muted); border-color: var(--border-strong); }
+.tier-badge[data-tier="vip"] { background: linear-gradient(135deg, #f3c39b, #cd7f32 55%, #8a4f1d); }
+.tier-badge[data-tier="gold"] { background: linear-gradient(135deg, #fff1b0, #f2c94c 50%, #b8821c); }
+.tier-badge[data-tier="platinum"] { background: linear-gradient(135deg, #ffffff, #d6dde6 45%, #8f9aa8); }
+.tier-badge[data-tier="diamond"] { background: linear-gradient(135deg, #e6fbff, #7fdcff 45%, #2f8fd8); }
+/* Obsidian — залитый тёмный камень с фиолетовым отливом, золотой рамкой и переливом */
+.tier-badge[data-tier="obsidian"] {
+  color: #f6e7b0; border: 1px solid #e2b13c;
+  background: linear-gradient(110deg, #0b0910 0%, #261a3a 35%, #0b0910 50%, #3a2458 65%, #0b0910 100%);
+  background-size: 250% 100%; animation: obsidian-sheen 4s linear infinite;
+  box-shadow: 0 0 14px -2px rgba(168, 85, 247, .6), inset 0 0 8px rgba(226, 177, 60, .25);
+}
+@keyframes obsidian-sheen { to { background-position: -250% 0; } }
+@media (prefers-reduced-motion: reduce) { .tier-badge[data-tier="obsidian"] { animation: none; } }
+
+.vip-card { display: grid; gap: var(--s2); }
+.vip-head { display: flex; align-items: center; gap: var(--s4); }
+.vip-progress { height: 10px; border-radius: 999px; background: var(--surface-2); overflow: hidden; margin-top: var(--s3); }
+.vip-progress span { display: block; height: 100%; width: 0; background: var(--gold); border-radius: inherit; transition: width 600ms var(--ease); }
+.vip-tiers { display: grid; gap: var(--s3); grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 760px) { .vip-tiers { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1100px) { .vip-tiers { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+.vip-tier { display: grid; gap: 6px; align-content: start; padding: var(--s3); border-radius: var(--r-md); background: var(--surface); border: 1px solid var(--border); }
+.vip-tier.is-current { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 10px 30px -18px rgba(242, 190, 60, .8); }
+.vip-tier.is-done { opacity: .7; }
+.vip-tier[data-tier="obsidian"] { background: linear-gradient(160deg, #120d1a, var(--surface) 70%); border-color: color-mix(in srgb, #a855f7 40%, var(--border)); }
+.vip-perks { margin: 0; padding-left: 16px; font-size: 13px; display: grid; gap: 2px; }
+.vip-tier .tier-badge { justify-self: start; }

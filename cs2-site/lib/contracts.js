@@ -11,6 +11,7 @@ import { lockUser } from './users.js';
 import { computeRoll, hashSeed } from './fair.js';
 import { sellPrice } from './inventory.js';
 import { solveOdds } from './cases.js';
+import { addXp } from './vip.js';
 
 const POOL = 16; // сколько разных скинов может выпасть
 
@@ -79,6 +80,7 @@ export async function signContract(userId, ids, expectedValue = null) {
     for (const it of ascending) { acc += it.ppm; if (roll < acc) { drop = it; break; } }
 
     await q.query('update users set nonce = nonce + 1 where id = $1', [userId]);
+    await addXp(q, userId, value, 'contract');
     await q.query(`update user_items set status = 'burned', updated_at = now() where id = any($1)`, [list]);
     const userItemId = (await q.one(
       `insert into user_items (user_id, hash_name, price, source) values ($1, $2, $3, 'contract') returning id`,

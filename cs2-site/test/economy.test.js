@@ -1,4 +1,5 @@
 import { test, beforeEach } from 'node:test';
+import { tierFor } from '../lib/vip.js';
 import assert from 'node:assert/strict';
 import { freshDb, makeUser, balanceOf } from './helpers.js';
 import { getDb } from '../lib/db.js';
@@ -60,8 +61,8 @@ test('апгрейд: результат совпадает с provably fair б�
     const db = await getDb();
     const user = await db.one('select * from users where id = $1', [u.id]);
     const r = await runUpgrade(u.id, { itemIds: [itemId], target: AWP });
-    // Шанс: 1250 / 9800 × 0.95
-    assert.equal(r.chance, Math.floor((125000 / 980000) * 0.95 * 1e6));
+    // Шанс: 1250 / 9800 × 0.95, плюс бонус уровня игрока (опыт копится с каждым апгрейдом)
+    assert.equal(r.chance, Math.floor(Math.min((125000 / 980000) * 0.95 * (1 + tierFor(user.xp).upgrade), DEFAULTS.maxChance) * 1e6));
     assert.equal(r.roll, computeRoll(user.server_seed, user.client_seed, user.nonce));
     assert.equal(r.won, r.roll < r.chance);
     assert.equal(r.fair.nonce, user.nonce);

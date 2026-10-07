@@ -101,7 +101,7 @@ async function load() {
 
 const KIND = {
   deposit: 'Пополнение', withdraw: 'Вывод', refund: 'Возврат', buy: 'Покупка', sell: 'Продажа', upgrade: 'Апгрейд', buyback: 'Выкуп',
-  admin: 'Админ', demo: 'Тест', bonus: 'Бонус', case: 'Кейс', promo: 'Промокод', referral: 'Реферал',
+  admin: 'Админ', demo: 'Тест', bonus: 'Бонус', case: 'Кейс', promo: 'Промокод', referral: 'Реферал', vip: 'Уровень',
 };
 const QUICK = [100, 1000, 10000, 50000];
 
@@ -147,7 +147,7 @@ async function openUser(id) {
       </form>
       <dl class="adm-facts">
         ${row('Пополнил', lc(st.deposits))}${row('Вывел', lc(st.withdrawn))}${row('Выдано админом и бонусами', lc(st.granted))}
-        ${row('Пригласил друзей', `${st.invited} · заработал ${lc(st.ref_earned)}`)}${row('Пришёл от', u.referrer_id ? `${esc(u.referrer_name)} (ID ${u.referrer_id})` : '—')}
+        ${row('Уровень', u.vip ? `<span class="tier-badge" data-tier="${esc(u.vip.key)}">${esc(u.vip.name)}</span> · ${u.vip.points.toLocaleString('ru-RU')} очков` : '—')}${row('Пригласил друзей', `${st.invited} · заработал ${lc(st.ref_earned)}`)}${row('Пришёл от', u.referrer_id ? `${esc(u.referrer_name)} (ID ${u.referrer_id})` : '—')}
         ${row('Апгрейдов', `${st.upgrades} (побед ${st.upgrades_won})`)}${row('Кейсов открыто', st.cases)}${row('Скинов в инвентаре', `${st.items} · ${lc(st.items_value)}`)}
         ${row('Зарегистрирован', dateTime(u.created_at))}${row('Последний вход', dateTime(u.last_seen_at))}
       </dl>

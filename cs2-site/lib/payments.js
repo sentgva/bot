@@ -17,6 +17,7 @@ import { notifyAdmin, rub } from './notify.js';
 import { floorLc, fmtLc, isWholeLc, starsToLc } from './lc.js';
 import { tgApi } from './telegram.js';
 import { rewardReferrer } from './referrals.js';
+import { addXp } from './vip.js';
 import * as cryptopay from './providers/cryptopay.js';
 
 export const BANKS = ['Сбербанк', 'Т-Банк', 'Альфа-Банк', 'ВТБ', 'Газпромбанк', 'Райффайзенбанк', 'Озон Банк', 'Яндекс Банк', 'Другой банк'];
@@ -155,12 +156,16 @@ export async function handleStarsPaid(message, fetchImpl) {
       `update payments set status = 'paid', paid_at = now(), updated_at = now(), provider_id = $2, details = details || $3 where id = $1`,
       [p.id, sp.telegram_payment_charge_id, JSON.stringify({ payerTelegramId: message.from?.id ?? null })],
     );
-    const balance = await changeBalance(q, p.user_id, p.amount, 'deposit', { ref: `payment:${p.id}`, note: `${p.details.stars} ⭐` });
+    let balance = await changeBalance(q, p.user_id, p.amount, 'deposit', { ref: `payment:${p.id}`, note: `${p.details.stars} ⭐` });
     await rewardReferrer(q, p.user_id, p.amount, `payment:${p.id}`);
-    return { ok: true, p, balance };
+    // Уровень: бонус к пополнению по уровню на момент оплаты, затем опыт
+    const { before } = await addXp(q, p.user_id, p.amount, 'deposit');
+    const bonus = floorLc(Math.floor(p.amount * before.deposit));
+    if (bonus > 0) balance = await changeBalance(q, p.user_id, bonus, 'vip', { ref: `payment:${p.id}`, note: `${before.name}: +${Math.round(before.deposit * 100)}% к пополнению` });
+    return { ok: true, p, balance, bonus };
   });
   if (result.ok) {
-    await tgApi('sendMessage', { chat_id: message.chat.id, text: `✅ Зачислено ${fmtLc(result.p.amount)} за ${result.p.details.stars} ⭐\nБаланс: ${fmtLc(result.balance)}` }, fetchImpl).catch(() => {});
+    await tgApi('sendMessage', { chat_id: message.chat.id, text: `✅ Зачислено ${fmtLc(result.p.amount)} за ${result.p.details.stars} ⭐${result.bonus ? `\n🎁 Бонус уровня: +${fmtLc(result.bonus)}` : ''}\nБаланс: ${fmtLc(result.balance)}` }, fetchImpl).catch(() => {});
   } else if (result.review) {
     await notifyAdmin([`⚠️ Оплата звёздами #${result.p.id}: сумма не совпала, проверь вручную`]);
   }
