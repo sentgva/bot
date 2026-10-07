@@ -21,6 +21,7 @@ import { getSettings, updateSettings } from './settings.js';
 import { isValidClientSeed } from './fair.js';
 import { parseTradeUrl, rublesToKop } from './validate.js';
 import * as admin from './admin.js';
+import { getCase, listCases, openCase } from './cases.js';
 
 const r = createRouter();
 
@@ -119,6 +120,7 @@ r.get('/api/me', async (req) => {
       payments: methodsInfo(s),
       upgrade: { houseEdge: s.houseEdge, maxChance: s.maxChance, minChance: s.minChance, maxItems: s.maxUpgradeItems, minValue: s.minUpgradeValue },
       market: { markup: s.marketMarkup, sellRate: s.siteSellRate },
+      cases: { edge: s.caseEdge },
       // Для страницы входа: ID и имя бота LuxeDrop (не секретные), тестовый вход — только локально
       auth: { telegramBotId: botId(), botUsername: config.tgBotUsername || null, devLogin: config.devLogin },
     },
@@ -210,6 +212,23 @@ r.post('/api/upgrade', async (req) => {
 r.get('/api/upgrades/recent', async (req, res) => {
   res.setHeader('Cache-Control', 'public, max-age=10, s-maxage=10');
   return recentWins(12);
+});
+
+// ── Кейсы ──────────────────────────────────────────────────
+
+r.get('/api/cases', async (req, res) => {
+  refreshPricesInBackground();
+  res.setHeader('Cache-Control', 'public, max-age=30, s-maxage=60');
+  return listCases();
+});
+r.get('/api/cases/:slug', async (req, res, { params }) => {
+  res.setHeader('Cache-Control', 'public, max-age=30, s-maxage=60');
+  return getCase(str(params.slug, 40));
+});
+r.post('/api/cases/:slug/open', async (req, res, { params }) => {
+  const u = await requireUser(req);
+  await rateLimit(`case:${u.id}`, 60, 60);
+  return openCase(u.id, str(params.slug, 40));
 });
 
 // ── Деньги ─────────────────────────────────────────────────

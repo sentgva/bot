@@ -39,7 +39,7 @@ create table if not exists user_items (
   user_id    bigint not null references users(id),
   hash_name  text not null references items(hash_name),
   price      bigint not null,             -- цена на момент получения
-  source     text not null,               -- market | upgrade | admin
+  source     text not null,               -- market | upgrade | admin | case
   status     text not null default 'owned', -- owned | withdrawing | withdrawn | sold | burned
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -52,7 +52,7 @@ create table if not exists ledger (
   user_id       bigint not null references users(id),
   amount        bigint not null,           -- + пополнение, − списание
   balance_after bigint not null,
-  kind          text not null,             -- deposit | withdraw | refund | buy | sell | upgrade | buyback | admin | demo | bonus
+  kind          text not null,             -- deposit | withdraw | refund | buy | sell | upgrade | buyback | admin | demo | bonus | case
   ref           text,
   note          text,
   created_at    timestamptz not null default now()
@@ -89,6 +89,25 @@ create table if not exists upgrades (
 );
 create index if not exists upgrades_user_idx on upgrades (user_id, id desc);
 create index if not exists upgrades_won_idx on upgrades (won, id desc);
+
+-- Открытия кейсов (lib/cases.js)
+create table if not exists case_opens (
+  id               bigserial primary key,
+  user_id          bigint not null references users(id),
+  case_slug        text not null,
+  case_price       bigint not null,
+  hash_name        text not null,
+  item_price       bigint not null,
+  chance_ppm       integer not null,       -- шанс выпавшего скина, миллионные доли
+  roll             integer not null,       -- 0…999999
+  server_seed_hash text not null,
+  client_seed      text not null,
+  nonce            integer not null,
+  user_item_id     bigint references user_items(id),
+  created_at       timestamptz not null default now()
+);
+create index if not exists case_opens_user_idx on case_opens (user_id, id desc);
+create index if not exists case_opens_drop_idx on case_opens (id desc) where item_price > case_price;
 
 -- Денежные операции: пополнения (in) и выводы (out)
 create table if not exists payments (

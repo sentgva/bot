@@ -22,6 +22,7 @@ export const DEFAULTS = {
   lcPerStar: 1.3,           // курс: сколько LC за 1 звезду Telegram (результат округляется вниз)
   minStars: 50,             // минимальное пополнение звёздами
   maxStars: 100000,         // максимальное пополнение звёздами за раз
+  caseEdge: 0.1,            // край сервиса в кейсах: средний дроп = цена кейса × (1 − caseEdge)
   signupBonus: 5000000,     // стартовый бонус новому игроку при первом входе, сотые LC (50 000 LC); 0 — выключен
 };
 
@@ -31,7 +32,7 @@ const LIMITS = {
   minUpgradeValue: [100, 10_000_000], marketMarkup: [0, 1], siteSellRate: [0.1, 1],
   cardFee: [0, 0.5], cryptoFee: [0, 0.5], minWithdraw: [100, 100_000_000], maxWithdraw: [100, 1_000_000_000],
   minDeposit: [100, 100_000_000], cryptoAutoLimit: [0, 1_000_000_000], statsMinPaid: [0, 1e12], bestDropMaxPrice: [10_000, 1e12],
-  lcPerStar: [0.01, 100], minStars: [1, 100_000], maxStars: [1, 1_000_000], signupBonus: [0, 100_000_000],
+  lcPerStar: [0.01, 100], minStars: [1, 100_000], maxStars: [1, 1_000_000], signupBonus: [0, 100_000_000], caseEdge: [0.01, 0.5],
 };
 
 let cache = { at: 0, value: null };

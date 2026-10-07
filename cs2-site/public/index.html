@@ -79,6 +79,7 @@
       </a>
       <nav class="nav" id="site-nav" aria-label="Основное меню">
         <ul>
+          <li><a href="/cases/">Кейсы</a></li>
           <li><a href="/upgrade/">Апгрейд</a></li>
           <li><a href="/market/">Маркет</a></li>
           <li class="nav-theme">
@@ -156,6 +157,21 @@
         <div class="stat reveal"><p class="stat-value" data-stat="cryptoFee">0%</p><p class="stat-label">комиссия на вывод в USDT и TON</p></div>
         <div class="stat reveal"><p class="stat-value" data-stat="minWithdraw">500 LC</p><p class="stat-label">минимальный вывод на карту и в крипту</p></div>
         <div class="stat reveal"><p class="stat-value" data-stat="sell">95%</p><p class="stat-label" data-stat-label="sell">цены вернём, если продашь скин обратно</p></div>
+      </div>
+    </section>
+
+    <!-- ===== Кейсы (из /api/cases) ===== -->
+    <section class="section" id="cases" aria-labelledby="cases-title" data-home-cases hidden>
+      <div class="container">
+        <div class="section-head reveal">
+          <p class="eyebrow">Кейсы</p>
+          <h2 class="h2" id="cases-title">Открывай кейсы — от 29 LC до ножей и перчаток</h2>
+          <p class="lead">Шансы каждого скина видны до открытия. Дроп сразу в инвентаре: продай, апгрейдь или выведи в Steam.</p>
+        </div>
+        <div class="case-grid" data-home-cases-grid></div>
+        <div class="row mt-6">
+          <a class="btn btn-primary" href="/cases/">Все кейсы<svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-arrow-right"/></svg></a>
+        </div>
       </div>
     </section>
 
@@ -462,6 +478,7 @@
         <nav aria-label="Сервис">
           <p class="footer-title">Сервис</p>
           <ul class="footer-links">
+            <li><a href="/cases/">Кейсы</a></li>
             <li><a href="/upgrade/">Апгрейдер</a></li>
             <li><a href="/market/">Маркет скинов</a></li>
           </ul>

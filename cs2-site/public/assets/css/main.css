@@ -919,3 +919,76 @@ h3, .h3 { font-weight: 600; letter-spacing: -.01em; font-size: clamp(17px, 1.8vw
 .cta-actions { display: grid; gap: var(--s3); align-content: center; }
 /* Сетки-списки: длинные названия скинов обрезаются, а не распирают страницу на телефоне */
 .feed, .list, .balance-input { grid-template-columns: minmax(0, 1fr); }
+
+/* ---------- Кейсы ---------- */
+.case-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s3); }
+@media (min-width: 640px) { .case-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s4); } }
+@media (min-width: 1100px) { .case-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+.case-skeleton { height: 250px; border-radius: var(--r-lg, 18px); }
+.case-card {
+  --case: var(--accent);
+  position: relative; isolation: isolate; display: grid; justify-items: center; gap: 4px; padding: var(--s3) var(--s3) var(--s4);
+  border-radius: 18px; text-decoration: none; color: var(--text); text-align: center; overflow: hidden;
+  background: radial-gradient(100% 70% at 50% 30%, color-mix(in srgb, var(--case) 22%, transparent), transparent 70%), var(--surface);
+  border: 1px solid color-mix(in srgb, var(--case) 30%, var(--border));
+  transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.case-card:hover, .case-card:focus-visible { transform: translateY(-4px); border-color: color-mix(in srgb, var(--case) 70%, var(--border)); box-shadow: 0 18px 40px -18px var(--case); }
+.case-card:hover .crate { transform: translateY(-3px) rotate(-1.5deg); }
+.case-name { font-family: var(--font-display); font-weight: 600; font-size: 15px; }
+.case-top { font-size: 12px; color: var(--muted); }
+.case-price {
+  margin-top: 6px; padding: 7px 14px; border-radius: 999px; font-family: var(--font-display); font-weight: 700; font-size: 14px;
+  background: var(--gold); color: var(--on-accent); box-shadow: 0 6px 18px -8px rgba(242, 190, 60, .8);
+}
+.case-art { --case: var(--accent); position: relative; width: 100%; max-width: 220px; aspect-ratio: 22 / 15; display: grid; place-items: center; }
+.case-art-lg { max-width: 340px; }
+.crate { position: relative; z-index: 1; width: 100%; height: auto; overflow: visible; font-family: var(--font-display); transition: transform 300ms var(--ease); filter: drop-shadow(0 10px 18px rgba(0, 0, 0, .55)); }
+.case-art-skin {
+  position: absolute; z-index: 2; left: 50%; top: 2%; width: 62%; height: auto; transform: translateX(-50%) rotate(-14deg);
+  filter: drop-shadow(0 8px 14px rgba(0, 0, 0, .7)) drop-shadow(0 0 18px color-mix(in srgb, var(--case) 60%, transparent));
+  pointer-events: none;
+}
+.case-card:hover .case-art-skin { transform: translateX(-50%) translateY(-6px) rotate(-10deg); transition: transform 300ms var(--ease); }
+
+.case-view { display: grid; gap: var(--s4); }
+.case-view > [data-case-back] { justify-self: start; }
+[data-case-back] .icon { transform: rotate(180deg); }
+.case-hero { display: grid; gap: var(--s5); align-items: center; }
+@media (min-width: 760px) { .case-hero { grid-template-columns: minmax(0, 340px) minmax(0, 1fr); } }
+.case-hero .case-art { margin-inline: auto; }
+.case-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s3); margin-top: var(--s4); }
+.case-fast { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--muted); cursor: pointer; }
+.case-fast input { width: 18px; height: 18px; accent-color: var(--accent); }
+
+/* Лента-рулетка: окно с маской по краям, золотой указатель по центру */
+.roulette { position: relative; padding: var(--s3) 0; border-radius: 16px; background: var(--surface); border: 1px solid var(--border); overflow: hidden; }
+.roulette-window { overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); }
+.roulette-track { display: flex; gap: 8px; width: max-content; padding: 0 8px; transform: translateX(var(--x, 0px)); will-change: transform; }
+.roulette-track.is-spinning { transition: transform var(--spin, 6500ms) cubic-bezier(.08, .72, .12, 1); }
+.roulette-marker { position: absolute; z-index: 2; top: 0; bottom: 0; left: 50%; width: 3px; transform: translateX(-50%); background: var(--gold); box-shadow: 0 0 14px rgba(242, 190, 60, .9); }
+.roulette-marker::before, .roulette-marker::after { content: ''; position: absolute; left: 50%; transform: translateX(-50%); border: 8px solid transparent; }
+.roulette-marker::before { top: 0; border-top-color: #f2c94c; }
+.roulette-marker::after { bottom: 0; border-bottom-color: #f2c94c; }
+.r-card {
+  --rarity: var(--border-strong);
+  flex: none; width: 150px; height: 128px; display: grid; grid-template-rows: 1fr auto; place-items: center; padding: 8px; border-radius: 12px;
+  background: radial-gradient(90% 70% at 50% 100%, color-mix(in srgb, var(--rarity) 35%, transparent), transparent 75%), var(--surface-2);
+  border-bottom: 3px solid var(--rarity);
+}
+.r-card img, .r-card .silhouette { width: 120px; height: 84px; object-fit: contain; filter: drop-shadow(0 4px 8px rgba(0, 0, 0, .6)); }
+.r-card .silhouette { color: var(--rarity); }
+.r-name { max-width: 100%; font-size: 11px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.r-card.is-win { box-shadow: 0 0 0 2px var(--rarity), 0 0 26px -2px var(--rarity); }
+@media (max-width: 559px) { .r-card { width: 116px; height: 104px; } .r-card img, .r-card .silhouette { width: 92px; height: 64px; } }
+
+.case-drop {
+  --rarity: var(--border-strong);
+  display: grid; gap: var(--s4); align-items: center; padding: var(--s4); border-radius: 18px;
+  background: radial-gradient(70% 90% at 15% 50%, color-mix(in srgb, var(--rarity) 30%, transparent), transparent 70%), var(--surface);
+  border: 1px solid color-mix(in srgb, var(--rarity) 50%, var(--border)); animation: drop-in 500ms var(--ease) both;
+}
+@media (min-width: 640px) { .case-drop { grid-template-columns: 240px minmax(0, 1fr); } }
+.case-drop .skin-img img { width: 100%; height: auto; filter: drop-shadow(0 10px 20px rgba(0, 0, 0, .6)) drop-shadow(0 0 24px var(--rarity)); }
+.case-drop-price { font-family: var(--font-display); font-weight: 700; font-size: 26px; color: var(--accent-text); }
+.case-drop-text .h3 { overflow-wrap: anywhere; }

@@ -77,6 +77,7 @@ function renderTabs() {
   const here = location.pathname;
   const tabs = [
     ['/', 'i-sparkles', 'Главная'],
+    ['/cases/', 'i-package', 'Кейсы'],
     ['/upgrade/', 'i-trending-up', 'Апгрейд'],
     ['/market/', 'i-shopping-cart', 'Маркет'],
     ['/profile/', 'i-wallet', 'Профиль'],

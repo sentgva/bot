@@ -183,7 +183,7 @@ export const wearShort = (w) => WEAR[w]?.[0] || '';
 const SILHOUETTE = '<svg class="silhouette" viewBox="0 0 120 44" fill="currentColor" aria-hidden="true"><path d="M4 18h34l3-4h34l2-3h9v3h28v5h-28l-3 4H72l-7 15h-9l5-13H44l-4 11H30l3-11H18l-9 5H4z"/></svg>';
 
 // Картинки Steam CDN отдаются нужного размера по суффиксу — не тянем полноразмерные PNG
-const sized = (url) => (/steamstatic\.com\/economy\/image\/[^/]+$/.test(url) ? `${url}/256fx192f` : url);
+export const sized = (url) => (/steamstatic\.com\/economy\/image\/[^/]+$/.test(url) ? `${url}/256fx192f` : url);
 
 export function skinImage(item, alt = '') {
   if (!item.image) return `<div class="skin-img">${SILHOUETTE}</div>`;

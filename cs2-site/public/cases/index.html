@@ -3,9 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Страница не найдена | LuxeDrop</title>
-  <meta name="description" content="Такой страницы нет. Перейди на главную, в апгрейдер или маркет скинов CS2.">
-  <meta name="robots" content="noindex">
+  <title>Кейсы CS2 с открытыми шансами — LuxeDrop</title>
+  <meta name="description" content="10 кейсов CS2: от «Стартового» за 29 LC до «Люкса» с ножами и перчатками. Шансы каждого скина открыты до покупки, дроп сразу в инвентаре.">
+  <link rel="canonical" href="https://luxedrop.gg/cases/">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://luxedrop.gg/cases/">
+  <meta property="og:title" content="Кейсы CS2 — LuxeDrop">
+  <meta property="og:description" content="10 кейсов с открытыми шансами: от 29 LC до ножей и перчаток.">
   <!-- partial:head -->
   <meta name="theme-color" content="#0a0906">
   <meta property="og:site_name" content="LuxeDrop">
@@ -25,7 +29,7 @@
   <link rel="stylesheet" href="/assets/css/main.css">
   <script>try{var t=localStorage.getItem('ld-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
   <!-- /partial:head -->
-  <script type="module" src="/assets/js/core.js"></script>
+  <script type="module" src="/assets/js/cases.js"></script>
 </head>
 <body>
   <!-- partial:header -->
@@ -37,7 +41,7 @@
       </a>
       <nav class="nav" id="site-nav" aria-label="Основное меню">
         <ul>
-          <li><a href="/cases/">Кейсы</a></li>
+          <li><a href="/cases/" aria-current="page">Кейсы</a></li>
           <li><a href="/upgrade/">Апгрейд</a></li>
           <li><a href="/market/">Маркет</a></li>
           <li class="nav-theme">
@@ -73,16 +77,44 @@
   <!-- /partial:header -->
 
   <main id="main">
-    <section class="container section center">
-      <p class="eyebrow">Ошибка 404</p>
-      <h1 class="h2">Такой страницы нет — но скины никуда не делись</h1>
-      <p class="lead center-block">Возможно, ссылка устарела или в адресе опечатка.</p>
-      <div class="row justify-center mt-6">
-        <a class="btn btn-primary" href="/">На главную</a>
-        <a class="btn btn-secondary" href="/upgrade/">Апгрейдер</a>
-        <a class="btn btn-ghost" href="/market/">Маркет</a>
+    <div class="container page-head" data-cases-head>
+      <p class="eyebrow"><svg class="icon icon-sm" aria-hidden="true"><use href="/assets/icons.svg#i-package"/></svg>Кейсы</p>
+      <h1 class="h2">Кейсы CS2</h1>
+      <p class="lead">Выбирай кейс, крути ленту и забирай скин. Шансы каждого скина видны до открытия, дроп сразу попадает в инвентарь — продай его, апгрейдь или выведи в Steam.</p>
+    </div>
+
+    <div class="container app-section">
+      <div class="case-grid" data-cases-grid aria-busy="true">
+        <div class="skeleton case-skeleton" aria-hidden="true"></div><div class="skeleton case-skeleton" aria-hidden="true"></div>
+        <div class="skeleton case-skeleton" aria-hidden="true"></div><div class="skeleton case-skeleton" aria-hidden="true"></div>
+        <div class="skeleton case-skeleton" aria-hidden="true"></div>
       </div>
-    </section>
+
+      <section class="case-view" data-case-view hidden aria-labelledby="case-title">
+        <a class="btn btn-ghost btn-sm" href="/cases/" data-case-back><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-arrow-right"/></svg><span>Все кейсы</span></a>
+        <div class="case-hero" data-case-hero>
+          <div class="case-art case-art-lg" data-case-art></div>
+          <div class="case-hero-text">
+            <h1 class="h2" id="case-title" data-case-name></h1>
+            <p class="muted" data-case-sub></p>
+            <div class="case-actions">
+              <button class="btn btn-primary btn-lg" type="button" data-open><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-package"/></svg><span data-open-label>Открыть</span></button>
+              <label class="case-fast"><input type="checkbox" data-fast> Быстро</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="roulette" data-roulette hidden aria-hidden="true">
+          <div class="roulette-window"><div class="roulette-track" data-track></div></div>
+          <span class="roulette-marker"></span>
+        </div>
+        <div class="case-result" data-result aria-live="polite" hidden></div>
+
+        <h2 class="h3 mt-7 mb-4">Что внутри</h2>
+        <div class="skin-grid" data-case-items></div>
+        <p class="hint mt-4">Средняя стоимость дропа — <span data-case-rtp>90%</span> от цены кейса. Скины из кейса можно продать сайту за 95% их цены.</p>
+      </section>
+    </div>
   </main>
 
   <!-- partial:footer -->

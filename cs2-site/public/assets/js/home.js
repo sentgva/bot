@@ -1,6 +1,7 @@
 // Главная: калькулятор шанса, живые цифры, витрина маркета, лучший дроп, вход через Telegram.
 import { $, api, pct, lc, session, skinCard, skinImage } from './core.js';
 import { onLive } from './live.js';
+import { caseCard, paint } from './case-art.js';
 
 const pctText = (x, digits = 1) => `${(x * 100).toFixed(digits).replace('.', ',').replace(/,0$/, '')}%`;
 
@@ -84,3 +85,13 @@ onLive(({ best }) => {
     $('[data-best-meta]').textContent = `Можно выбить со ставки от ${lc(best.minStake)}`;
   }
 });
+
+// ── Кейсы: по одному из каждой ценовой ступени ─────────────
+api('/api/cases').then((list) => {
+  if (!list.length) return;
+  const pick = ['starter', 'rifle', 'covert', 'knife', 'luxe'].map((slug) => list.find((c) => c.slug === slug)).filter(Boolean);
+  const box = $('[data-home-cases-grid]');
+  box.innerHTML = (pick.length >= 3 ? pick : list.slice(0, 5)).map(caseCard).join('');
+  paint(box);
+  $('[data-home-cases]').hidden = false;
+}).catch(() => {});

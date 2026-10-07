@@ -9,6 +9,7 @@
 import { getDb } from './db.js';
 import { publicItem } from './catalog.js';
 import { recentWins } from './upgrade.js';
+import { recentCaseDrops } from './cases.js';
 import { getSettings } from './settings.js';
 
 const ONLINE_WINDOW = "interval '2 minutes'";
@@ -19,7 +20,9 @@ async function dropsAndBest() {
   if (cache.value && Date.now() - cache.at < 10_000) return cache.value;
   const db = await getDb();
   const s = await getSettings();
-  const drops = await recentWins(20);
+  // Настоящие выигрыши: апгрейды и заносы из кейсов, вперемешку по времени
+  const drops = [...await recentWins(20), ...await recentCaseDrops(20)]
+    .sort((a, b) => new Date(b.at) - new Date(a.at)).slice(0, 20);
   const win = await db.one(
     `select up.id, up.chance_ppm, up.input_value, up.created_at, us.name as user_name, i.*
      from upgrades up join users us on us.id = up.user_id join items i on i.hash_name = up.target_hash_name
