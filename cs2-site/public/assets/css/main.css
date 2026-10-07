@@ -1107,3 +1107,26 @@ h3, .h3 { font-weight: 600; letter-spacing: -.01em; font-size: clamp(17px, 1.8vw
   .upg .mult-chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
   .upg .panel-head h2 { font-size: 17px; }
 }
+
+/* Переписка в тикете поддержки */
+.chat { display: grid; gap: 8px; max-height: 50vh; overflow-y: auto; padding: 4px; }
+.chat-msg { max-width: 88%; padding: 10px 12px; border-radius: 14px; background: var(--surface-2); justify-self: start; }
+.chat-msg.is-admin { justify-self: end; background: color-mix(in srgb, var(--accent) 18%, var(--surface-2)); }
+.chat-msg p { overflow-wrap: anywhere; }
+textarea.input { min-height: 84px; resize: vertical; padding-block: 10px; }
+
+/* ---------- Контракты ---------- */
+.ctr { display: grid; gap: var(--s4); align-items: start; }
+@media (min-width: 1000px) { .ctr { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .ctr-side { position: sticky; top: calc(var(--header-h) + 16px); } }
+.ctr .upg-scroll { max-height: 640px; }
+.ctr .upg-scroll .skin-grid, .ctr-pool { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (min-width: 1280px) { .ctr-pool { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (max-width: 767px) {
+  .ctr .upg-scroll { max-height: 56vh; }
+  .ctr .skin-grid { gap: 8px; }
+  .ctr .skin { padding: 6px 6px 8px; border-radius: 10px; }
+  .ctr .skin .skin-img { margin-bottom: 4px; }
+  .ctr .skin-name { font-size: 11px; line-height: 1.25; }
+  .ctr .skin-meta { display: none; }
+  .ctr .skin-price { font-size: 11.5px; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+}

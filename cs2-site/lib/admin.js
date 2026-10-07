@@ -22,7 +22,9 @@ export async function overview() {
       (select coalesce(sum(case_price - item_price), 0)::bigint from case_opens) as cases_profit,
       (select count(*) from upgrades)::int as upgrades,
       (select coalesce(sum(input_value), 0)::bigint - coalesce(sum(target_price) filter (where won), 0)::bigint from upgrades) as upgrades_profit,
-      (select coalesce(sum(amount), 0)::bigint from ledger where kind in ('admin', 'bonus') and amount > 0) as granted
+      (select coalesce(sum(amount), 0)::bigint from ledger where kind in ('admin', 'bonus') and amount > 0) as granted,
+      (select count(*) from tickets t where t.status = 'open'
+         and (select sender from ticket_messages m where m.ticket_id = t.id order by m.id desc limit 1) = 'user')::int as tickets
   `);
 }
 

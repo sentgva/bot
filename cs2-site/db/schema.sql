@@ -39,7 +39,7 @@ create table if not exists user_items (
   user_id    bigint not null references users(id),
   hash_name  text not null references items(hash_name),
   price      bigint not null,             -- цена на момент получения
-  source     text not null,               -- market | upgrade | admin | case
+  source     text not null,               -- market | upgrade | admin | case | contract
   status     text not null default 'owned', -- owned | withdrawing | withdrawn | sold | burned
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -132,6 +132,54 @@ alter table users add column if not exists is_admin boolean not null default fal
 -- Рефералы (lib/referrals.js): кто пригласил игрока
 alter table users add column if not exists referred_by bigint references users(id);
 create index if not exists users_referred_by_idx on users (referred_by) where referred_by is not null;
+
+-- Контракты (lib/contracts.js): 3–10 скинов → один случайный скин
+create table if not exists contracts (
+  id               bigserial primary key,
+  user_id          bigint not null references users(id),
+  input_items      jsonb not null,
+  input_value      bigint not null,
+  hash_name        text not null,
+  item_price       bigint not null,
+  chance_ppm       integer not null,
+  roll             integer not null,
+  server_seed_hash text not null,
+  client_seed      text not null,
+  nonce            integer not null,
+  user_item_id     bigint references user_items(id),
+  created_at       timestamptz not null default now()
+);
+create index if not exists contracts_user_idx on contracts (user_id, id desc);
+
+-- Поддержка в Telegram-боте (lib/support.js)
+create table if not exists tickets (
+  id          bigserial primary key,
+  telegram_id text not null,
+  user_id     bigint references users(id),
+  tg_name     text,
+  tg_username text,
+  status      text not null default 'open',   -- open | closed
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now()
+);
+create index if not exists tickets_status_idx on tickets (status, updated_at desc);
+create index if not exists tickets_tg_idx on tickets (telegram_id, status);
+create table if not exists ticket_messages (
+  id         bigserial primary key,
+  ticket_id  bigint not null references tickets(id),
+  sender     text not null,                   -- user | admin
+  admin_name text,
+  text       text not null,
+  created_at timestamptz not null default now()
+);
+create index if not exists ticket_messages_idx on ticket_messages (ticket_id, id);
+-- Какое сообщение в чате админа относится к какому тикету (чтобы ответ reply'ем ушёл нужному игроку)
+create table if not exists ticket_admin_messages (
+  chat_id    text not null,
+  message_id bigint not null,
+  ticket_id  bigint not null references tickets(id),
+  primary key (chat_id, message_id)
+);
 
 -- Денежные операции: пополнения (in) и выводы (out)
 create table if not exists payments (

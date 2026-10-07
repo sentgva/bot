@@ -7,7 +7,7 @@ import {
 } from './http.js';
 import { endSession, sessionUserId, startSession } from './session.js';
 import { getUser, isAdmin, ledgerOf, publicUser, rotateSeed, setClientSeed, setTradeUrl, upsertTelegramUser } from './users.js';
-import { botId, handleUpdate, verifyInitData, verifyLoginWidget, webhookSecret } from './telegram.js';
+import { botId, handleUpdate, tgApi, verifyInitData, verifyLoginWidget, webhookSecret } from './telegram.js';
 import { listItems, pricesAreStale, syncCatalog } from './catalog.js';
 import { buyPrice, finishSkinWithdrawal, listOwned, listSkinWithdrawals, pollSkinWithdrawals, sellItems, withdrawItem } from './inventory.js';
 import { listUpgrades, recentWins, runUpgrade } from './upgrade.js';
@@ -22,8 +22,10 @@ import { isValidClientSeed } from './fair.js';
 import { parseTradeUrl, rublesToKop } from './validate.js';
 import * as admin from './admin.js';
 import { getCase, listCases, openCase } from './cases.js';
+import { previewContract, signContract } from './contracts.js';
 import { createPromo, listPromos, redeemPromo, setPromoActive } from './promo.js';
 import { referralStats } from './referrals.js';
+import { adminBotMessage, adminReply, getTicket, isAdminTelegram, listTickets, setTicketStatus, userMessage } from './support.js';
 
 const r = createRouter();
 
@@ -100,12 +102,37 @@ r.post('/api/telegram/webhook', async (req) => {
     // Оплата звёздами: проверка перед списанием и зачисление после оплаты
     if (update.pre_checkout_query) await handlePreCheckout(update.pre_checkout_query);
     else if (update.message?.successful_payment) await handleStarsPaid(update.message);
+    else if (update.message?.chat?.type === 'private' && update.message.from) await handlePrivateMessage(update);
     else await handleUpdate(update);
   } catch (err) {
     console.error('telegram update:', err.message);
   }
   return { ok: true };
 });
+
+// Личка бота: админам — ответы на тикеты и команды, игрокам — поддержка; /start и прочие команды — меню бота
+async function handlePrivateMessage(update) {
+  const msg = update.message;
+  const text = typeof msg.text === 'string' ? msg.text : '';
+  const command = text.startsWith('/') ? text.split(/[\s@]/)[0] : null;
+  if (await isAdminTelegram(msg.from.id)) {
+    if ((await adminBotMessage(msg)).handled) return;
+    if (!command) {
+      await tgApi('sendMessage', { chat_id: msg.chat.id, text: 'Чтобы ответить игроку — ответь (reply) на сообщение тикета или напиши /reply N текст.\n/tickets — открытые тикеты, /close N — закрыть.' });
+      return;
+    }
+  }
+  if (command === '/support' || command === '/help') {
+    await tgApi('sendMessage', { chat_id: msg.chat.id, text: '💬 Поддержка LuxeDrop: напиши вопрос сюда одним сообщением — передадим админам, ответ придёт в этот чат.' });
+    return;
+  }
+  if (!command) {
+    if (!text) { await tgApi('sendMessage', { chat_id: msg.chat.id, text: 'Пока принимаем только текст — опиши вопрос словами 🙏' }); return; }
+    await userMessage(msg.from, text);
+    return;
+  }
+  await handleUpdate(update);
+}
 
 r.post('/api/auth/logout', async (req, res) => {
   endSession(res);
@@ -124,6 +151,7 @@ r.get('/api/me', async (req) => {
       upgrade: { houseEdge: s.houseEdge, maxChance: s.maxChance, minChance: s.minChance, maxItems: s.maxUpgradeItems, minValue: s.minUpgradeValue },
       market: { markup: s.marketMarkup, sellRate: s.siteSellRate },
       cases: { edge: s.caseEdge },
+      contracts: { edge: s.contractEdge, minMult: s.contractMinMult, maxMult: s.contractMaxMult, minItems: s.contractMinItems, maxItems: s.contractMaxItems },
       // Для страницы входа: ID и имя бота LuxeDrop (не секретные), тестовый вход — только локально
       auth: { telegramBotId: botId(), botUsername: config.tgBotUsername || null, devLogin: config.devLogin },
     },
@@ -219,6 +247,21 @@ r.post('/api/promo', async (req) => {
   return redeemPromo(u.id, str(code, 40));
 });
 r.get('/api/me/referrals', async (req) => referralStats((await requireUser(req)).id));
+
+// ── Контракты ──────────────────────────────────────────────
+
+r.post('/api/contracts/preview', async (req) => {
+  const u = await requireUser(req);
+  await rateLimit(`contract-pv:${u.id}`, 120, 60);
+  const { ids } = await readJson(req);
+  return previewContract(u.id, Array.isArray(ids) ? ids.map(int) : []);
+});
+r.post('/api/contracts/sign', async (req) => {
+  const u = await requireUser(req);
+  await rateLimit(`contract:${u.id}`, 30, 60);
+  const { ids, value } = await readJson(req);
+  return signContract(u.id, Array.isArray(ids) ? ids.map(int) : [], Number.isSafeInteger(value) ? value : null);
+});
 
 // ── Кейсы ──────────────────────────────────────────────────
 
@@ -323,6 +366,18 @@ r.post('/api/admin/users/:id', async (req, res, { params }) => {
   const b = await readJson(req);
   const amount = b.amount === undefined ? undefined : Math.round(Number(b.amount) * 100);
   return admin.updateUser(int(params.id), { action: b.action, amount, note: str(b.note, 200) }, me);
+});
+r.get('/api/admin/tickets', async (req, res, { url }) => { await requireAdmin(req); return listTickets(url.searchParams.get('status') || 'open'); });
+r.get('/api/admin/tickets/:id', async (req, res, { params }) => { await requireAdmin(req); return getTicket(int(params.id)); });
+r.post('/api/admin/tickets/:id/reply', async (req, res, { params }) => {
+  const me = await requireAdmin(req);
+  const { text } = await readJson(req);
+  return adminReply(int(params.id), str(text, 4000), me);
+});
+r.post('/api/admin/tickets/:id/status', async (req, res, { params }) => {
+  await requireAdmin(req);
+  const { status } = await readJson(req);
+  return setTicketStatus(int(params.id), str(status, 10));
 });
 r.get('/api/admin/promos', async (req) => { await requireAdmin(req); return listPromos(); });
 r.post('/api/admin/promos', async (req) => {

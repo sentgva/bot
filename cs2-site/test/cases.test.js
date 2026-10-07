@@ -113,3 +113,28 @@ test('кейс CS2: шансы по редкости как в игре, цен�
   const r = await openCase(u.id, 'kilowatt', 1, c.price);
   assert.equal(r.balance, c.price);
 });
+
+test('контракт: 3–10 скинов → один скин в диапазоне ×0,25…×4, средний результат 90%, входные скины сгорают', async () => {
+  const { previewContract, signContract } = await import('../lib/contracts.js');
+  const u = await makeUser(0);
+  const db = await getDb();
+  const items = await db.query("select hash_name, price from items where quantity > 0 and price between 3000 and 20000 order by price limit 4");
+  const ids = [];
+  for (const it of items) ids.push((await db.one(`insert into user_items (user_id, hash_name, price, source) values ($1, $2, $3, 'admin') returning id`, [u.id, it.hash_name, it.price])).id);
+  await assert.rejects(previewContract(u.id, ids.slice(0, 2)), /от 3 до 10/);
+  const pv = await previewContract(u.id, ids);
+  const value = items.reduce((a, i) => a + Number(i.price), 0);
+  assert.equal(pv.value, value);
+  assert.ok(pv.items.every((i) => i.price >= value * 0.25 && i.price <= value * 4));
+  assert.equal(pv.items.reduce((a, i) => a + i.ppm, 0), 1_000_000);
+  const ev = pv.items.reduce((a, i) => a + (i.price * i.ppm) / 1e6, 0);
+  assert.ok(Math.abs(ev / value - 0.9) < 0.01, `EV ${ev / value}`);
+
+  await assert.rejects(signContract(u.id, ids, value + 1), /обновились/);
+  const r = await signContract(u.id, ids, value);
+  assert.ok(pv.items.some((i) => i.hashName === r.item.hashName));
+  const burned = await db.one("select count(*)::int as n from user_items where id = any($1) and status = 'burned'", [ids]);
+  assert.equal(burned.n, ids.length);
+  assert.equal((await db.one('select source from user_items where id = $1', [r.userItemId])).source, 'contract');
+  await assert.rejects(signContract(u.id, ids), /недоступна/);
+});

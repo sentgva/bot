@@ -78,6 +78,7 @@ function renderTabs() {
   const tabs = [
     ['/', 'i-sparkles', 'Главная'],
     ['/cases/', 'i-package', 'Кейсы'],
+    ['/contracts/', 'i-layers', 'Контракты'],
     ['/upgrade/', 'i-trending-up', 'Апгрейд'],
     ['/profile/', 'i-wallet', 'Профиль'],
   ];

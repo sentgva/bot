@@ -98,8 +98,8 @@ export async function handleUpdate(update, fetchImpl = fetch) {
   const isStart = typeof msg.text === 'string' && msg.text.startsWith('/start');
   const text = isStart
     ? `Привет, ${msg.from?.first_name || 'игрок'}! Это LuxeDrop — апгрейд скинов CS2.\n\n`
-      + '• Ставь немного — выигрывай много: шанс до 80%\n• Пополнение звёздами ⭐ — баланс в LuxeCoin (1 LC = 1 ₽)\n• Вывод в USDT за 2 минуты, на карту — в среднем за 15\n\nЖми кнопку ниже — LuxeDrop откроется прямо в Telegram.'
-    : 'LuxeDrop открывается кнопкой ниже 👇\nВопросы — в поддержку: @luxedrop_support'; // ЗАМЕНИТЬ: контакт поддержки
+      + '• Ставь немного — выигрывай много: шанс до 80%\n• Пополнение звёздами ⭐ — баланс в LuxeCoin (1 LC = 1 ₽)\n• Вывод в USDT за 2 минуты, на карту — в среднем за 15\n\nЖми кнопку ниже — LuxeDrop откроется прямо в Telegram.\n\nЕсть вопрос? Просто напиши его сюда — ответит поддержка.'
+    : 'LuxeDrop открывается кнопкой ниже 👇\nЕсть вопрос? Просто напиши его сюда — ответит поддержка.';
   const ref = isStart ? (msg.text.split(/\s+/)[1] || '').match(/^[0-9A-Za-z]{2,12}$/)?.[0] || null : null;
   await tgApi('sendMessage', { chat_id: msg.chat.id, text, reply_markup: openButton(undefined, ref) }, fetchImpl);
   return { ok: true };

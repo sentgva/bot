@@ -12,7 +12,7 @@ if (!config.siteUrl.startsWith('https://')) { console.log('SITE_URL должен
 try {
   await tgApi('setWebhook', { url: `${config.siteUrl}/api/telegram/webhook`, secret_token: webhookSecret(), allowed_updates: ['message', 'pre_checkout_query'], drop_pending_updates: true }); // pre_checkout_query — для оплаты звёздами
   await tgApi('setChatMenuButton', { menu_button: { type: 'web_app', text: 'LuxeDrop', web_app: { url: webAppUrl() } } });
-  await tgApi('setMyCommands', { commands: [{ command: 'start', description: 'Открыть апгрейдер LuxeDrop' }] });
+  await tgApi('setMyCommands', { commands: [{ command: 'start', description: 'Открыть LuxeDrop' }, { command: 'support', description: 'Написать в поддержку' }] });
   await tgApi('setMyDescription', { description: 'Апгрейд скинов CS2 прямо в Telegram: ставь немного — выигрывай много. Шанс до 80%, пополнение звёздами, вывод в USDT за 2 минуты и на карту.' });
   console.log(`Бот настроен: Mini App → ${webAppUrl()}`);
 } catch (err) {

@@ -23,7 +23,7 @@ async function overview() {
     stat('Доход с апгрейдов', lc(o.upgrades_profit), `бросков ${o.upgrades.toLocaleString('ru-RU')}`, profit(o.upgrades_profit)),
     stat('Выдано вручную', lc(o.granted), 'бонусы и начисления'),
   ].join('');
-  for (const k of ['withdrawals', 'skin_withdrawals']) $(`[data-count="${k}"]`).textContent = o[k] || '';
+  for (const k of ['withdrawals', 'skin_withdrawals', 'tickets']) $(`[data-count="${k}"]`).textContent = o[k] || '';
 }
 
 // Игрок: имя и ссылка на Telegram
@@ -32,7 +32,17 @@ const user = (r) => `${esc(r.user_name || 'гость')} ${tgLink(r)}`;
 const btn = (action, label, cls = 'btn-secondary') => `<button class="btn ${cls} btn-sm" type="button" data-action="${action}">${label}</button>`;
 
 const roleBadge = (u) => (u.is_owner ? ' <span class="badge badge-accent">Владелец</span>' : u.is_admin ? ' <span class="badge badge-accent">Админ</span>' : '');
+let currentTicket = null;
 const RENDER = {
+  async tickets() {
+    const list = await api(`/api/admin/tickets?status=${status}`);
+    return list.map((t) => `<button type="button" class="list-item adm-row${String(t.id) === String(currentTicket) ? ' is-active' : ''}" data-ticket="${t.id}">
+      <div class="grow"><p><b>#${t.id} · ${esc(t.tg_name || 'Игрок')}</b> ${t.tg_username ? `<span class="small muted">@${esc(t.tg_username)}</span>` : ''}
+        ${t.status === 'open' && t.last_sender === 'user' ? '<span class="badge badge-warning">Ждёт ответа</span>' : ''}</p>
+      <p class="small muted">${t.last_sender === 'admin' ? 'Вы: ' : ''}${esc(String(t.last_text || '').slice(0, 90))}</p>
+      <p class="tiny muted">${dateTime(t.updated_at)} · сообщений ${t.messages}</p></div>
+    </button>`);
+  },
   async promos() {
     const list = await api('/api/admin/promos');
     return list.map((p) => {
@@ -80,7 +90,7 @@ const RENDER = {
 };
 
 async function load() {
-  $('[data-status-filter]').hidden = !['withdrawals', 'skins'].includes(tab);
+  $('[data-status-filter]').hidden = !['withdrawals', 'skins', 'tickets'].includes(tab);
   if (tab === 'settings') return loadSettings();
   const box = $(`[data-list="${tab}"]`);
   try {
@@ -212,6 +222,50 @@ document.addEventListener('click', async (e) => {
       overview();
       load();
     } catch (err) { toastError(err); }
+  });
+});
+
+// ── Поддержка ──────────────────────────────────────────────
+
+async function openTicket(id) {
+  currentTicket = id;
+  $$('[data-ticket]').forEach((r) => r.classList.toggle('is-active', r.dataset.ticket === String(id)));
+  const card = $('[data-ticket-card]');
+  card.innerHTML = '<p class="muted">Загружаем…</p>';
+  try {
+    const { ticket: t, messages } = await api(`/api/admin/tickets/${id}`);
+    card.innerHTML = `
+      <div class="adm-user-head"><div class="grow"><p class="h3">Обращение #${t.id}</p>
+        <p class="small muted">${esc(t.tg_name || 'Игрок')} · ${t.tg_username ? `<a href="https://t.me/${esc(t.tg_username)}" target="_blank" rel="noopener">@${esc(t.tg_username)}</a> · ` : ''}TG ${esc(t.telegram_id)}${t.user_id ? ` · ID на сайте ${t.user_id}` : ''}</p></div>
+        <span class="badge${t.status === 'open' ? ' badge-success' : ''}">${t.status === 'open' ? 'Открыт' : 'Закрыт'}</span></div>
+      <div class="chat">${messages.map((m) => `<div class="chat-msg is-${m.sender}"><p>${esc(m.text).replace(/\n/g, '<br>')}</p>
+        <span class="tiny muted">${m.sender === 'admin' ? esc(m.admin_name || 'Админ') + ' · ' : ''}${dateTime(m.created_at)}</span></div>`).join('')}</div>
+      <form class="adm-grant" data-ticket-reply novalidate>
+        <textarea class="input" name="text" rows="3" maxlength="3500" placeholder="Ответ игроку — придёт в Telegram от бота" aria-label="Ответ"></textarea>
+        <div class="row">
+          <button class="btn btn-primary" type="submit" data-loading="Отправляем…">Ответить</button>
+          <button class="btn btn-ghost" type="button" data-ticket-status="${t.status === 'open' ? 'closed' : 'open'}">${t.status === 'open' ? 'Закрыть обращение' : 'Открыть снова'}</button>
+        </div>
+      </form>`;
+    const chat = $('.chat', card);
+    chat.scrollTop = chat.scrollHeight;
+  } catch (err) { card.innerHTML = ''; toastError(err); }
+}
+$('[data-list="tickets"]').addEventListener('click', (e) => { const r = e.target.closest('[data-ticket]'); if (r) openTicket(r.dataset.ticket); });
+$('[data-ticket-card]').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const form = e.target.closest('[data-ticket-reply]');
+  const text = form.elements.text.value.trim();
+  if (!text) { form.elements.text.focus(); return; }
+  await withLoading(e.submitter, async () => {
+    try { await api(`/api/admin/tickets/${currentTicket}/reply`, { method: 'POST', body: { text } }); toast('Ответ отправлен в Telegram', 'success'); openTicket(currentTicket); load(); overview(); } catch (err) { toastError(err); }
+  });
+});
+$('[data-ticket-card]').addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-ticket-status]');
+  if (!b) return;
+  await withLoading(b, async () => {
+    try { await api(`/api/admin/tickets/${currentTicket}/status`, { method: 'POST', body: { status: b.dataset.ticketStatus } }); openTicket(currentTicket); load(); overview(); } catch (err) { toastError(err); }
   });
 });
 

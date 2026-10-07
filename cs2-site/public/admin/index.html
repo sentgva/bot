@@ -38,6 +38,7 @@
       <nav class="nav" id="site-nav" aria-label="Основное меню">
         <ul>
           <li><a href="/cases/">Кейсы</a></li>
+          <li><a href="/contracts/">Контракты</a></li>
           <li><a href="/upgrade/">Апгрейд</a></li>
           <li class="nav-theme">
             <button class="btn btn-ghost" type="button" data-theme-toggle aria-label="Сменить тему">
@@ -81,6 +82,7 @@
 
       <div class="tabs mt-6" role="tablist" aria-label="Разделы админки">
         <button class="tab" role="tab" id="t-users" aria-controls="p-users" aria-selected="true" data-tab="users">Игроки</button>
+        <button class="tab" role="tab" id="t-tickets" aria-controls="p-tickets" aria-selected="false" tabindex="-1" data-tab="tickets">Поддержка <span class="badge" data-count="tickets"></span></button>
         <button class="tab" role="tab" id="t-withdrawals" aria-controls="p-withdrawals" aria-selected="false" tabindex="-1" data-tab="withdrawals">Выводы денег <span class="badge" data-count="withdrawals"></span></button>
         <button class="tab" role="tab" id="t-skins" aria-controls="p-skins" aria-selected="false" tabindex="-1" data-tab="skins">Выводы скинов <span class="badge" data-count="skin_withdrawals"></span></button>
         <button class="tab" role="tab" id="t-promos" aria-controls="p-promos" aria-selected="false" tabindex="-1" data-tab="promos">Промокоды</button>
@@ -105,6 +107,14 @@
           </div>
           <aside class="card adm-user" data-user-card aria-live="polite">
             <p class="muted">Выбери игрока слева — здесь появятся его баланс, статистика и выдача LC.</p>
+          </aside>
+        </div>
+      </section>
+      <section role="tabpanel" id="p-tickets" aria-labelledby="t-tickets" hidden>
+        <div class="adm-users">
+          <div class="list" data-list="tickets"></div>
+          <aside class="card adm-user" data-ticket-card aria-live="polite">
+            <p class="muted">Выбери обращение слева. Отвечать можно и прямо в Telegram — ответом (reply) на сообщение бота о тикете.</p>
           </aside>
         </div>
       </section>
@@ -150,6 +160,7 @@
           <p class="footer-title">Сервис</p>
           <ul class="footer-links">
             <li><a href="/cases/">Кейсы</a></li>
+            <li><a href="/contracts/">Контракты</a></li>
             <li><a href="/upgrade/">Апгрейдер</a></li>
           </ul>
         </nav>
