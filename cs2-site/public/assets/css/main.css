@@ -1031,3 +1031,23 @@ h3, .h3 { font-weight: 600; letter-spacing: -.01em; font-size: clamp(17px, 1.8vw
   position: absolute; z-index: 3; top: 10px; left: 10px; padding: 3px 9px; border-radius: 999px; font-family: var(--font-display); font-size: 10px; font-weight: 700;
   letter-spacing: .05em; text-transform: uppercase; background: var(--case); color: #0b0a07; box-shadow: 0 0 16px -2px var(--case);
 }
+
+/* ---------- Нижние вкладки на телефоне ---------- */
+.mob-tabs { display: none; }
+@media (max-width: 899px) {
+  html:not(.tg) .mob-tabs {
+    display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 45;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: color-mix(in srgb, var(--bg) 94%, transparent); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+    border-top: 1px solid var(--border);
+  }
+  .mob-tabs a {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 60px;
+    color: var(--muted); font-size: 11px; font-weight: 650; text-decoration: none;
+  }
+  .mob-tabs a[aria-current="page"] { color: var(--accent-text); }
+  html:not(.tg) body { padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px)); }
+  html:not(.tg) .toasts { bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
+  /* Панель «шанс + Апгрейдить» — над вкладками */
+  html:not(.tg) .sticky-bar { bottom: calc(60px + env(safe-area-inset-bottom, 0px)); padding-bottom: var(--s3); }
+}
