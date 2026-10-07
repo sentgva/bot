@@ -112,6 +112,7 @@ const SETTINGS = [
   ['siteSellRate', 'Продажа скина с сайта (доля цены)'], ['cardFee', 'Комиссия карта/СБП (доля)'],
   ['cryptoFee', 'Комиссия крипта (доля)'], ['minWithdraw', 'Мин. вывод, коп.'], ['maxWithdraw', 'Макс. вывод, коп.'], ['minDeposit', 'Мин. пополнение, коп.'],
   ['cryptoAutoLimit', 'Авто-вывод крипты до, коп.'], ['statsMinPaid', 'Показывать «выплачено» от, коп.'], ['bestDropMaxPrice', '«Лучший дроп» не дороже, коп.'],
+  ['signupBonus', 'Стартовый бонус новым игрокам, коп. (5000000 = 50 000 LC, 0 — выкл.)'],
 ];
 async function loadSettings() {
   const s = await api('/api/admin/settings');

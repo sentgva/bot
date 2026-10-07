@@ -370,7 +370,7 @@ loaders.wallet = async () => {
 
 const KIND = {
   deposit: 'Пополнение', withdraw: 'Вывод', refund: 'Возврат', buy: 'Покупка скина', sell: 'Продажа скина',
-  upgrade: 'Ставка в апгрейде', buyback: 'Выкуп скинов', admin: 'Корректировка', demo: 'Тестовое пополнение',
+  upgrade: 'Ставка в апгрейде', buyback: 'Выкуп скинов', admin: 'Корректировка', demo: 'Тестовое пополнение', bonus: 'Бонус',
 };
 loaders.history = async () => {
   const list = await api('/api/me/ledger').catch(() => []);

@@ -52,7 +52,7 @@ create table if not exists ledger (
   user_id       bigint not null references users(id),
   amount        bigint not null,           -- + пополнение, − списание
   balance_after bigint not null,
-  kind          text not null,             -- deposit | withdraw | refund | buy | sell | upgrade | buyback | admin | demo
+  kind          text not null,             -- deposit | withdraw | refund | buy | sell | upgrade | buyback | admin | demo | bonus
   ref           text,
   note          text,
   created_at    timestamptz not null default now()

@@ -5,20 +5,31 @@
 import { getDb } from './db.js';
 import { fail } from './http.js';
 import { hashSeed, newClientSeed, newServerSeed } from './fair.js';
+import { getSettings } from './settings.js';
+import { floorLc } from './lc.js';
 import { config } from './config.js';
 
 // Вход через Telegram (Mini App или Telegram Login на сайте): аккаунт привязан к Telegram ID
 export async function upsertTelegramUser(tg) {
   const db = await getDb();
   const name = [tg.first_name, tg.last_name].filter(Boolean).join(' ').slice(0, 64) || tg.username || `Игрок ${String(tg.id).slice(-5)}`;
-  return db.one(
-    `insert into users (telegram_id, tg_username, name, avatar, server_seed, client_seed)
-     values ($1, $2, $3, $4, $5, $6)
-     on conflict (telegram_id) do update set tg_username = excluded.tg_username, name = excluded.name,
-       avatar = coalesce(excluded.avatar, users.avatar), last_seen_at = now()
-     returning *`,
-    [String(tg.id), tg.username || null, name, typeof tg.photo_url === 'string' && tg.photo_url.startsWith('https://') ? tg.photo_url : null, newServerSeed(), newClientSeed()],
-  );
+  const { signupBonus } = await getSettings();
+  return db.tx(async (q) => {
+    // xmax = 0 — строка только что вставлена, то есть это первый вход игрока
+    const u = await q.one(
+      `insert into users (telegram_id, tg_username, name, avatar, server_seed, client_seed)
+       values ($1, $2, $3, $4, $5, $6)
+       on conflict (telegram_id) do update set tg_username = excluded.tg_username, name = excluded.name,
+         avatar = coalesce(excluded.avatar, users.avatar), last_seen_at = now()
+       returning *, (xmax = 0) as inserted`,
+      [String(tg.id), tg.username || null, name, typeof tg.photo_url === 'string' && tg.photo_url.startsWith('https://') ? tg.photo_url : null, newServerSeed(), newClientSeed()],
+    );
+    const { inserted, ...user } = u;
+    // Стартовый бонус новому игроку (настройка signupBonus в админке, 0 — выключен)
+    const bonus = floorLc(signupBonus);
+    if (inserted && bonus > 0) user.balance = await changeBalance(q, user.id, bonus, 'bonus', { note: 'Стартовый бонус' });
+    return user;
+  });
 }
 
 // Админ — Telegram ID из ADMIN_TG_IDS

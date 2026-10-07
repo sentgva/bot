@@ -8,10 +8,13 @@ delete process.env.TG_BOT_TOKEN;
 const { resetDb } = await import('../lib/db.js');
 const { seedDemoItems } = await import('../lib/catalog.js');
 const { upsertTelegramUser, changeBalance } = await import('../lib/users.js');
+const { updateSettings } = await import('../lib/settings.js');
 
 export async function freshDb() {
   const db = await resetDb();
   await seedDemoItems();
+  // Стартовый бонус в тестах выключен, чтобы балансы считались от нуля (сам бонус проверяет test/admin.test.js)
+  await updateSettings({ signupBonus: 0 });
   return db;
 }
 
