@@ -33,7 +33,7 @@ function renderDrops(drops, targets = []) {
   }
   const first = seen.size === 0;
   let html = drops.map((d) => card(d.item, !first && !seen.has(d.id) ? ' is-new' : '',
-    `${d.user} выиграл ${d.item.hashName} с шансом ${(d.chance / 10000).toFixed(1).replace('.', ',')}%`)).join('');
+    `Выигрыш: ${d.item.hashName}, шанс ${(d.chance / 10000).toFixed(1).replace('.', ',')}%`)).join('');
   // Настоящих выигрышей мало — добираем реальными скинами каталога и честно подписываем
   if (targets.length) {
     html += '<span class="drop-sep">Можно выбить</span>'

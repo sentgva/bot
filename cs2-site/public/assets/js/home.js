@@ -72,7 +72,7 @@ onLive(({ best }) => {
   $('[data-best-price]').textContent = lc(item.price);
   if (best.type === 'win') {
     $('[data-best-label]').textContent = 'Лучший дроп недели';
-    $('[data-best-meta]').textContent = `${best.user} · шанс ${pct(best.chance)} · ставка ${lc(best.inputValue)}`;
+    $('[data-best-meta]').textContent = `шанс ${pct(best.chance)} · ставка ${lc(best.inputValue)}`;
   } else {
     $('[data-best-label]').textContent = 'Главный приз';
     $('[data-best-meta]').textContent = `Можно выбить со ставки от ${lc(best.minStake)}`;

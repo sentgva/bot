@@ -92,10 +92,11 @@ export async function listUpgrades(userId, limit = 30) {
 export async function recentWins(limit = 12) {
   const db = await getDb();
   const rows = await db.query(
-    `select up.id, up.chance_ppm, up.input_value, up.created_at, us.name as user_name, i.*
-     from upgrades up join users us on us.id = up.user_id join items i on i.hash_name = up.target_hash_name
+    `select up.id, up.chance_ppm, up.input_value, up.created_at, i.*
+     from upgrades up join items i on i.hash_name = up.target_hash_name
      where up.won order by up.id desc limit $1`,
     [limit],
   );
-  return rows.map((r) => ({ id: r.id, chance: r.chance_ppm, inputValue: r.input_value, user: r.user_name, at: r.created_at, item: publicItem(r) }));
+  // Анонимно: кто выиграл — не показываем
+  return rows.map((r) => ({ id: r.id, chance: r.chance_ppm, inputValue: r.input_value, at: r.created_at, item: publicItem(r) }));
 }

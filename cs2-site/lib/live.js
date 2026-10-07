@@ -24,15 +24,15 @@ async function dropsAndBest() {
   const drops = [...await recentWins(20), ...await recentCaseDrops(20)]
     .sort((a, b) => new Date(b.at) - new Date(a.at)).slice(0, 20);
   const win = await db.one(
-    `select up.id, up.chance_ppm, up.input_value, up.created_at, us.name as user_name, i.*
-     from upgrades up join users us on us.id = up.user_id join items i on i.hash_name = up.target_hash_name
+    `select up.id, up.chance_ppm, up.input_value, up.created_at, i.*
+     from upgrades up join items i on i.hash_name = up.target_hash_name
      where up.won and up.created_at > now() - interval '7 days' and up.target_price <= $1
      order by up.target_price desc, up.id desc limit 1`,
     [s.bestDropMaxPrice],
   );
   let best;
   if (win) {
-    best = { type: 'win', item: publicItem(win), user: win.user_name, chance: win.chance_ppm, inputValue: win.input_value, at: win.created_at };
+    best = { type: 'win', item: publicItem(win), chance: win.chance_ppm, inputValue: win.input_value, at: win.created_at };
   } else {
     // Самый дорогой скин не дороже порога; ножи и перчатки — в приоритете, они эффектнее
     const top = await db.one(

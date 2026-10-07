@@ -42,3 +42,16 @@ test('лучший дроп: пока выигрышей нет — «главн
   assert.equal(after.best.item.hashName, 'Desert Eagle | Mecha Industries (Field-Tested)');
   assert.ok(after.drops.length >= 1);
 });
+
+test('анонимность: в публичной ленте и «лучшем дропе» нет имён игроков', async () => {
+  const [c] = await (await import('../lib/cases.js')).listCases();
+  const { openCase } = await import('../lib/cases.js');
+  const u = await makeUser(c.price * 40);
+  for (let i = 0; i < 40; i++) await openCase(u.id, c.slug);
+  resetLiveCache();
+  const live = await getLive('g:anon');
+  const json = JSON.stringify(live);
+  assert.ok(!json.includes(u.name), 'имени игрока нет в ответе');
+  assert.ok(live.drops.every((d) => !('user' in d)));
+  assert.ok(!live.best || !('user' in live.best));
+});

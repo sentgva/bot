@@ -336,7 +336,7 @@ async function loadFeed() {
       ? list.map((w) => `
         <div class="feed-item" data-rarity="${esc(w.item.rarity || '')}">
           ${skinImage(w.item, '')}
-          <div class="grow"><p class="name">${esc(w.item.name)}</p><p class="tiny muted">${esc(w.user)} · шанс ${fmtChance(w.chance)} · ${dateTime(w.at)}</p></div>
+          <div class="grow"><p class="name">${esc(w.item.name)}</p><p class="tiny muted">шанс ${fmtChance(w.chance)} · ${dateTime(w.at)}</p></div>
           <span class="num"><b>${lc(w.item.price)}</b></span>
         </div>`).join('')
       : '<p class="muted">Здесь появятся последние выигрыши. Стань первым!</p>';

@@ -220,10 +220,10 @@ export async function openCase(userId, slug, count = 1, expectedPrice = null) {
 export async function recentCaseDrops(limit = 20) {
   const db = await getDb();
   const rows = await db.query(
-    `select co.id, co.chance_ppm, co.case_price, co.created_at, us.name as user_name, i.*
-     from case_opens co join users us on us.id = co.user_id join items i on i.hash_name = co.hash_name
+    `select co.id, co.chance_ppm, co.case_price, co.created_at, i.*
+     from case_opens co join items i on i.hash_name = co.hash_name
      where co.item_price > co.case_price order by co.id desc limit $1`,
     [limit],
   );
-  return rows.map((r) => ({ id: `c${r.id}`, chance: r.chance_ppm, inputValue: r.case_price, user: r.user_name, at: r.created_at, item: publicItem(r) }));
+  return rows.map((r) => ({ id: `c${r.id}`, chance: r.chance_ppm, inputValue: r.case_price, at: r.created_at, item: publicItem(r) }));
 }
