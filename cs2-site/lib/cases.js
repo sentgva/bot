@@ -14,6 +14,7 @@ import { getSettings } from './settings.js';
 import { changeBalance, lockUser } from './users.js';
 import { ROLL_MAX, computeRoll, hashSeed } from './fair.js';
 import { sellPrice } from './inventory.js';
+import fs from 'node:fs';
 
 const LC = 100; // сотых долей в 1 LC
 const PISTOLS = ['Glock-18', 'USP-S', 'P2000', 'P250', 'Five-SeveN', 'Tec-9', 'CZ75-Auto', 'Desert Eagle', 'Dual Berettas', 'R8 Revolver'];
@@ -23,29 +24,16 @@ const SNIPERS = ['AWP', 'SSG 08', 'SCAR-20', 'G3SG1'];
 
 // where — SQL-условие по таблице items (только константы из кода, без ввода игрока); min/max — цена в LC
 export const CASES = [
-  { slug: 'bratan', name: 'Братан', fresh: true, price: 19, color: '#f97316', groups: [{ where: "rarity <> 'gold'", min: 2, max: 250, n: 14 }] },
   { slug: 'starter', name: 'Стартовый', price: 29, color: '#7d9cc0', groups: [{ where: "rarity <> 'gold'", min: 3, max: 400, n: 14 }] },
   { slug: 'smg', name: 'Пулемётчик', price: 49, color: '#8847ff', groups: [{ where: 'weapon = any($weapons)', weapons: SMGS, min: 4, max: 2500, n: 14 }] },
   { slug: 'pistol', name: 'Пистолетный', price: 69, color: '#4b69ff', groups: [{ where: 'weapon = any($weapons)', weapons: PISTOLS, min: 5, max: 4000, n: 14 }] },
-  { slug: 'kobildzhon', name: 'Кобилджон', fresh: true, price: 119, color: '#84cc16', groups: [{ where: 'weapon = any($weapons)', weapons: ['AWP', 'Desert Eagle'], min: 7, max: 10000, n: 14 }] },
   { slug: 'rifle', name: 'Калаш и эмка', price: 149, color: '#d32ce6', groups: [{ where: 'weapon = any($weapons)', weapons: RIFLES, min: 10, max: 12000, n: 14 }] },
   { slug: 'sniper', name: 'Снайперский', price: 249, color: '#2fb37a', groups: [{ where: 'weapon = any($weapons)', weapons: SNIPERS, min: 10, max: 30000, n: 14 }] },
   { slug: 'factory', name: 'С завода', price: 299, color: '#38bdf8', groups: [{ where: "wear = 'Factory New' and rarity <> 'gold'", min: 20, max: 25000, n: 14 }] },
   { slug: 'stattrak', name: 'StatTrak™', price: 399, color: '#cf6a32', groups: [{ where: "stattrak and rarity <> 'gold'", min: 30, max: 30000, n: 14 }] },
   {
-    slug: 'pantera', name: 'Пантера', fresh: true, price: 549, color: '#a855f7',
-    groups: [
-      { where: "rarity <> 'gold' and name ~* '(black|night|dark|onyx|obsidian|shadow|noir|midnight|panther|graphite|carbon)'", min: 10, max: 32000, n: 12 },
-      { where: "rarity = 'gold' and name ~* '(night|black|ultraviolet|dark|shadow)'", min: 3000, max: 40000, n: 3 },
-    ],
-  },
-  {
     slug: 'covert', name: 'Тайный', price: 790, color: '#eb4b4b',
     groups: [{ where: "rarity = 'covert'", min: 500, max: 45000, n: 10 }, { where: "rarity = 'classified'", min: 60, max: 600, n: 6 }],
-  },
-  {
-    slug: 'koch', name: 'Коч', fresh: true, price: 1490, color: '#22d3ee',
-    groups: [{ where: "rarity = 'gold' and (weapon ilike '%gloves%' or weapon = 'Hand Wraps')", min: 1700, max: 30000, n: 8 }, { where: "rarity in ('covert', 'classified')", min: 50, max: 1500, n: 8 }],
   },
   {
     slug: 'knife', name: 'Ножевой', price: 2990, color: '#e4ae39',
@@ -56,7 +44,50 @@ export const CASES = [
     groups: [{ where: "rarity = 'gold'", min: 10000, max: 150000, n: 8 }, { where: "rarity in ('covert', 'gold')", min: 500, max: 8000, n: 8 }],
   },
 ];
-const BY_SLUG = new Map(CASES.map((c) => [c.slug, c]));
+// Настоящие кейсы CS2 (db/cs-cases.json, собирается scripts/build-cs-cases.js): родные названия, картинки и состав.
+// Шансы — как в игре, по редкости; скины внутри редкости равновероятны. Цена кейса = средний дроп ÷ (1 − caseEdge),
+// округлённая вверх до целого LC, поэтому край сервиса тот же, что у остальных кейсов.
+export const CS_TIER_ODDS = { milspec: 0.7992, restricted: 0.1598, classified: 0.032, covert: 0.0064, rare: 0.0026 };
+const WEARS = ['Field-Tested', 'Minimal Wear', 'Factory New', 'Well-Worn', 'Battle-Scarred'];
+const CS_CASES = JSON.parse(fs.readFileSync(new URL('../db/cs-cases.json', import.meta.url), 'utf8')).map((c) => ({ ...c, kind: 'cs' }));
+
+const ALL = [...CS_CASES, ...CASES];
+const BY_SLUG = new Map(ALL.map((c) => [c.slug, c]));
+
+// Скин кейса → конкретный предмет каталога: предпочитаем «После полевых», потом другие износы; ванильные ножи — без износа
+async function resolveSkins(q, names) {
+  const candidates = names.flatMap((n) => [...WEARS.map((w) => `${n} (${w})`), n]);
+  const rows = await q.query('select * from items where quantity > 0 and image is not null and hash_name = any($1)', [candidates]);
+  const byHash = new Map(rows.map((r) => [r.hash_name, r]));
+  const out = new Map();
+  for (const n of names) {
+    const hit = [...WEARS.map((w) => `${n} (${w})`), n].map((h) => byHash.get(h)).find(Boolean);
+    if (hit) out.set(n, hit);
+  }
+  return out;
+}
+
+async function buildCsCase(q, def, edge) {
+  const found = await resolveSkins(q, [...def.skins.map((x) => x.name), ...def.rare]);
+  const tiers = {};
+  for (const sk of def.skins) if (found.has(sk.name)) (tiers[sk.tier] ||= []).push(found.get(sk.name));
+  const rare = def.rare.map((n) => found.get(n)).filter(Boolean);
+  if (rare.length) tiers.rare = [...new Map(rare.map((r) => [r.hash_name, r])).values()];
+  const present = Object.keys(tiers).filter((t) => CS_TIER_ODDS[t]);
+  if (!tiers.milspec?.length || present.length < 3) return null;
+  const norm = present.reduce((a, t) => a + CS_TIER_ODDS[t], 0);
+  let items = present.flatMap((t) => tiers[t].map((row) => ({ row, p: CS_TIER_ODDS[t] / norm / tiers[t].length })));
+  // В миллионные доли: каждому хотя бы 1 ppm, остаток округления — самому дешёвому
+  items = items.map((it) => ({ row: it.row, ppm: Math.max(1, Math.floor(it.p * ROLL_MAX)) }));
+  const cheapest = items.reduce((m, it) => (it.row.price < m.row.price ? it : m), items[0]);
+  cheapest.ppm += ROLL_MAX - items.reduce((a, it) => a + it.ppm, 0);
+  const ev = items.reduce((a, it) => a + (it.row.price * it.ppm) / ROLL_MAX, 0);
+  const price = Math.max(LC, Math.ceil(ev / (1 - edge) / LC) * LC);
+  items.sort((a, b) => b.row.price - a.row.price);
+  return { slug: def.slug, name: def.name, price, color: def.color, image: def.image, kind: 'cs', items };
+}
+
+const buildAny = (q, def, edge) => (def.kind === 'cs' ? buildCsCase(q, def, edge) : buildCase(q, def, edge));
 
 // Скины группы: n штук равномерно по цене (самый дешёвый и самый дорогой — всегда)
 async function groupItems(q, g) {
@@ -111,11 +142,11 @@ async function buildCase(q, def, edge) {
   const ppm = solveOdds(rows.map((r) => r.price), price * (1 - edge));
   if (!ppm) return null;
   const items = rows.map((r, i) => ({ row: r, ppm: ppm[i] })).sort((a, b) => b.row.price - a.row.price);
-  return { slug: def.slug, name: def.name, price, color: def.color, fresh: Boolean(def.fresh), items };
+  return { slug: def.slug, name: def.name, price, color: def.color, items };
 }
 
 const pub = (c) => ({
-  slug: c.slug, name: c.name, price: c.price, color: c.color, fresh: c.fresh,
+  slug: c.slug, name: c.name, price: c.price, color: c.color, image: c.image || null, kind: c.kind || 'luxe',
   items: c.items.map(({ row, ppm }) => ({ ...publicItem(row), ppm })),
 });
 
@@ -126,8 +157,8 @@ export async function listCases() {
   if (cache.list && cache.edge === s.caseEdge && Date.now() - cache.at < 60_000) return cache.list;
   const db = await getDb();
   const list = [];
-  for (const def of CASES) {
-    const c = await buildCase(db, def, s.caseEdge);
+  for (const def of ALL) {
+    const c = await buildAny(db, def, s.caseEdge);
     if (c) list.push(pub(c));
   }
   cache = { at: Date.now(), edge: s.caseEdge, list };
@@ -144,7 +175,7 @@ export async function getCase(slug) {
 export const MAX_OPEN = 5; // сколько кейсов можно открыть за раз
 
 // Открыть count одинаковых кейсов (1…5) одной транзакцией: каждый — свой бросок со своим nonce
-export async function openCase(userId, slug, count = 1) {
+export async function openCase(userId, slug, count = 1, expectedPrice = null) {
   const def = BY_SLUG.get(slug);
   if (!def) fail(404, 'Кейс не найден');
   if (!Number.isSafeInteger(count) || count < 1 || count > MAX_OPEN) fail(400, `За раз можно открыть от 1 до ${MAX_OPEN} кейсов`);
@@ -152,8 +183,10 @@ export async function openCase(userId, slug, count = 1) {
   const db = await getDb();
   return db.tx(async (q) => {
     const u = await lockUser(q, userId);
-    const c = await buildCase(q, def, s.caseEdge);
+    const c = await buildAny(q, def, s.caseEdge);
     if (!c) fail(503, 'Кейс временно недоступен');
+    // Цена кейсов CS2 плавает вместе с ценами скинов — не списываем больше, чем игрок видел
+    if (expectedPrice != null && expectedPrice !== c.price) fail(409, `Цена кейса обновилась: теперь ${c.price / LC} LC. Нажми ещё раз`, { price: c.price });
     const total = c.price * count;
     if (u.balance < total) fail(400, count > 1 ? `Недостаточно LC: нужно ${total / 100} LC за ${count} кейса` : 'Недостаточно LC на балансе');
     const balance = await changeBalance(q, userId, -total, 'case', { note: `Кейс «${c.name}»${count > 1 ? ` ×${count}` : ''}` });

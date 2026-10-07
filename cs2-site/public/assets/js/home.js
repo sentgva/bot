@@ -58,13 +58,6 @@ session().then(({ user, config }) => {
   }
 });
 
-// ── Витрина маркета: популярные скины ──────────────────────
-api('/api/items?sort=popular&min=50000&limit=10').then(({ items }) => {
-  $('[data-showcase]').innerHTML = items.map((i) => skinCard(i, {
-    price: i.buyPrice,
-    actions: '<a class="btn btn-secondary btn-sm" href="/market/">В маркет</a>',
-  })).join('');
-}).catch(() => { $('[data-showcase]').closest('section').hidden = true; });
 
 // ── Лучший дроп ────────────────────────────────────────────
 onLive(({ best }) => {
@@ -89,7 +82,7 @@ onLive(({ best }) => {
 // ── Кейсы: по одному из каждой ценовой ступени ─────────────
 api('/api/cases').then((list) => {
   if (!list.length) return;
-  const pick = ['bratan', 'kobildzhon', 'pantera', 'koch', 'luxe'].map((slug) => list.find((c) => c.slug === slug)).filter(Boolean);
+  const pick = ['kilowatt', 'dreams', 'prisma2', 'knife', 'luxe'].map((slug) => list.find((c) => c.slug === slug)).filter(Boolean);
   const box = $('[data-home-cases-grid]');
   box.innerHTML = (pick.length >= 3 ? pick : list.slice(0, 5)).map(caseCard).join('');
   paint(box);

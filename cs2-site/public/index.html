@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>LuxeDrop — апгрейд скинов CS2 с выводом на карту и в крипту</title>
-  <meta name="description" content="Апгрейд и маркет скинов CS2. Шанс до 80%, пополнение звёздами Telegram, вывод в USDT за 2 минуты и на карту в среднем за 15. Вход через Telegram.">
+  <meta name="description" content="Кейсы и апгрейд скинов CS2. Шанс до 80%, пополнение звёздами Telegram, вывод в USDT за 2 минуты и на карту в среднем за 15. Вход через Telegram.">
   <link rel="canonical" href="https://luxedrop.gg/">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://luxedrop.gg/">
@@ -58,10 +58,10 @@
           { "@type": "Question", "name": "Это не развод? Почему вам можно доверять?", "acceptedAnswer": { "@type": "Answer", "text": "Вход только через официальный Telegram — без паролей и регистрации. Начни с малого: пополни 500 ₽ и выведи — убедись сам." } },
           { "@type": "Question", "name": "Что такое LuxeCoin и как пополнить звёздами?", "acceptedAnswer": { "@type": "Answer", "text": "LuxeCoin (LC) — валюта сайта: 1 LC = 1 ₽ рыночной стоимости скинов. Пополнить можно звёздами Telegram (курс в профиле, округление вниз до целого LC) или криптой. Выводить LC можно на карту, по СБП и в USDT/TON." } },
           { "@type": "Question", "name": "Сколько ждать вывод на карту?", "acceptedAnswer": { "@type": "Answer", "text": "Крипта до 20 000 ₽ уходит автоматически за 1–2 минуты. Карта и СБП — в среднем 15 минут с 10:00 до 23:00 МСК. Заявки, оставленные ночью, выплачиваем утром." } },
-          { "@type": "Question", "name": "Какие комиссии?", "acceptedAnswer": { "@type": "Answer", "text": "Вывод в крипту — 0%, на карту и по СБП — 3%. В маркете наценка 5% к рыночной цене. Продажа скина с сайта обратно на баланс — 95% цены. В апгрейдере комиссия 5% заложена в шанс." } },
+          { "@type": "Question", "name": "Какие комиссии?", "acceptedAnswer": { "@type": "Answer", "text": "Вывод в крипту — 0%, на карту и по СБП — 3%. Продажа скина с сайта обратно на баланс — 95% цены. В апгрейдере комиссия 5% заложена в шанс." } },
           { "@type": "Question", "name": "Безопасно ли входить через Telegram?", "acceptedAnswer": { "@type": "Answer", "text": "Да. Вход подтверждает сам Telegram, мы получаем только имя, ник и аватар. Номер телефона мы не видим, пароли не нужны." } },
           { "@type": "Question", "name": "Что, если скин не пришёл?", "acceptedAnswer": { "@type": "Answer", "text": "Обычно обмен приходит за 5–30 минут. Если обмен не удался, скин вернётся в твой инвентарь на сайте, и его можно вывести снова или продать." } },
-          { "@type": "Question", "name": "Откуда берутся скины и как вывести их в Steam?", "acceptedAnswer": { "@type": "Answer", "text": "Скины покупаются в нашем маркете по рыночной цене или выигрываются в апгрейдере. Чтобы забрать скин в Steam, добавь трейд-ссылку в профиле — обмен придёт за 5–30 минут." } },
+          { "@type": "Question", "name": "Откуда берутся скины и как вывести их в Steam?", "acceptedAnswer": { "@type": "Answer", "text": "Скины выпадают из кейсов или выигрываются в апгрейдере. Чтобы забрать скин в Steam, добавь трейд-ссылку в профиле — обмен придёт за 5–30 минут." } },
           { "@type": "Question", "name": "С какого возраста можно пользоваться сервисом?", "acceptedAnswer": { "@type": "Answer", "text": "Только с 18 лет. Апгрейд — игра с риском: ставь только то, что готов потерять. Можно попросить поддержку заблокировать аккаунт на нужный срок." } }
         ]
       }
@@ -81,7 +81,6 @@
         <ul>
           <li><a href="/cases/">Кейсы</a></li>
           <li><a href="/upgrade/">Апгрейд</a></li>
-          <li><a href="/market/">Маркет</a></li>
           <li class="nav-theme">
             <button class="btn btn-ghost" type="button" data-theme-toggle aria-label="Сменить тему">
               <svg class="icon i-sun" aria-hidden="true"><use href="/assets/icons.svg#i-sun"/></svg>
@@ -105,10 +104,9 @@
       </div>
     </div>
   </header>
-  <!-- Живая лента: онлайн, последние выигрыши и скины «Можно выбить» (настоящие данные из /api/live) -->
+  <!-- Живая лента: последние выигрыши и скины «Можно выбить» (настоящие данные из /api/live) -->
   <div class="live-strip" data-live>
     <div class="container live-inner">
-      <p class="online"><span class="online-dot" aria-hidden="true"></span><b class="num" data-online-count hidden></b><span>онлайн</span></p>
       <div class="live-drops" data-live-drops aria-label="Последние выигрыши и цели апгрейда"><p class="live-empty">Загружаем…</p></div>
     </div>
   </div>
@@ -165,7 +163,7 @@
       <div class="container">
         <div class="section-head reveal">
           <p class="eyebrow">Кейсы</p>
-          <h2 class="h2" id="cases-title">Открывай кейсы — от 29 LC до ножей и перчаток</h2>
+          <h2 class="h2" id="cases-title">Кейсы CS2 и кейсы LuxeDrop — от 29 LC до ножей и перчаток</h2>
           <p class="lead">Шансы каждого скина видны до открытия. Дроп сразу в инвентаре: продай, апгрейдь или выведи в Steam.</p>
         </div>
         <div class="case-grid" data-home-cases-grid></div>
@@ -219,7 +217,7 @@
           <li class="card step reveal">
             <span class="step-num" aria-hidden="true">2</span>
             <h3 class="h3">Пополни LuxeCoin и купи скин</h3>
-            <p class="muted">Звёздами Telegram ⭐ или USDT/TON. В маркете — тысячи скинов по рыночной цене, наценка всего 5%.</p>
+            <p class="muted">Звёздами Telegram ⭐ или USDT/TON. На LC открывай кейсы и апгрейдь скины.</p>
           </li>
           <li class="card step reveal">
             <span class="step-num" aria-hidden="true">3</span>
@@ -229,7 +227,7 @@
         </ol>
         <div class="row mt-6">
           <a class="btn btn-primary" href="/upgrade/">Открыть апгрейдер<svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-arrow-right"/></svg></a>
-          <a class="btn btn-ghost" href="/market/">Сначала посмотреть маркет</a>
+          <a class="btn btn-ghost" href="/cases/">Сначала открыть кейс</a>
         </div>
       </div>
     </section>
@@ -305,24 +303,6 @@
       </div>
     </section>
 
-    <!-- ===== Витрина маркета (популярные скины из каталога) ===== -->
-    <section class="section section-tint" id="market" aria-labelledby="market-title">
-      <div class="container">
-        <div class="section-head reveal">
-          <p class="eyebrow">Маркет</p>
-          <h2 class="h2" id="market-title">Тысячи скинов по рыночной цене — наценка всего 5%</h2>
-          <p class="lead">Купленный скин сразу у тебя: апгрейдь его, выводи в Steam по трейд-ссылке или продай обратно за 95% цены.</p>
-        </div>
-        <div class="skin-grid skin-grid-wide" data-showcase aria-live="polite">
-          <div class="skeleton skeleton-card" aria-hidden="true"></div><div class="skeleton skeleton-card" aria-hidden="true"></div>
-          <div class="skeleton skeleton-card" aria-hidden="true"></div><div class="skeleton skeleton-card" aria-hidden="true"></div>
-          <div class="skeleton skeleton-card" aria-hidden="true"></div>
-        </div>
-        <div class="row mt-6">
-          <a class="btn btn-primary" href="/market/">Открыть маркет<svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-arrow-right"/></svg></a>
-        </div>
-      </div>
-    </section>
 
     <!-- ===== Социальное доказательство ===== -->
     <!-- ЗАМЕНИТЬ ДО ЗАПУСКА: отзывы и кейсы ниже — образцы оформления. Публикуйте только реальные отзывы
@@ -348,8 +328,8 @@
           </article>
           <article class="card review reveal">
             <div class="review-head"><span class="avatar avatar-fallback" aria-hidden="true">Л</span><div><p><b>Лиза</b> <span class="muted small">· liza.cs</span></p><p class="stars" role="img" aria-label="Оценка 4 из 5"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-star"/></svg><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-star"/></svg><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-star"/></svg><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-star"/></svg></p></div></div>
-            <blockquote><p>Купила в маркете нож мечты дешевле, чем видела в других местах. Вход через Telegram — вообще без возни.</p></blockquote>
-            <p class="review-foot"><span>Покупка в маркете</span><span>август 2026</span></p>
+            <blockquote><p>Открыла пару кейсов CS2 и сразу забрала нож апгрейдом. Вход через Telegram — вообще без возни.</p></blockquote>
+            <p class="review-foot"><span>Кейсы + апгрейд</span><span>август 2026</span></p>
           </article>
           <article class="card review reveal">
             <div class="review-head"><span class="avatar avatar-fallback" aria-hidden="true">Н</span><div><p><b>Никита</b> <span class="muted small">· nkt</span></p><p class="stars" role="img" aria-label="Оценка 5 из 5"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-star"/></svg><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-star"/></svg><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-star"/></svg><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-star"/></svg><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-star"/></svg></p></div></div>
@@ -381,8 +361,8 @@
             <p class="row"><span class="badge badge-success">Скин в Steam за 20 мин</span></p>
           </article>
           <article class="card case reveal">
-            <p class="case-flow">Маркет <svg class="icon icon-sm accent" aria-hidden="true"><use href="/assets/icons.svg#i-arrow-right"/></svg> апгрейд <svg class="icon icon-sm accent" aria-hidden="true"><use href="/assets/icons.svg#i-arrow-right"/></svg> USDT</p>
-            <p class="muted small">Купил за 2 000 LC · апгрейд ×3 · продал за 95%</p>
+            <p class="case-flow">Кейс <svg class="icon icon-sm accent" aria-hidden="true"><use href="/assets/icons.svg#i-arrow-right"/></svg> апгрейд <svg class="icon icon-sm accent" aria-hidden="true"><use href="/assets/icons.svg#i-arrow-right"/></svg> USDT</p>
+            <p class="muted small">Кейс за 149 LC · апгрейд ×3 · продал за 95%</p>
             <p class="row"><span class="badge badge-success">Выплата за 2 мин</span></p>
           </article>
         </div>
@@ -411,7 +391,7 @@
           </details>
           <details class="reveal">
             <summary>Какие комиссии?<svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-chevron-down"/></svg></summary>
-            <div class="answer"><p>Вывод в USDT и TON — 0%, на карту и по СБП — 3%. В маркете наценка 5% к рыночной цене. Продажа скина с сайта обратно на баланс — 95% цены.</p><p>В апгрейдере комиссия 5% уже заложена в шанс. Других списаний нет.</p></div>
+            <div class="answer"><p>Вывод в USDT и TON — 0%, на карту и по СБП — 3%. Продажа скина с сайта обратно на баланс — 95% цены.</p><p>В апгрейдере комиссия 5% уже заложена в шанс. Других списаний нет.</p></div>
           </details>
           <details class="reveal">
             <summary>Безопасно ли входить через Telegram?<svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-chevron-down"/></svg></summary>
@@ -423,7 +403,7 @@
           </details>
           <details class="reveal">
             <summary>Откуда берутся скины и как вывести их в Steam?<svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-chevron-down"/></svg></summary>
-            <div class="answer"><p>Скины покупаются в нашем маркете по рыночной цене или выигрываются в апгрейдере. Чтобы забрать скин в Steam, добавь трейд-ссылку в профиле — обмен придёт за 5–30 минут.</p></div>
+            <div class="answer"><p>Скины выпадают из кейсов или выигрываются в апгрейдере. Чтобы забрать скин в Steam, добавь трейд-ссылку в профиле — обмен придёт за 5–30 минут.</p></div>
           </details>
           <details class="reveal">
             <summary>С какого возраста можно пользоваться?<svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-chevron-down"/></svg></summary>
@@ -466,7 +446,7 @@
           <a class="logo" href="/" aria-label="LuxeDrop — на главную">
             <img src="/assets/img/logo.webp" srcset="/assets/img/logo.webp 1x, /assets/img/logo@2x.webp 2x" alt="LuxeDrop" width="151" height="48" loading="lazy">
           </a>
-          <p class="muted small footer-about">Апгрейд и маркет скинов CS2. Вход через Telegram, вывод на карту, по СБП и в крипту.</p>
+          <p class="muted small footer-about">Кейсы и апгрейд скинов CS2. Вход через Telegram, вывод на карту, по СБП и в крипту.</p>
           <!-- ЗАМЕНИТЬ: ссылки на ваши соцсети -->
           <div class="socials">
             <a href="https://t.me/luxedrop" rel="noopener" target="_blank" aria-label="Telegram-канал LuxeDrop"><svg aria-hidden="true"><use href="/assets/icons.svg#b-telegram"/></svg></a>
@@ -480,7 +460,6 @@
           <ul class="footer-links">
             <li><a href="/cases/">Кейсы</a></li>
             <li><a href="/upgrade/">Апгрейдер</a></li>
-            <li><a href="/market/">Маркет скинов</a></li>
           </ul>
         </nav>
         <nav aria-label="Помощь">

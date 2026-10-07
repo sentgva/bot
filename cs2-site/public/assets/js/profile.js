@@ -82,7 +82,7 @@ loaders.inventory = async () => {
     : `<div class="empty-wrap">${emptyState({
       iconName: 'i-package', title: 'Скинов на сайте пока нет',
       text: 'Купи скин в маркете или выиграй его в апгрейдере.',
-      action: '<div class="row justify-center"><a class="btn btn-primary btn-sm" href="/market/">Маркет</a><a class="btn btn-secondary btn-sm" href="/upgrade/">Апгрейдер</a></div>',
+      action: '<div class="row justify-center"><a class="btn btn-primary btn-sm" href="/cases/">Кейсы</a><a class="btn btn-secondary btn-sm" href="/upgrade/">Апгрейдер</a></div>',
     })}</div>`;
   const wd = await api('/api/me/skin-withdrawals').catch(() => []);
   const WD = { review: ['Готовим обмен', 'badge-warning'], processing: ['Отправляем', 'badge-blue'], sent: ['Отправлен', 'badge-success'], refunded: ['Возвращён на сайт', ''] };

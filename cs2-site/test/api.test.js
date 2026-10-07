@@ -38,7 +38,7 @@ test('гость видит конфиг, но не может покупать'
   const me = await (await call('/api/me')).json();
   assert.equal(me.user, null);
   assert.ok(me.config.upgrade.maxChance > 0);
-  const res = await call('/api/market/buy', { method: 'POST', body: { hashName: 'x', price: 1 } });
+  const res = await call('/api/cases/starter/open', { method: 'POST', body: { count: 1 } });
   assert.equal(res.status, 401);
   assert.match((await res.json()).error, /Telegram/);
 });

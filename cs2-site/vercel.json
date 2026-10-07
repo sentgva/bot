@@ -23,6 +23,16 @@
       "source": "/fair/",
       "destination": "/",
       "permanent": true
+    },
+    {
+      "source": "/market",
+      "destination": "/cases/",
+      "permanent": false
+    },
+    {
+      "source": "/market/",
+      "destination": "/cases/",
+      "permanent": false
     }
   ],
   "rewrites": [

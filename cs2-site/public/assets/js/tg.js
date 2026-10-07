@@ -79,7 +79,6 @@ function renderTabs() {
     ['/', 'i-sparkles', 'Главная'],
     ['/cases/', 'i-package', 'Кейсы'],
     ['/upgrade/', 'i-trending-up', 'Апгрейд'],
-    ['/market/', 'i-shopping-cart', 'Маркет'],
     ['/profile/', 'i-wallet', 'Профиль'],
   ];
   const nav = document.createElement('nav');

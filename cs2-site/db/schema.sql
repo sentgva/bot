@@ -209,3 +209,13 @@ begin
     insert into meta (key, value) values ('migration_signup_bonus_1000', 'true');
   end if;
 end $$;
+
+-- Разовый сброс шансов апгрейдера к рабочим значениям (на сайте стояли комиссия 50% и максимум 5% — апгрейд был почти невозможен)
+do $$
+begin
+  if not exists (select 1 from meta where key = 'migration_upgrade_odds_reset_1') then
+    insert into settings (key, value) values ('houseEdge', '0.05'), ('maxChance', '0.8'), ('minChance', '0.01')
+      on conflict (key) do update set value = excluded.value;
+    insert into meta (key, value) values ('migration_upgrade_odds_reset_1', 'true');
+  end if;
+end $$;

@@ -101,7 +101,7 @@ function renderInput() {
     : emptyState({
       iconName: 'i-package', title: 'Пока нет скинов на сайте',
       text: 'Купи скин в маркете или поставь сумму с баланса ниже.',
-      action: '<a class="btn btn-secondary btn-sm" href="/market/">Открыть маркет</a>',
+      action: '<a class="btn btn-secondary btn-sm" href="/cases/">Открыть кейсы</a>',
     });
   el.balanceBox.hidden = false;
   const max = Math.floor(state.user.balance / 100);

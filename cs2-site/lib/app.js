@@ -9,7 +9,7 @@ import { endSession, sessionUserId, startSession } from './session.js';
 import { getUser, isAdmin, ledgerOf, publicUser, rotateSeed, setClientSeed, setTradeUrl, upsertTelegramUser } from './users.js';
 import { botId, handleUpdate, verifyInitData, verifyLoginWidget, webhookSecret } from './telegram.js';
 import { listItems, pricesAreStale, syncCatalog } from './catalog.js';
-import { buyItem, buyPrice, finishSkinWithdrawal, listOwned, listSkinWithdrawals, pollSkinWithdrawals, sellItems, withdrawItem } from './inventory.js';
+import { buyPrice, finishSkinWithdrawal, listOwned, listSkinWithdrawals, pollSkinWithdrawals, sellItems, withdrawItem } from './inventory.js';
 import { listUpgrades, recentWins, runUpgrade } from './upgrade.js';
 import {
   createCryptoDeposit, createStarsInvoice, demoTopup, finishWithdraw, handleCryptoWebhook, handlePreCheckout, handleStarsPaid,
@@ -176,13 +176,6 @@ r.get('/api/items', async (req, res, { url }) => {
   return { total: data.total, items: data.items.map((i) => ({ ...i, buyPrice: buyPrice(i.price, s) })) };
 });
 
-r.post('/api/market/buy', async (req) => {
-  const u = await requireUser(req);
-  await rateLimit(`buy:${u.id}`, 30, 60);
-  const { hashName, price } = await readJson(req);
-  return buyItem(u.id, str(hashName, 200), int(price));
-});
-
 r.get('/api/inventory', async (req) => listOwned((await requireUser(req)).id));
 
 r.post('/api/inventory/sell', async (req) => {
@@ -241,8 +234,8 @@ r.get('/api/cases/:slug', async (req, res, { params }) => {
 r.post('/api/cases/:slug/open', async (req, res, { params }) => {
   const u = await requireUser(req);
   await rateLimit(`case:${u.id}`, 60, 60);
-  const { count } = await readJson(req).catch(() => ({}));
-  return openCase(u.id, str(params.slug, 40), int(count) || 1);
+  const { count, price } = await readJson(req).catch(() => ({}));
+  return openCase(u.id, str(params.slug, 40), int(count) || 1, Number.isSafeInteger(price) ? price : null);
 });
 
 // ── Деньги ─────────────────────────────────────────────────

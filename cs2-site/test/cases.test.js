@@ -81,3 +81,35 @@ test('открытие 5 кейсов за раз: одна оплата, пят
   await assert.rejects(openCase(poor.id, c.slug, 3), /Недостаточно/);
   assert.equal((await balanceOf(poor.id)).balance, c.price * 2, 'при нехватке ничего не списано');
 });
+
+test('кейс CS2: шансы по редкости как в игре, цена = средний дроп ÷ 0,9, защита от смены цены', async () => {
+  const { CS_TIER_ODDS } = await import('../lib/cases.js');
+  const fs = await import('node:fs');
+  const def = JSON.parse(fs.readFileSync(new URL('../db/cs-cases.json', import.meta.url), 'utf8')).find((c) => c.slug === 'kilowatt');
+  const PRICE = { milspec: 1_000, restricted: 5_000, classified: 20_000, covert: 100_000, rare: 1_000_000 };
+  const db = await getDb();
+  const rows = [...def.skins.map((s) => [s.name, s.tier]), ...def.rare.slice(0, 5).map((n) => [n, 'rare'])];
+  for (const [name, tier] of rows) {
+    await db.query(
+      `insert into items (hash_name, name, rarity, image, price, quantity) values ($1, $2, $3, 'https://x/y.png', $4, 5) on conflict do nothing`,
+      [`${name} (Field-Tested)`, name, tier === 'rare' ? 'gold' : tier, PRICE[tier]],
+    );
+  }
+  resetCasesCache();
+  const c = (await listCases()).find((x) => x.slug === 'kilowatt');
+  assert.ok(c, 'кейс собрался');
+  assert.equal(c.kind, 'cs');
+  assert.ok(c.image);
+  const byPrice = (p) => c.items.filter((i) => i.price === p).reduce((a, i) => a + i.ppm, 0) / 1_000_000;
+  const norm = Object.values(CS_TIER_ODDS).reduce((a, b) => a + b, 0);
+  assert.ok(Math.abs(byPrice(PRICE.covert) - CS_TIER_ODDS.covert / norm) < 0.0002);
+  assert.ok(Math.abs(byPrice(PRICE.rare) - CS_TIER_ODDS.rare / norm) < 0.0002);
+  const ev = c.items.reduce((a, i) => a + (i.price * i.ppm) / 1_000_000, 0);
+  assert.ok(ev / c.price <= 0.9 && ev / c.price > 0.88, `EV/цена ${ev / c.price}`);
+  assert.equal(c.price % 100, 0, 'цена — целые LC');
+
+  const u = await makeUser(c.price * 2);
+  await assert.rejects(openCase(u.id, 'kilowatt', 1, c.price + 100), /Цена кейса обновилась/);
+  const r = await openCase(u.id, 'kilowatt', 1, c.price);
+  assert.equal(r.balance, c.price);
+});

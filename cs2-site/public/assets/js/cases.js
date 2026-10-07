@@ -21,7 +21,10 @@ function renderGrid() {
     grid.innerHTML = '<p class="muted">Кейсы скоро появятся — подтягиваем цены скинов.</p>';
     return;
   }
-  grid.innerHTML = state.cases.map(caseCard).join('');
+  const cs = state.cases.filter((c) => c.kind === 'cs');
+  const own = state.cases.filter((c) => c.kind !== 'cs');
+  const group = (title, list) => (list.length ? `<h2 class="h3 case-group">${title}</h2>${list.map(caseCard).join('')}` : '');
+  grid.innerHTML = group('Кейсы CS2', cs) + group('Кейсы LuxeDrop', own);
   paint(grid);
 }
 
@@ -144,13 +147,15 @@ async function open() {
   result.hidden = true;
   renderOpenButton();
   try {
-    const r = await withLoading(openBtn, () => api(`/api/cases/${encodeURIComponent(c.slug)}/open`, { method: 'POST', body: { count: state.count } }));
+    const r = await withLoading(openBtn, () => api(`/api/cases/${encodeURIComponent(c.slug)}/open`, { method: 'POST', body: { count: state.count, price: c.price } }));
     state.user.balance = r.balance;
     setBalance(r.balance);
     roulettes.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'center' });
     await spinAll(r.drops || [r]);
     showResult({ drops: r.drops || [r] });
   } catch (err) {
+    // Цена кейса CS2 обновилась вместе с ценами скинов — показываем новую, игрок жмёт ещё раз
+    if (err.status === 409 && err.data?.price) { c.price = err.data.price; }
     toastError(err);
   } finally {
     state.spinning = false;

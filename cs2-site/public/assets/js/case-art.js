@@ -34,6 +34,12 @@ export function paint(root = document) {
 }
 
 export const caseArt = (c, big = false) => {
+  // Настоящий кейс CS2 — его родная картинка из Steam
+  if (c.image) {
+    return `<div class="case-art case-art-real${big ? ' case-art-lg' : ''}" data-case-color="${esc(c.color)}">
+      <img src="${esc(sized(c.image))}" alt="" loading="lazy" decoding="async" width="256" height="192">
+    </div>`;
+  }
   const top = c.items[0];
   return `<div class="case-art${big ? ' case-art-lg' : ''}" data-case-color="${esc(c.color)}">
     ${top?.image ? `<img class="case-art-skin" src="${esc(sized(top.image))}" alt="" loading="lazy" decoding="async" width="256" height="192">` : ''}
@@ -41,10 +47,8 @@ export const caseArt = (c, big = false) => {
   </div>`;
 };
 
-
 export const caseCard = (c) => `
     <a class="case-card" href="/cases/?c=${esc(c.slug)}" data-case="${esc(c.slug)}" data-case-color="${esc(c.color)}">
-      ${c.fresh ? '<span class="case-new">Новый</span>' : ''}
       ${caseArt(c)}
       <span class="case-name">${esc(c.name)}</span>
       <span class="case-top">до ${lc(c.items[0].price)}</span>

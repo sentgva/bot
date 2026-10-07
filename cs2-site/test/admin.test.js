@@ -42,7 +42,8 @@ test('шанс апгрейда настраивается от 0 до 100%, к�
   const s = await getSettings();
   assert.equal(s.maxChance, 1);
   assert.equal(s.minChance, 0);
-  assert.ok((await updateSettings({ maxChance: 1.5 })).errors.maxChance, 'больше 100% нельзя');
+  assert.ok((await updateSettings({ maxChance: 1.5 })).errors.maxChance, "больше 100% нельзя");
+  assert.ok((await updateSettings({ maxChance: 0.05, houseEdge: 0.5 })).errors.houseEdge, "комиссия 50% — опечатка, не сохраняем");
 
   const u = await makeUser(0);
   await updateUser(u.id, { action: 'adjust', amount: 1_000_000, note: 'Бонус' });

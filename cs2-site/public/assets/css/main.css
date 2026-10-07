@@ -1059,3 +1059,9 @@ h3, .h3 { font-weight: 600; letter-spacing: -.01em; font-size: clamp(17px, 1.8vw
 .ref-stats .stat { padding: var(--s3); border-radius: var(--r-md); background: var(--surface-2); }
 .ref-stats .stat-value { font-family: var(--font-display); font-weight: 700; font-size: 20px; overflow-wrap: anywhere; }
 .ref-stats .stat-label { font-size: 12px; color: var(--muted); }
+
+/* Настоящие кейсы CS2 и заголовки групп */
+.case-group { grid-column: 1 / -1; margin-top: var(--s4); }
+.case-group:first-child { margin-top: 0; }
+.case-art-real img { width: 100%; height: auto; object-fit: contain; filter: drop-shadow(0 12px 18px rgba(0, 0, 0, .6)) drop-shadow(0 0 22px color-mix(in srgb, var(--case) 45%, transparent)); transition: transform 300ms var(--ease); }
+.case-card:hover .case-art-real img { transform: translateY(-4px) scale(1.03); }
