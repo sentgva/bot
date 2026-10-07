@@ -1,6 +1,6 @@
 // Апгрейдер: выбор ставки (скины + баланс), выбор цели, расчёт шанса, бросок с анимацией стрелки.
 import {
-  $, $$, api, dateTime, emptyState, esc, icon, loginUrl, pct, prefersReducedMotion, lc, session, setBalance,
+  $, $$, api, emptyState, esc, icon, loginUrl, pct, prefersReducedMotion, lc, session, setBalance,
   skeletonCards, skinCard, skinImage, toastError, withLoading,
 } from './core.js';
 
@@ -34,7 +34,6 @@ const el = {
   ringWin: $('[data-ring-win]'), pointer: $('[data-pointer]'), chance: $('[data-chance]'), multLabel: $('[data-mult]'),
   go: $('[data-go]'), goMini: $('[data-go-mini]'), chanceMini: $('[data-chance-mini]'), why: $('[data-why]'), result: $('[data-result]'),
   targets: $('[data-targets]'), more: $('[data-targets-more]'), q: $('#target-q'), multFilter: $('[data-mult-filter]'),
-  feed: $('[data-feed]'),
 };
 
 // ── Расчёт ─────────────────────────────────────────────────
@@ -330,24 +329,6 @@ function showResult(r) {
 el.go.addEventListener('click', go);
 el.goMini.addEventListener('click', go);
 
-// ── Лента ──────────────────────────────────────────────────
-
-async function loadFeed() {
-  try {
-    const list = await api('/api/upgrades/recent');
-    el.feed.innerHTML = list.length
-      ? list.map((w) => `
-        <div class="feed-item" data-rarity="${esc(w.item.rarity || '')}">
-          ${skinImage(w.item, '')}
-          <div class="grow"><p class="name">${esc(w.item.name)}</p><p class="tiny muted">шанс ${fmtChance(w.chance)} · ${dateTime(w.at)}</p></div>
-          <span class="num"><b>${lc(w.item.price)}</b></span>
-        </div>`).join('')
-      : '<p class="muted">Здесь появятся последние выигрыши. Стань первым!</p>';
-  } catch {
-    el.feed.innerHTML = '<p class="muted">Лента временно недоступна.</p>';
-  }
-}
-
 async function loadOwned() {
   if (!state.user) return;
   state.owned = await api('/api/inventory').catch(() => []);
@@ -368,4 +349,3 @@ await loadOwned();
 renderInput();
 render();
 loadTargets(true);
-loadFeed();
