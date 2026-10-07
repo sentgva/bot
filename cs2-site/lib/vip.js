@@ -17,8 +17,9 @@ export const TIERS = [
   { key: 'vip', name: 'VIP', xp: 500, deposit: 0.01, upgrade: 0.005, cashback: 0.005 },
   { key: 'gold', name: 'Gold', xp: 3_000, deposit: 0.02, upgrade: 0.01, cashback: 0.01 },
   { key: 'platinum', name: 'Platinum', xp: 15_000, deposit: 0.03, upgrade: 0.015, cashback: 0.015 },
-  { key: 'diamond', name: 'Diamond', xp: 60_000, deposit: 0.04, upgrade: 0.02, cashback: 0.02 },
-  { key: 'obsidian', name: 'Obsidian', xp: 200_000, deposit: 0.05, upgrade: 0.03, cashback: 0.03 },
+  { key: 'diamond', name: 'Diamond', xp: 60_000, deposit: 0.08, upgrade: 0.03, cashback: 0.05 },
+  // Верхние уровни — заметно щедрее. Предел: апгрейд × 0,95 × (1 + upgrade) и кейсы 90% + кэшбэк должны оставаться < 100%
+  { key: 'obsidian', name: 'Obsidian', xp: 200_000, deposit: 0.12, upgrade: 0.045, cashback: 0.07 },
 ];
 
 // Уровень по опыту (xp — в сотых долях очка)

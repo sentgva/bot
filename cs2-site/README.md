@@ -80,7 +80,7 @@
 cd cs2-site
 npm install
 npm run dev          # http://localhost:3000
-npm test             # 64 теста: экономика, честность, платежи, звёзды и LuxeCoin, вход через Telegram, API, каталог, лента
+npm test             # 65 тестов: экономика, честность, платежи, звёзды и LuxeCoin, вход через Telegram, API, каталог, лента
 ```
 
 Без `DATABASE_URL` используется встроенный Postgres (PGlite) в папке `.data/`. Ничего ставить не нужно.

@@ -38,3 +38,14 @@ test('уровни: опыт за кейсы растёт от цены, кэш�
   assert.equal(before.key, 'gold');
   assert.equal(after.key, 'obsidian');
 });
+
+test('уровни: даже на Obsidian сайт не уходит в минус (апгрейд и кейсы < 100% возврата)', async () => {
+  const { DEFAULTS } = await import('../lib/settings.js');
+  for (const t of TIERS) {
+    assert.ok((1 - DEFAULTS.houseEdge) * (1 + t.upgrade) < 1, `${t.name}: апгрейд`);
+    assert.ok((1 - DEFAULTS.caseEdge) + t.cashback < 1, `${t.name}: кейсы`);
+  }
+  const d = TIERS.find((t) => t.key === 'diamond');
+  const o = TIERS.find((t) => t.key === 'obsidian');
+  assert.ok(o.deposit > d.deposit && o.upgrade > d.upgrade && o.cashback > d.cashback);
+});
