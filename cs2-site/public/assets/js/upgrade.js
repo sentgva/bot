@@ -47,7 +47,7 @@ function calc() {
   const raw = (value / state.target.price) * (1 - state.cfg.houseEdge);
   if (value < state.cfg.minValue) return { value, chance: raw, ok: false, reason: `Минимальная ставка — ${lc(state.cfg.minValue)}` };
   if (raw > state.cfg.maxChance) return { value, chance: raw, ok: false, reason: `Шанс выше ${Math.round(state.cfg.maxChance * 100)}% — выбери цель дороже` };
-  if (raw < state.cfg.minChance || raw * 1_000_000 < 1) return { value, chance: raw, ok: false, reason: `Шанс меньше ${pct(Math.max(1, Math.round(state.cfg.minChance * 1_000_000)), 2)} — выбери цель дешевле или добавь ставку` };
+  if (raw < state.cfg.minChance || raw * 1_000_000 < 1) return { value, chance: raw, ok: false, reason: `Шанс меньше ${fmtChance(Math.max(1, Math.round(state.cfg.minChance * 1_000_000)))} — выбери цель дешевле или добавь ставку` };
   return { value, chance: raw, ok: true, reason: '' };
 }
 
@@ -63,11 +63,13 @@ function render() {
   el.ringWin.setAttribute('stroke-dasharray', `${(arc * C).toFixed(2)} ${C.toFixed(2)}`);
   el.ringWin.style.opacity = arc > 0 ? '1' : '0';
   $$('.tick', el.ticks).forEach((t, i) => t.classList.toggle('on', i < Math.round(arc * TICKS)));
-  const chanceText = pct(Math.floor(shown * 1e6));
+  const chanceText = fmtChance(Math.floor(shown * 1e6));
+  $('[data-switch-in]').textContent = lc(value);
+  $('[data-switch-target]').textContent = state.target ? lc(state.target.price) : 'не выбрана';
   el.chanceMini.textContent = chanceText;
   if (res && !state.spinning) {
     el.chance.textContent = res.won ? 'ПОБЕДА' : 'МИМО';
-    el.multLabel.textContent = `шанс был ${pct(res.chance)}`;
+    el.multLabel.textContent = `шанс был ${fmtChance(res.chance)}`;
     el.roll.textContent = `бросок ${res.roll.toLocaleString('ru-RU')}`;
   } else if (!state.spinning) {
     el.chance.textContent = chanceText;
@@ -79,6 +81,19 @@ function render() {
   el.goMini.disabled = !can;
   el.why.textContent = state.spinning ? '' : reason;
 }
+
+// Шанс: крупные — с одним знаком (47,5%), маленькие — точнее (0,0095%), чтобы не показывать «0,0%»
+function fmtChance(ppm) {
+  const digits = ppm >= 10_000 ? 1 : ppm >= 1_000 ? 2 : 4;
+  return `${(ppm / 10_000).toFixed(digits).replace(/\.?0+$/, '').replace('.', ',')}%`;
+}
+
+// На телефоне ставка и цель — вкладки под колесом
+function setPane(name) {
+  $('[data-upg]').dataset.activePane = name;
+  $$('[data-pane]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.pane === name)));
+}
+$$('[data-pane]').forEach((b) => b.addEventListener('click', () => setPane(b.dataset.pane)));
 
 // ── Ставка ─────────────────────────────────────────────────
 
@@ -153,7 +168,7 @@ async function loadTargets(reset = false) {
   const seq = ++loadSeq;
   if (reset) { state.offset = 0; state.targets = []; el.targets.innerHTML = skeletonCards(6); }
   const { min, max } = targetRange();
-  const p = new URLSearchParams({ q: state.q, sort: inputValue() ? 'price_asc' : 'popular', offset: String(state.offset), limit: String(PAGE) });
+  const p = new URLSearchParams({ q: state.q, sort: state.sortDesc ? 'price_desc' : inputValue() ? 'price_asc' : 'popular', offset: String(state.offset), limit: String(PAGE) });
   if (min) p.set('min', String(min));
   if (max) p.set('max', String(max));
   try {
@@ -190,6 +205,11 @@ el.more.querySelector('button').addEventListener('click', () => loadTargets(fals
 let qTimer;
 el.q.addEventListener('input', () => { clearTimeout(qTimer); qTimer = setTimeout(() => { state.q = el.q.value.trim(); loadTargets(true); }, 300); });
 
+$('[data-sort-desc]').addEventListener('click', (e) => {
+  state.sortDesc = !state.sortDesc;
+  e.currentTarget.setAttribute('aria-pressed', String(state.sortDesc));
+  loadTargets(true);
+});
 el.multFilter.addEventListener('click', (e) => {
   const chip = e.target.closest('[data-mult-value]');
   if (!chip) return;
@@ -289,7 +309,7 @@ function showResult(r) {
     : `<div class="row mt-3"><button class="btn btn-secondary btn-sm" type="button" data-again>Попробовать ещё</button></div>`;
   el.result.innerHTML = `
     ${verdict}
-    <p class="small muted mt-2">Бросок ${r.roll.toLocaleString('ru-RU')} из 1 000 000, нужно было меньше ${r.chance.toLocaleString('ru-RU')} (шанс ${pct(r.chance)}).</p>
+    <p class="small muted mt-2">Бросок ${r.roll.toLocaleString('ru-RU')} из 1 000 000, нужно было меньше ${r.chance.toLocaleString('ru-RU')} (шанс ${fmtChance(r.chance)}).</p>
     ${actions}`;
   el.result.querySelector('[data-again]')?.addEventListener('click', () => {
     el.result.innerHTML = '';
@@ -316,7 +336,7 @@ async function loadFeed() {
       ? list.map((w) => `
         <div class="feed-item" data-rarity="${esc(w.item.rarity || '')}">
           ${skinImage(w.item, '')}
-          <div class="grow"><p class="name">${esc(w.item.name)}</p><p class="tiny muted">${esc(w.user)} · шанс ${pct(w.chance)} · ${dateTime(w.at)}</p></div>
+          <div class="grow"><p class="name">${esc(w.item.name)}</p><p class="tiny muted">${esc(w.user)} · шанс ${fmtChance(w.chance)} · ${dateTime(w.at)}</p></div>
           <span class="num"><b>${lc(w.item.price)}</b></span>
         </div>`).join('')
       : '<p class="muted">Здесь появятся последние выигрыши. Стань первым!</p>';
@@ -343,7 +363,7 @@ if (s.config) {
   // Границы шанса из настроек админки
   const fmt = (x) => `${String(Math.round(x * 10000) / 100).replace('.', ',')}%`;
   $('[data-cfg-max]').textContent = fmt(state.cfg.maxChance);
-  $('[data-cfg-min]').textContent = fmt(state.cfg.minChance);
+  $('[data-cfg-min]').textContent = state.cfg.minChance > 0 ? fmt(state.cfg.minChance) : 'без ограничения';
 }
 await loadOwned();
 renderInput();

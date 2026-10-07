@@ -219,3 +219,12 @@ begin
     insert into meta (key, value) values ('migration_upgrade_odds_reset_1', 'true');
   end if;
 end $$;
+
+-- Разово: минимальный шанс апгрейда 0 — можно ставить на любой скин (например, 10 LC на скин за 100 000 LC)
+do $$
+begin
+  if not exists (select 1 from meta where key = 'migration_upgrade_min_chance_0') then
+    insert into settings (key, value) values ('minChance', '0') on conflict (key) do update set value = excluded.value;
+    insert into meta (key, value) values ('migration_upgrade_min_chance_0', 'true');
+  end if;
+end $$;

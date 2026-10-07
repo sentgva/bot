@@ -75,16 +75,21 @@
   <!-- /partial:header -->
 
   <main id="main">
-    <div class="container page-head">
+    <div class="container page-head upg-head">
       <p class="eyebrow"><svg class="icon icon-sm" aria-hidden="true"><use href="/assets/icons.svg#i-trending-up"/></svg>Апгрейдер</p>
       <h1 class="h2">Апгрейдер скинов CS2</h1>
       <p class="lead">Поставь скины или часть баланса, выбери скин дороже — чем ближе цена, тем выше шанс.</p>
     </div>
 
     <div class="container app-section">
-      <div class="upg">
+      <div class="upg" data-upg data-active-pane="in">
+        <!-- На телефоне: переключатель между ставкой и целью (на компьютере обе колонки видны сразу) -->
+        <div class="upg-switch" role="tablist" aria-label="Ставка или цель">
+          <button type="button" role="tab" aria-selected="true" data-pane="in"><span>Ставка</span><b data-switch-in>0 LC</b></button>
+          <button type="button" role="tab" aria-selected="false" data-pane="target"><span>Цель</span><b data-switch-target>не выбрана</b></button>
+        </div>
         <!-- Ставка -->
-        <section class="card upg-panel" aria-labelledby="in-title">
+        <section class="card upg-panel" aria-labelledby="in-title" data-pane-panel="in">
           <div class="panel-head">
             <h2 id="in-title">Твоя ставка</h2>
             <span class="badge badge-accent num" data-input-total>0 LC</span>
@@ -147,7 +152,7 @@
         </section>
 
         <!-- Цель -->
-        <section class="card upg-panel" aria-labelledby="target-title">
+        <section class="card upg-panel" aria-labelledby="target-title" data-pane-panel="target">
           <div class="panel-head">
             <h2 id="target-title">Что хочешь получить</h2>
           </div>
@@ -161,7 +166,9 @@
             <button type="button" class="chip" role="radio" aria-checked="false" data-mult-value="2">×2</button>
             <button type="button" class="chip" role="radio" aria-checked="false" data-mult-value="5">×5</button>
             <button type="button" class="chip" role="radio" aria-checked="false" data-mult-value="10">×10</button>
+            <button type="button" class="chip" role="radio" aria-checked="false" data-mult-value="100">×100</button>
           </div>
+          <button type="button" class="chip mb-4" aria-pressed="false" data-sort-desc>Сначала дорогие</button>
           <div class="upg-scroll" tabindex="-1">
             <div class="skin-grid" data-targets aria-label="Скины-цели"></div>
             <div class="load-more" data-targets-more hidden><button class="btn btn-secondary btn-sm" type="button">Показать ещё</button></div>

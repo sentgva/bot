@@ -53,3 +53,13 @@ test('шанс апгрейда настраивается от 0 до 100%, к�
   assert.equal(d.ledger[0].note, 'Бонус');
   await assert.rejects(userDetail(999_999), /не найден/);
 });
+
+test('апгрейд на любой скин: 10 LC на самый дорогой скин каталога — шанс крошечный, но бросок проходит', async () => {
+  const { runUpgrade } = await import('../lib/upgrade.js');
+  const db = await getDb();
+  const top = await db.one('select hash_name, price from items where quantity > 0 order by price desc limit 1');
+  const u = await makeUser(1_000);
+  const r = await runUpgrade(u.id, { balance: 1_000, target: top.hash_name });
+  assert.ok(r.chance >= 1 && r.chance < 1000, `шанс ${r.chance} ppm`);
+  assert.equal(r.balance, 0);
+});

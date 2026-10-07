@@ -1065,3 +1065,45 @@ h3, .h3 { font-weight: 600; letter-spacing: -.01em; font-size: clamp(17px, 1.8vw
 .case-group:first-child { margin-top: 0; }
 .case-art-real img { width: 100%; height: auto; object-fit: contain; filter: drop-shadow(0 12px 18px rgba(0, 0, 0, .6)) drop-shadow(0 0 22px color-mix(in srgb, var(--case) 45%, transparent)); transition: transform 300ms var(--ease); }
 .case-card:hover .case-art-real img { transform: translateY(-4px) scale(1.03); }
+
+/* ---------- Апгрейдер на телефоне: колесо сверху, ставка и цель — вкладками ---------- */
+.upg-switch { display: none; }
+@media (max-width: 767px) {
+  .upg-head { padding-block: var(--s4) var(--s2); }
+  .upg-head .lead, .upg-head .eyebrow { display: none; }
+  .upg { gap: var(--s3); }
+  .upg-switch {
+    order: -1; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 4px; border-radius: 14px;
+    position: sticky; top: calc(var(--header-h) + 6px); z-index: 6;
+    background: color-mix(in srgb, var(--surface) 92%, transparent); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    border: 1px solid var(--border);
+  }
+  .upg-center { order: -2; }
+  .upg-switch button {
+    display: grid; gap: 1px; padding: 8px 10px; border: 0; border-radius: 10px; background: transparent; color: var(--muted);
+    font: inherit; font-size: 12px; text-align: center; cursor: pointer;
+  }
+  .upg-switch button b { font-family: var(--font-display); font-size: 15px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .upg-switch button[aria-selected="true"] { background: var(--gold); color: var(--on-accent); }
+  .upg-switch button[aria-selected="true"] b { color: var(--on-accent); }
+  .upg[data-active-pane="in"] [data-pane-panel="target"], .upg[data-active-pane="target"] [data-pane-panel="in"] { display: none; }
+
+  .upg-panel { padding: var(--s3); }
+  .upg-center .upg-summary { display: none; }
+  .upg-center [data-go] { display: none; } /* кнопка — в нижней панели */
+  .upg-center .hint { margin-top: 0; }
+  .wheel { width: min(230px, 64vw); margin: 4px auto var(--s2); }
+  .wheel-chance { font-size: 30px; }
+  .wheel-label { font-size: 12px; margin-top: 4px; }
+
+  .upg .upg-scroll { max-height: 56vh; }
+  .upg .skin-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 8px; }
+  .upg .skin { padding: 6px 6px 8px; border-radius: 10px; }
+  .upg .skin .skin-img { margin-bottom: 4px; }
+  .upg .skin-name { font-size: 11px; line-height: 1.25; }
+  .upg .skin-meta { display: none; }
+  .upg .skin-price { font-size: 11.5px; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .upg .skin .check { width: 20px; height: 20px; top: 4px; right: 4px; }
+  .upg .mult-chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .upg .panel-head h2 { font-size: 17px; }
+}

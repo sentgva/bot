@@ -40,7 +40,7 @@ async function dropsAndBest() {
       [s.bestDropMaxPrice],
     );
     // Минимальная ставка, с которой этот скин можно выбить (шанс не меньше минимального)
-    best = top ? { type: 'top', item: publicItem(top), minStake: Math.ceil((top.price * s.minChance) / (1 - s.houseEdge)) } : null;
+    best = top ? { type: 'top', item: publicItem(top), minStake: Math.max(s.minUpgradeValue, Math.ceil((top.price * s.minChance) / (1 - s.houseEdge) / 100) * 100) } : null;
   }
   // Подборка меняется раз в сутки (порядок по md5 от имени и даты), чтобы лента не прыгала при каждом опросе
   const targets = drops.length >= FEED_SIZE ? [] : (await db.query(
