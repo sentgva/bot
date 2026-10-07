@@ -1038,5 +1038,582 @@
    "★ Sport Gloves | Omega",
    "★ Sport Gloves | Bronze Morph"
   ]
+ },
+ {
+  "slug": "riptide",
+  "name": "Operation Riptide",
+  "color": "#2ec4b6",
+  "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGJKz2lu_XsnXwtmkJjSU91dh8bj35VTqVBP4io_fr3sVtvD2O_Q9dqfEXTWSlepz4bA5THnikx915z6BytmuIHiXaAdyDpEhTflK7EdW-TaRMg",
+  "fresh": true,
+  "skins": [
+   {
+    "name": "AUG | Plague",
+    "tier": "milspec"
+   },
+   {
+    "name": "Dual Berettas | Tread",
+    "tier": "milspec"
+   },
+   {
+    "name": "G3SG1 | Keeping Tabs",
+    "tier": "milspec"
+   },
+   {
+    "name": "MP7 | Guerrilla",
+    "tier": "milspec"
+   },
+   {
+    "name": "PP-Bizon | Lumen",
+    "tier": "milspec"
+   },
+   {
+    "name": "USP-S | Black Lotus",
+    "tier": "milspec"
+   },
+   {
+    "name": "XM1014 | Watchdog",
+    "tier": "milspec"
+   },
+   {
+    "name": "MAG-7 | BI83 Spectrum",
+    "tier": "restricted"
+   },
+   {
+    "name": "FAMAS | ZX Spectron",
+    "tier": "restricted"
+   },
+   {
+    "name": "Five-SeveN | Boost Protocol",
+    "tier": "restricted"
+   },
+   {
+    "name": "MP9 | Mount Fuji",
+    "tier": "restricted"
+   },
+   {
+    "name": "M4A4 | Spider Lily",
+    "tier": "restricted"
+   },
+   {
+    "name": "MAC-10 | Toybox",
+    "tier": "classified"
+   },
+   {
+    "name": "Glock-18 | Snack Attack",
+    "tier": "classified"
+   },
+   {
+    "name": "SSG 08 | Turbo Peek",
+    "tier": "classified"
+   },
+   {
+    "name": "AK-47 | Leet Museo",
+    "tier": "covert"
+   },
+   {
+    "name": "Desert Eagle | Ocean Drive",
+    "tier": "covert"
+   }
+  ],
+  "rare": [
+   "★ Bowie Knife | Gamma Doppler",
+   "★ Bowie Knife | Lore",
+   "★ Bowie Knife | Autotronic",
+   "★ Bowie Knife | Black Laminate",
+   "★ Bowie Knife | Freehand",
+   "★ Bowie Knife | Bright Water",
+   "★ Butterfly Knife | Gamma Doppler",
+   "★ Butterfly Knife | Lore",
+   "★ Butterfly Knife | Autotronic",
+   "★ Butterfly Knife | Black Laminate",
+   "★ Butterfly Knife | Freehand",
+   "★ Butterfly Knife | Bright Water",
+   "★ Falchion Knife | Gamma Doppler",
+   "★ Falchion Knife | Lore",
+   "★ Falchion Knife | Autotronic",
+   "★ Falchion Knife | Black Laminate",
+   "★ Falchion Knife | Freehand",
+   "★ Falchion Knife | Bright Water",
+   "★ Huntsman Knife | Gamma Doppler",
+   "★ Huntsman Knife | Lore",
+   "★ Huntsman Knife | Autotronic",
+   "★ Huntsman Knife | Black Laminate",
+   "★ Huntsman Knife | Freehand",
+   "★ Huntsman Knife | Bright Water",
+   "★ Shadow Daggers | Gamma Doppler",
+   "★ Shadow Daggers | Lore",
+   "★ Shadow Daggers | Autotronic",
+   "★ Shadow Daggers | Black Laminate",
+   "★ Shadow Daggers | Freehand",
+   "★ Shadow Daggers | Bright Water"
+  ]
+ },
+ {
+  "slug": "brokenfang",
+  "name": "Operation Broken Fang",
+  "color": "#e0b33a",
+  "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGJKz2lu_XsnXwtmkJjSU91dh8bj35VTqVBP4io_fr3UVu6P-MPQ0dKbCVzLGx7wgtbM6S3jhw0V25m-EnNj7JS7GaQ4nD8QiRflK7EfH0YGFHg",
+  "fresh": true,
+  "skins": [
+   {
+    "name": "CZ75-Auto | Vendetta",
+    "tier": "milspec"
+   },
+   {
+    "name": "P90 | Cocoa Rampage",
+    "tier": "milspec"
+   },
+   {
+    "name": "G3SG1 | Digital Mesh",
+    "tier": "milspec"
+   },
+   {
+    "name": "Galil AR | Vandal",
+    "tier": "milspec"
+   },
+   {
+    "name": "P250 | Contaminant",
+    "tier": "milspec"
+   },
+   {
+    "name": "M249 | Deep Relief",
+    "tier": "milspec"
+   },
+   {
+    "name": "MP5-SD | Condition Zero",
+    "tier": "milspec"
+   },
+   {
+    "name": "AWP | Exoskeleton",
+    "tier": "restricted"
+   },
+   {
+    "name": "Dual Berettas | Dezastre",
+    "tier": "restricted"
+   },
+   {
+    "name": "Nova | Clear Polymer",
+    "tier": "restricted"
+   },
+   {
+    "name": "SSG 08 | Parallax",
+    "tier": "restricted"
+   },
+   {
+    "name": "UMP-45 | Gold Bismuth",
+    "tier": "restricted"
+   },
+   {
+    "name": "Five-SeveN | Fairy Tale",
+    "tier": "classified"
+   },
+   {
+    "name": "M4A4 | Cyber Security",
+    "tier": "classified"
+   },
+   {
+    "name": "USP-S | Monster Mashup",
+    "tier": "classified"
+   },
+   {
+    "name": "M4A1-S | Printstream",
+    "tier": "covert"
+   },
+   {
+    "name": "Glock-18 | Neo-Noir",
+    "tier": "covert"
+   }
+  ],
+  "rare": [
+   "★ Broken Fang Gloves | Yellow-banded",
+   "★ Broken Fang Gloves | Unhinged",
+   "★ Broken Fang Gloves | Needle Point",
+   "★ Broken Fang Gloves | Jade",
+   "★ Driver Gloves | Snow Leopard",
+   "★ Driver Gloves | Black Tie",
+   "★ Driver Gloves | Rezan the Red",
+   "★ Driver Gloves | Queen Jaguar",
+   "★ Hand Wraps | CAUTION!",
+   "★ Hand Wraps | Giraffe",
+   "★ Hand Wraps | Constrictor",
+   "★ Hand Wraps | Desert Shamagh",
+   "★ Moto Gloves | Blood Pressure",
+   "★ Moto Gloves | Smoke Out",
+   "★ Moto Gloves | Finish Line",
+   "★ Moto Gloves | 3rd Commando Company",
+   "★ Specialist Gloves | Field Agent",
+   "★ Specialist Gloves | Tiger Strike",
+   "★ Specialist Gloves | Lt. Commander",
+   "★ Specialist Gloves | Marble Fade",
+   "★ Sport Gloves | Slingshot",
+   "★ Sport Gloves | Scarlet Shamagh",
+   "★ Sport Gloves | Nocts",
+   "★ Sport Gloves | Big Game"
+  ]
+ },
+ {
+  "slug": "dangerzone",
+  "name": "Danger Zone",
+  "color": "#ff7a45",
+  "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGJKz2lu_XsnXwtmkJjSU91dh8bj35VTqVBP4io_fr3MVv_H4a6FucPPBWjDIkbdz4rg4Syyyxxsi5mzRntuvJCqVbwAgDZBwRPlK7EcZJ5GkQA",
+  "fresh": true,
+  "skins": [
+   {
+    "name": "MP9 | Modest Threat",
+    "tier": "milspec"
+   },
+   {
+    "name": "Glock-18 | Oxide Blaze",
+    "tier": "milspec"
+   },
+   {
+    "name": "Nova | Wood Fired",
+    "tier": "milspec"
+   },
+   {
+    "name": "M4A4 | Magnesium",
+    "tier": "milspec"
+   },
+   {
+    "name": "Sawed-Off | Black Sand",
+    "tier": "milspec"
+   },
+   {
+    "name": "SG 553 | Danger Close",
+    "tier": "milspec"
+   },
+   {
+    "name": "Tec-9 | Fubar",
+    "tier": "milspec"
+   },
+   {
+    "name": "G3SG1 | Scavenger",
+    "tier": "restricted"
+   },
+   {
+    "name": "Galil AR | Signal",
+    "tier": "restricted"
+   },
+   {
+    "name": "MAC-10 | Pipe Down",
+    "tier": "restricted"
+   },
+   {
+    "name": "P250 | Nevermore",
+    "tier": "restricted"
+   },
+   {
+    "name": "USP-S | Flashback",
+    "tier": "restricted"
+   },
+   {
+    "name": "UMP-45 | Momentum",
+    "tier": "classified"
+   },
+   {
+    "name": "Desert Eagle | Mecha Industries",
+    "tier": "classified"
+   },
+   {
+    "name": "MP5-SD | Phosphor",
+    "tier": "classified"
+   },
+   {
+    "name": "AK-47 | Asiimov",
+    "tier": "covert"
+   },
+   {
+    "name": "AWP | Neo-Noir",
+    "tier": "covert"
+   }
+  ],
+  "rare": [
+   "★ Navaja Knife",
+   "★ Navaja Knife | Fade",
+   "★ Navaja Knife | Crimson Web",
+   "★ Navaja Knife | Slaughter",
+   "★ Navaja Knife | Case Hardened",
+   "★ Navaja Knife | Urban Masked",
+   "★ Navaja Knife | Blue Steel",
+   "★ Navaja Knife | Night Stripe",
+   "★ Navaja Knife | Stained",
+   "★ Navaja Knife | Forest DDPAT",
+   "★ Navaja Knife | Boreal Forest",
+   "★ Navaja Knife | Scorched",
+   "★ Navaja Knife | Safari Mesh",
+   "★ Stiletto Knife",
+   "★ Stiletto Knife | Fade",
+   "★ Stiletto Knife | Crimson Web",
+   "★ Stiletto Knife | Slaughter",
+   "★ Stiletto Knife | Case Hardened",
+   "★ Stiletto Knife | Urban Masked",
+   "★ Stiletto Knife | Blue Steel",
+   "★ Stiletto Knife | Night Stripe",
+   "★ Stiletto Knife | Stained",
+   "★ Stiletto Knife | Forest DDPAT",
+   "★ Stiletto Knife | Boreal Forest",
+   "★ Stiletto Knife | Scorched",
+   "★ Stiletto Knife | Safari Mesh",
+   "★ Talon Knife",
+   "★ Talon Knife | Fade",
+   "★ Talon Knife | Crimson Web",
+   "★ Talon Knife | Slaughter",
+   "★ Talon Knife | Case Hardened",
+   "★ Talon Knife | Urban Masked",
+   "★ Talon Knife | Blue Steel",
+   "★ Talon Knife | Night Stripe",
+   "★ Talon Knife | Stained",
+   "★ Talon Knife | Forest DDPAT",
+   "★ Talon Knife | Boreal Forest",
+   "★ Talon Knife | Scorched",
+   "★ Talon Knife | Safari Mesh",
+   "★ Ursus Knife",
+   "★ Ursus Knife | Fade",
+   "★ Ursus Knife | Crimson Web",
+   "★ Ursus Knife | Slaughter",
+   "★ Ursus Knife | Case Hardened",
+   "★ Ursus Knife | Urban Masked",
+   "★ Ursus Knife | Blue Steel",
+   "★ Ursus Knife | Night Stripe",
+   "★ Ursus Knife | Stained",
+   "★ Ursus Knife | Forest DDPAT",
+   "★ Ursus Knife | Boreal Forest",
+   "★ Ursus Knife | Scorched",
+   "★ Ursus Knife | Safari Mesh"
+  ]
+ },
+ {
+  "slug": "horizon",
+  "name": "Horizon",
+  "color": "#7aa7ff",
+  "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGJKz2lu_XsnXwtmkJjSU91dh8bj35VTqVBP4io_fr3IV6vSrbfw8eaiWCjWVkewgseM9TXyxl0wi6mSHn9-tIHqUbg5yDpEmEPlK7EcXFmSLsw",
+  "fresh": true,
+  "skins": [
+   {
+    "name": "AUG | Amber Slipstream",
+    "tier": "milspec"
+   },
+   {
+    "name": "Dual Berettas | Shred",
+    "tier": "milspec"
+   },
+   {
+    "name": "Glock-18 | Warhawk",
+    "tier": "milspec"
+   },
+   {
+    "name": "MP9 | Capillary",
+    "tier": "milspec"
+   },
+   {
+    "name": "P90 | Traction",
+    "tier": "milspec"
+   },
+   {
+    "name": "R8 Revolver | Survivalist",
+    "tier": "milspec"
+   },
+   {
+    "name": "Tec-9 | Snek-9",
+    "tier": "milspec"
+   },
+   {
+    "name": "CZ75-Auto | Eco",
+    "tier": "restricted"
+   },
+   {
+    "name": "G3SG1 | High Seas",
+    "tier": "restricted"
+   },
+   {
+    "name": "Nova | Toy Soldier",
+    "tier": "restricted"
+   },
+   {
+    "name": "AWP | PAW",
+    "tier": "restricted"
+   },
+   {
+    "name": "MP7 | Powercore",
+    "tier": "restricted"
+   },
+   {
+    "name": "M4A1-S | Nightmare",
+    "tier": "classified"
+   },
+   {
+    "name": "Sawed-Off | Devourer",
+    "tier": "classified"
+   },
+   {
+    "name": "FAMAS | Eye of Athena",
+    "tier": "classified"
+   },
+   {
+    "name": "AK-47 | Neon Rider",
+    "tier": "covert"
+   },
+   {
+    "name": "Desert Eagle | Code Red",
+    "tier": "covert"
+   }
+  ],
+  "rare": [
+   "★ Navaja Knife",
+   "★ Navaja Knife | Fade",
+   "★ Navaja Knife | Crimson Web",
+   "★ Navaja Knife | Slaughter",
+   "★ Navaja Knife | Case Hardened",
+   "★ Navaja Knife | Urban Masked",
+   "★ Navaja Knife | Blue Steel",
+   "★ Navaja Knife | Night Stripe",
+   "★ Navaja Knife | Stained",
+   "★ Navaja Knife | Forest DDPAT",
+   "★ Navaja Knife | Boreal Forest",
+   "★ Navaja Knife | Scorched",
+   "★ Navaja Knife | Safari Mesh",
+   "★ Stiletto Knife",
+   "★ Stiletto Knife | Fade",
+   "★ Stiletto Knife | Crimson Web",
+   "★ Stiletto Knife | Slaughter",
+   "★ Stiletto Knife | Case Hardened",
+   "★ Stiletto Knife | Urban Masked",
+   "★ Stiletto Knife | Blue Steel",
+   "★ Stiletto Knife | Night Stripe",
+   "★ Stiletto Knife | Stained",
+   "★ Stiletto Knife | Forest DDPAT",
+   "★ Stiletto Knife | Boreal Forest",
+   "★ Stiletto Knife | Scorched",
+   "★ Stiletto Knife | Safari Mesh",
+   "★ Talon Knife",
+   "★ Talon Knife | Fade",
+   "★ Talon Knife | Crimson Web",
+   "★ Talon Knife | Slaughter",
+   "★ Talon Knife | Case Hardened",
+   "★ Talon Knife | Urban Masked",
+   "★ Talon Knife | Blue Steel",
+   "★ Talon Knife | Night Stripe",
+   "★ Talon Knife | Stained",
+   "★ Talon Knife | Forest DDPAT",
+   "★ Talon Knife | Boreal Forest",
+   "★ Talon Knife | Scorched",
+   "★ Talon Knife | Safari Mesh",
+   "★ Ursus Knife",
+   "★ Ursus Knife | Fade",
+   "★ Ursus Knife | Crimson Web",
+   "★ Ursus Knife | Slaughter",
+   "★ Ursus Knife | Case Hardened",
+   "★ Ursus Knife | Urban Masked",
+   "★ Ursus Knife | Blue Steel",
+   "★ Ursus Knife | Night Stripe",
+   "★ Ursus Knife | Stained",
+   "★ Ursus Knife | Forest DDPAT",
+   "★ Ursus Knife | Boreal Forest",
+   "★ Ursus Knife | Scorched",
+   "★ Ursus Knife | Safari Mesh"
+  ]
+ },
+ {
+  "slug": "glove",
+  "name": "Glove",
+  "color": "#c9a227",
+  "image": "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGJKz2lu_XsnXwtmkJjSU91dh8bj35VTqVBP4io_frHcVuPaoafU1JqiVWWSVkux15OQ8Giiylk0k5mvTnIqpd3PCaQIhWMYkE_lK7EcNeCKW-w",
+  "fresh": true,
+  "skins": [
+   {
+    "name": "CZ75-Auto | Polymer",
+    "tier": "milspec"
+   },
+   {
+    "name": "Glock-18 | Ironwork",
+    "tier": "milspec"
+   },
+   {
+    "name": "MP7 | Cirrus",
+    "tier": "milspec"
+   },
+   {
+    "name": "Galil AR | Black Sand",
+    "tier": "milspec"
+   },
+   {
+    "name": "MP9 | Sand Scale",
+    "tier": "milspec"
+   },
+   {
+    "name": "MAG-7 | Sonar",
+    "tier": "milspec"
+   },
+   {
+    "name": "P2000 | Turf",
+    "tier": "milspec"
+   },
+   {
+    "name": "Dual Berettas | Royal Consorts",
+    "tier": "restricted"
+   },
+   {
+    "name": "G3SG1 | Stinger",
+    "tier": "restricted"
+   },
+   {
+    "name": "M4A1-S | Flashback",
+    "tier": "restricted"
+   },
+   {
+    "name": "Nova | Gila",
+    "tier": "restricted"
+   },
+   {
+    "name": "USP-S | Cyrex",
+    "tier": "restricted"
+   },
+   {
+    "name": "FAMAS | Mecha Industries",
+    "tier": "classified"
+   },
+   {
+    "name": "P90 | Shallow Grave",
+    "tier": "classified"
+   },
+   {
+    "name": "Sawed-Off | Wasteland Princess",
+    "tier": "classified"
+   },
+   {
+    "name": "SSG 08 | Dragonfire",
+    "tier": "covert"
+   },
+   {
+    "name": "M4A4 | Buzz Kill",
+    "tier": "covert"
+   }
+  ],
+  "rare": [
+   "★ Bloodhound Gloves | Snakebite",
+   "★ Bloodhound Gloves | Bronzed",
+   "★ Bloodhound Gloves | Charred",
+   "★ Bloodhound Gloves | Guerrilla",
+   "★ Driver Gloves | Crimson Weave",
+   "★ Driver Gloves | Convoy",
+   "★ Driver Gloves | Lunar Weave",
+   "★ Driver Gloves | Diamondback",
+   "★ Hand Wraps | Slaughter",
+   "★ Hand Wraps | Badlands",
+   "★ Hand Wraps | Spruce DDPAT",
+   "★ Hand Wraps | Leather",
+   "★ Moto Gloves | Cool Mint",
+   "★ Moto Gloves | Boom!",
+   "★ Moto Gloves | Spearmint",
+   "★ Moto Gloves | Eclipse",
+   "★ Specialist Gloves | Crimson Kimono",
+   "★ Specialist Gloves | Emerald Web",
+   "★ Specialist Gloves | Forest DDPAT",
+   "★ Specialist Gloves | Foundation",
+   "★ Sport Gloves | Superconductor",
+   "★ Sport Gloves | Hedge Maze",
+   "★ Sport Gloves | Arid",
+   "★ Sport Gloves | Pandora's Box"
+  ]
  }
 ]

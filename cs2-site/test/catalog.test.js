@@ -51,3 +51,30 @@ test('разбор названия', () => {
   assert.deepEqual(splitHashName('AWP | Asiimov (Battle-Scarred)'), { name: 'AWP | Asiimov', wear: 'Battle-Scarred' });
   assert.deepEqual(splitHashName('★ Karambit'), { name: '★ Karambit', wear: null });
 });
+
+test('наклейки: в каталоге с редкостью по цвету, цена и без лотов, выбросы без лотов — нет', async () => {
+  const skinport = [
+    ...SKINPORT,
+    { market_hash_name: 'Sticker | Vitality (Holo) | Austin 2025', suggested_price: 80.79, min_price: null, quantity: 0 },
+    { market_hash_name: 'Sticker | Vitality | Austin 2025', suggested_price: 3.5, min_price: 3, quantity: 12 },
+    { market_hash_name: 'Sticker | Fake (Gold) | Austin 2025', suggested_price: 900_000, min_price: null, quantity: 0 },
+  ];
+  const stickers = [
+    { market_hash_name: 'Sticker | Vitality (Holo) | Austin 2025', rarity: { color: '#d32ce6' }, image: 'https://img/s1.png' },
+    { market_hash_name: 'Sticker | Vitality | Austin 2025', rarity: { color: '#4b69ff' }, image: 'https://img/s2.png' },
+    { market_hash_name: 'Sticker | Fake (Gold) | Austin 2025', rarity: { color: '#eb4b4b' }, image: 'https://img/s3.png' },
+  ];
+  const fetchImpl = async (url) => new Response(JSON.stringify(
+    String(url).includes('skinport') ? skinport : String(url).includes('stickers') ? stickers : META,
+  ));
+  await syncCatalog({ fetchImpl, forceMeta: true });
+  const db = await getDb();
+  const holo = await db.one(`select * from items where hash_name = 'Sticker | Vitality (Holo) | Austin 2025'`);
+  assert.equal(holo.weapon, 'Sticker');
+  assert.equal(holo.rarity, 'classified');
+  assert.equal(holo.price, 8000);
+  assert.ok(holo.quantity > 0);
+  assert.equal((await db.one(`select price from items where hash_name = 'Sticker | Vitality | Austin 2025'`)).price, 300, 'дешёвые наклейки — от 1 LC');
+  assert.equal(await db.one(`select 1 from items where hash_name like 'Sticker | Fake%'`), null);
+  assert.equal(await db.one(`select 1 from items where hash_name = 'Sticker | Something'`), null, 'без метаданных — нет');
+});

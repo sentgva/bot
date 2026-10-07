@@ -23,6 +23,7 @@ const PISTOLS = ['Glock-18', 'USP-S', 'P2000', 'P250', 'Five-SeveN', 'Tec-9', 'C
 const SMGS = ['MP9', 'MAC-10', 'UMP-45', 'P90', 'MP7', 'PP-Bizon', 'MP5-SD'];
 const RIFLES = ['AK-47', 'M4A4', 'M4A1-S'];
 const SNIPERS = ['AWP', 'SSG 08', 'SCAR-20', 'G3SG1'];
+const GLOVES = ['Sport Gloves', 'Driver Gloves', 'Specialist Gloves', 'Moto Gloves', 'Hand Wraps', 'Hydra Gloves', 'Bloodhound Gloves', 'Broken Fang Gloves'];
 
 // where — SQL-условие по таблице items (только константы из кода, без ввода игрока); min/max — цена в LC
 export const CASES = [
@@ -45,6 +46,33 @@ export const CASES = [
     slug: 'luxe', name: 'Люкс', price: 9990, color: '#f5d76e',
     groups: [{ where: "rarity = 'gold'", min: 10000, max: 150000, n: 8 }, { where: "rarity in ('covert', 'gold')", min: 500, max: 8000, n: 8 }],
   },
+  // Новинки (fresh — плашка «Новый» на карточке)
+  { slug: 'budget', name: 'Бюджетный', price: 9, color: '#9aa7b8', fresh: true, groups: [{ where: "rarity <> 'gold'", min: 5, max: 120, n: 14 }] },
+  { slug: 'deagle', name: 'Дигл', price: 99, color: '#d9a441', fresh: true, groups: [{ where: 'weapon = any($weapons)', weapons: ['Desert Eagle'], min: 7, max: 20000, n: 14 }] },
+  { slug: 'awp', name: 'AWP Only', price: 199, color: '#4fc3a1', fresh: true, groups: [{ where: 'weapon = any($weapons)', weapons: ['AWP'], min: 10, max: 60000, n: 14 }] },
+  {
+    slug: 'gloves', name: 'Перчатки', price: 1990, color: '#b07cff', fresh: true,
+    groups: [{ where: 'weapon = any($weapons)', weapons: GLOVES, min: 2000, max: 60000, n: 10 }, { where: "rarity in ('covert', 'classified')", min: 100, max: 1500, n: 6 }],
+  },
+  {
+    slug: 'karambit', name: 'Карамбит', price: 4990, color: '#ff4d6d', fresh: true,
+    groups: [{ where: 'weapon = any($weapons)', weapons: ['Karambit'], min: 30000, max: 170000, n: 6 }, { where: "rarity in ('covert', 'classified')", min: 150, max: 3000, n: 10 }],
+  },
+];
+
+// Кейсы-наклейки: наклейки одного мейджора (все варианты — бумажные, глиттер, голо, фольга, золото) с картинкой капсулы.
+// Цены наклеек на Skinport неполные, поэтому шансы — как у кейсов LuxeDrop (подбор под цену), а не по редкости капсулы.
+const STEAM_IMG = 'https://community.akamai.steamstatic.com/economy/image/';
+const stickerCase = (slug, name, price, color, image, min, max) => ({
+  slug, name, price, color, image: STEAM_IMG + image, kind: 'sticker', fresh: true,
+  groups: [{ where: 'hash_name like $like', like: `Sticker | % | ${name}`, sticker: true, min, max, n: 16 }],
+});
+export const STICKER_CASES = [
+  stickerCase('stk-austin', 'Austin 2025', 49, '#f2a541', 'i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGJG5zlm-UfvRzd6yenqC9gQlptK76UvmVRjOjYLp_ile_c2-aadmH_GGHTXAk7tJvORuSie3hlN1sDjSz4r8c3mXZlAkWZEmQbNesRG6lN3uZriw4w2Pi44QmX2tiytA8G81tB5pi67Y', 2, 2500),
+  stickerCase('stk-budapest', 'Budapest 2025', 39, '#5ad1e6', 'i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGJG5zlm-UfvRzd6yenmC4QQlptK76UvmVRjOjYLp_ile_c2-aadmH_KGCjXAk7tJvORuSie3hlMj5GWGyNn_cimfbgMhW8d3Q-cOtRnpxIHlZu3htlGMi9hMz3333CMb8G81tC_mVj8j', 1, 4000),
+  stickerCase('stk-copenhagen', 'Copenhagen 2024', 99, '#e5484d', 'i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGJKz2lu_XsnXwtmkJjSU91dh8bjn_lDkShjjoYbh_ilk7OKmOvQ_dM-fC2CVz-pl_rZvTXDqzRxw523Rm4mocy6QOgUmDcR4Q-8Mu0O5wNPkNuLnsleL3tlbjXKpQyK7hjg', 2, 3500),
+  stickerCase('stk-shanghai', 'Shanghai 2024', 149, '#f0c419', 'i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGJG5zlm-UfvRzd6yemif5AQlptO76UvmVRjOjYLp_ile_c2-aadmH-ObDzXAk7pJvORuSie3hlN0sD_SzIysdC6Ra1N1CZUhELUP5hjrxtWzM-7ltVCN2Y8RyCX62itK8G81tJokOYd2', 4, 3500),
+  stickerCase('stk-cologne', 'Cologne 2026', 79, '#8e7cff', 'i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGJG5zlm-UfvRzd6yeniY6Vly-oKmuguxDh7-kpnn8ycJv6D4V6d_JfSaGnTekboi4OM7TSziwEUm5GnTmd2oIC2UOg9yApp5RrYI4RHplofmYrjk5xue1dzxs7YNoQ', 1, 10000),
 ];
 // Настоящие кейсы CS2 (db/cs-cases.json, собирается scripts/build-cs-cases.js): родные названия, картинки и состав.
 // Шансы — как в игре, по редкости; скины внутри редкости равновероятны. Цена кейса = средний дроп ÷ (1 − caseEdge),
@@ -53,7 +81,7 @@ export const CS_TIER_ODDS = { milspec: 0.7992, restricted: 0.1598, classified: 0
 const WEARS = ['Field-Tested', 'Minimal Wear', 'Factory New', 'Well-Worn', 'Battle-Scarred'];
 const CS_CASES = JSON.parse(fs.readFileSync(new URL('../db/cs-cases.json', import.meta.url), 'utf8')).map((c) => ({ ...c, kind: 'cs' }));
 
-const ALL = [...CS_CASES, ...CASES];
+const ALL = [...CS_CASES, ...STICKER_CASES, ...CASES];
 const BY_SLUG = new Map(ALL.map((c) => [c.slug, c]));
 
 // Скин кейса → конкретный предмет каталога: предпочитаем «После полевых», потом другие износы; ванильные ножи — без износа
@@ -86,18 +114,21 @@ async function buildCsCase(q, def, edge) {
   const ev = items.reduce((a, it) => a + (it.row.price * it.ppm) / ROLL_MAX, 0);
   const price = Math.max(LC, Math.ceil(ev / (1 - edge) / LC) * LC);
   items.sort((a, b) => b.row.price - a.row.price);
-  return { slug: def.slug, name: def.name, price, color: def.color, image: def.image, kind: 'cs', items };
+  return { slug: def.slug, name: def.name, price, color: def.color, image: def.image, kind: 'cs', fresh: def.fresh, items };
 }
 
 const buildAny = (q, def, edge) => (def.kind === 'cs' ? buildCsCase(q, def, edge) : buildCase(q, def, edge));
 
 // Скины группы: n штук равномерно по цене (самый дешёвый и самый дорогой — всегда)
 async function groupItems(q, g) {
-  const where = g.where.replace('$weapons', '$3');
   const params = [g.min * LC, g.max * LC];
-  if (g.weapons) params.push(g.weapons);
+  let where = g.where;
+  if (g.weapons) { params.push(g.weapons); where = where.replace('$weapons', `$${params.length}`); }
+  if (g.like) { params.push(g.like); where = where.replace('$like', `$${params.length}`); }
+  // Наклейки попадают только в кейсы-наклейки
+  const sticker = g.sticker ? "weapon = 'Sticker'" : "weapon is distinct from 'Sticker'";
   const rows = await q.query(
-    `select * from items where quantity > 0 and image is not null and price between $1 and $2 and (${where})
+    `select * from items where quantity > 0 and image is not null and price between $1 and $2 and ${sticker} and (${where})
      order by price asc, hash_name asc`,
     params,
   );
@@ -144,11 +175,11 @@ async function buildCase(q, def, edge) {
   const ppm = solveOdds(rows.map((r) => r.price), price * (1 - edge));
   if (!ppm) return null;
   const items = rows.map((r, i) => ({ row: r, ppm: ppm[i] })).sort((a, b) => b.row.price - a.row.price);
-  return { slug: def.slug, name: def.name, price, color: def.color, items };
+  return { slug: def.slug, name: def.name, price, color: def.color, image: def.image, kind: def.kind, fresh: def.fresh, items };
 }
 
 const pub = (c) => ({
-  slug: c.slug, name: c.name, price: c.price, color: c.color, image: c.image || null, kind: c.kind || 'luxe',
+  slug: c.slug, name: c.name, price: c.price, color: c.color, image: c.image || null, kind: c.kind || 'luxe', fresh: Boolean(c.fresh),
   items: c.items.map(({ row, ppm }) => ({ ...publicItem(row), ppm })),
 });
 

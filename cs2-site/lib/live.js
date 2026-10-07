@@ -36,7 +36,7 @@ async function dropsAndBest() {
   } else {
     // Самый дорогой скин не дороже порога; ножи и перчатки — в приоритете, они эффектнее
     const top = await db.one(
-      `select * from items where quantity > 0 and price <= $1 order by (rarity = 'gold') desc, price desc limit 1`,
+      `select * from items where quantity > 0 and price <= $1 and weapon is distinct from 'Sticker' order by (rarity = 'gold') desc, price desc limit 1`,
       [s.bestDropMaxPrice],
     );
     // Минимальная ставка, с которой этот скин можно выбить (шанс не меньше минимального)
@@ -45,7 +45,7 @@ async function dropsAndBest() {
   // Подборка меняется раз в сутки (порядок по md5 от имени и даты), чтобы лента не прыгала при каждом опросе
   const targets = drops.length >= FEED_SIZE ? [] : (await db.query(
     `select * from items where quantity > 0 and image is not null and price between 30000 and $1
-       and rarity in ('gold', 'covert', 'classified')
+       and rarity in ('gold', 'covert', 'classified') and weapon is distinct from 'Sticker'
      order by md5(hash_name || current_date::text) limit $2`,
     [s.bestDropMaxPrice, FEED_SIZE - drops.length],
   )).map(publicItem);

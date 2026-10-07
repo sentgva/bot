@@ -3,7 +3,7 @@
 import fs from 'node:fs';
 
 const API_URL = 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/api/en/crates.json';
-// slug, название кейса в API, цвет подсветки на сайте
+// slug, название кейса в API, цвет подсветки на сайте, новинка на сайте (плашка «Новый»)
 const PICK = [
   ['fever', 'Fever Case', '#ff6b3d'],
   ['gallery', 'Gallery Case', '#f4c430'],
@@ -15,15 +15,20 @@ const PICK = [
   ['fracture', 'Fracture Case', '#ff9f43'],
   ['prisma2', 'Prisma 2 Case', '#ff5fd2'],
   ['clutch', 'Clutch Case', '#5b8cff'],
+  ['riptide', 'Operation Riptide Case', '#2ec4b6', true],
+  ['brokenfang', 'Operation Broken Fang Case', '#e0b33a', true],
+  ['dangerzone', 'Danger Zone Case', '#ff7a45', true],
+  ['horizon', 'Horizon Case', '#7aa7ff', true],
+  ['glove', 'Glove Case', '#c9a227', true],
 ];
 const TIER = { rarity_rare_weapon: 'milspec', rarity_mythical_weapon: 'restricted', rarity_legendary_weapon: 'classified', rarity_ancient_weapon: 'covert' };
 
 const list = await (await fetch(API_URL, { signal: AbortSignal.timeout(60000) })).json();
-const out = PICK.map(([slug, apiName, color]) => {
+const out = PICK.map(([slug, apiName, color, fresh]) => {
   const c = list.find((x) => x.name === apiName);
   if (!c) throw new Error(`Нет кейса ${apiName}`);
   return {
-    slug, name: apiName.replace(/ Case$/, ''), color, image: c.image,
+    slug, name: apiName.replace(/ Case$/, ''), color, image: c.image, ...(fresh ? { fresh: true } : {}),
     skins: c.contains.map((s) => ({ name: s.name, tier: TIER[s.rarity?.id] })).filter((s) => s.tier),
     rare: [...new Set((c.contains_rare || []).map((s) => s.name))],
   };

@@ -21,10 +21,12 @@ function renderGrid() {
     grid.innerHTML = '<p class="muted">Кейсы скоро появятся — подтягиваем цены скинов.</p>';
     return;
   }
-  const cs = state.cases.filter((c) => c.kind === 'cs');
-  const own = state.cases.filter((c) => c.kind !== 'cs');
+  // Новинки — первыми в своей группе
+  const of = (test) => state.cases.filter(test).sort((a, b) => Number(b.fresh) - Number(a.fresh));
   const group = (title, list) => (list.length ? `<h2 class="h3 case-group">${title}</h2>${list.map(caseCard).join('')}` : '');
-  grid.innerHTML = group('Кейсы CS2', cs) + group('Кейсы LuxeDrop', own);
+  grid.innerHTML = group('Кейсы CS2', of((c) => c.kind === 'cs'))
+    + group('Кейсы-наклейки', of((c) => c.kind === 'sticker'))
+    + group('Кейсы LuxeDrop', of((c) => c.kind !== 'cs' && c.kind !== 'sticker'));
   paint(grid);
 }
 
@@ -41,7 +43,7 @@ function showCase(slug, push = false) {
   view.hidden = false;
   $('[data-case-art]').outerHTML = caseArt(c, true).replace('class="case-art', 'data-case-art class="case-art');
   $('[data-case-name]').textContent = `Кейс «${c.name}»`;
-  $('[data-case-sub]').textContent = `${c.items.length} скинов · самый дорогой — ${c.items[0].name} за ${lc(c.items[0].price)}`;
+  $('[data-case-sub]').textContent = `${c.items.length} ${c.kind === 'sticker' ? 'наклеек' : 'скинов'} · самый дорогой — ${c.items[0].name} за ${lc(c.items[0].price)}`;
   $('[data-case-items]').innerHTML = c.items.map((i) => skinCard(i, { tag: pct(i.ppm, i.ppm < 1000 ? 3 : 2) })).join('');
   roulettes.hidden = true;
   result.hidden = true;

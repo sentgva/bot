@@ -102,7 +102,7 @@ export function welcomeCaption(firstName, bonusLc = 1000) {
     `Привет, ${escHtml(firstName || 'игрок')}! 👋 Это <b>LuxeDrop</b> — кейсы и апгрейд скинов CS2 прямо в Telegram.`,
     '',
     bonusLc > 0 ? `🎁 <b>${bonusLc.toLocaleString('ru-RU')} LC</b> на баланс при первом входе` : null,
-    '📦 20 кейсов: настоящие кейсы CS2 и наши',
+    '📦 35 кейсов: настоящие кейсы CS2, наклейки и наши',
     '🎯 Апгрейд на любой скин — шанс до 80%',
     '',
     'Жми кнопку ниже и открывай первый кейс 👇',

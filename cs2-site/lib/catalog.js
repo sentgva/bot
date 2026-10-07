@@ -14,8 +14,14 @@ import { floorLc } from './lc.js';
 
 const SKINPORT_URL = 'https://api.skinport.com/v1/items';
 const META_URL = 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/api/en/skins_not_grouped.json';
+const STICKERS_URL = 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/api/en/stickers.json';
 const MIN_PRICE = 500; // скины дешевле 5 ₽ не показываем
 const MIN_LISTINGS = 2; // минимум лотов на Skinport, чтобы цене можно было верить
+// Наклейки на Skinport продаются редко: берём рекомендованную цену и без лотов, но без явных выбросов
+const STICKER_MIN_PRICE = 100;
+const STICKER_MAX_UNLISTED = 5_000_000;
+const META_VERSION = 2; // 2 — с наклейками
+export const isSticker = (hashName) => hashName.startsWith('Sticker | ');
 
 const WEARS = ['Factory New', 'Minimal Wear', 'Field-Tested', 'Well-Worn', 'Battle-Scarred'];
 const WEAR_RE = new RegExp(` \\((${WEARS.join('|')})\\)$`);
@@ -47,19 +53,28 @@ export async function fetchSkinportPrices(fetchImpl = fetch) {
   for (const it of list) {
     // Только скины, которые реально продаются (есть лоты), иначе «рекомендованная» цена бывает фантастической.
     // Берём меньшую из рекомендованной и минимальной цены лота — так цена ближе к реальной сделке.
-    if (!it.market_hash_name || (it.quantity || 0) < MIN_LISTINGS) continue;
-    const candidates = [it.suggested_price, it.min_price].filter((p) => Number.isFinite(p) && p > 0);
+    if (!it.market_hash_name) continue;
+    const listed = (it.quantity || 0) >= MIN_LISTINGS;
+    const sticker = isSticker(it.market_hash_name);
+    if (!listed && !sticker) continue;
+    const candidates = (listed ? [it.suggested_price, it.min_price] : [it.suggested_price]).filter((p) => Number.isFinite(p) && p > 0);
     if (!candidates.length) continue;
     const price = toKop(Math.min(...candidates));
-    if (price >= MIN_PRICE) map.set(it.market_hash_name, { price, quantity: it.quantity });
+    if (price < (sticker ? STICKER_MIN_PRICE : MIN_PRICE) || (!listed && price > STICKER_MAX_UNLISTED)) continue;
+    // quantity > 0 — предмет есть в каталоге; у наклеек без лотов ставим 1
+    map.set(it.market_hash_name, { price, quantity: Math.max(1, it.quantity || 0) });
   }
   return map;
 }
 
-export async function fetchMetadata(fetchImpl = fetch) {
-  const res = await fetchImpl(META_URL, { signal: AbortSignal.timeout(25000) });
+async function fetchJson(url, fetchImpl) {
+  const res = await fetchImpl(url, { signal: AbortSignal.timeout(25000) });
   if (!res.ok) throw new Error(`CSGO-API ответил ${res.status}`);
-  const list = await res.json();
+  return res.json();
+}
+
+export async function fetchMetadata(fetchImpl = fetch) {
+  const [list, stickers] = await Promise.all([fetchJson(META_URL, fetchImpl), fetchJson(STICKERS_URL, fetchImpl).catch(() => [])]);
   const map = new Map();
   for (const s of list) {
     const hashName = s.market_hash_name || s.name;
@@ -72,6 +87,13 @@ export async function fetchMetadata(fetchImpl = fetch) {
       image: s.image || null,
       stattrak: Boolean(s.stattrak) || hashName.includes('StatTrak™'),
     });
+  }
+  // Наклейки: редкость по цвету (High Grade → синий, Remarkable → фиолетовый, Exotic → розовый, Extraordinary → красный)
+  for (const s of Array.isArray(stickers) ? stickers : []) {
+    const hashName = s.market_hash_name;
+    if (!hashName || !isSticker(hashName)) continue;
+    const color = String(s.rarity?.color || '').toLowerCase();
+    map.set(hashName, { weapon: 'Sticker', rarity: RARITY_BY_COLOR[color] || null, rarityColor: color || null, image: s.image || null, stattrak: false });
   }
   return map;
 }
@@ -107,7 +129,9 @@ export async function syncCatalog({ fetchImpl = fetch, forceMeta = false } = {})
   const startedAt = new Date();
   const prices = await fetchSkinportPrices(fetchImpl);
   const metaAt = await getMeta(db, 'catalog_meta_at');
-  const needMeta = forceMeta || !metaAt || Date.now() - metaAt > 24 * 3600_000;
+  // Версия метаданных: поменяли состав (например, добавили наклейки) — обновляем сразу, не дожидаясь суток
+  const metaV = await getMeta(db, 'catalog_meta_v');
+  const needMeta = forceMeta || !metaAt || metaV !== META_VERSION || Date.now() - metaAt > 24 * 3600_000;
   let rows;
   if (needMeta) {
     const meta = await fetchMetadata(fetchImpl);
@@ -119,6 +143,7 @@ export async function syncCatalog({ fetchImpl = fetch, forceMeta = false } = {})
     }
     await upsertItems(db, rows);
     await setMeta(db, 'catalog_meta_at', Date.now());
+    await setMeta(db, 'catalog_meta_v', META_VERSION);
   } else {
     // Только цены для уже известных скинов
     const known = await db.query('select hash_name, name, weapon, wear, rarity, rarity_color as "rarityColor", image, stattrak from items');

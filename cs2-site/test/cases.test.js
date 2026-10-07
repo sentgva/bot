@@ -150,3 +150,26 @@ test('лента: любой дроп из кейса (даже дешевле �
   assert.equal(d.caseSlug, c.slug);
   assert.equal(d.caseName, c.name);
 });
+
+test('кейсы-наклейки: внутри только наклейки своего мейджора, в остальные кейсы наклейки не попадают; новинки помечены', async () => {
+  const db = await getDb();
+  const prices = [200, 300, 500, 900, 2_000, 4_000, 8_000, 15_000, 30_000, 60_000, 120_000, 200_000];
+  for (const [i, p] of prices.entries()) {
+    for (const t of ['Austin 2025', 'Cologne 2026']) {
+      await db.query(
+        `insert into items (hash_name, name, weapon, rarity, image, price, quantity) values ($1, $1, 'Sticker', 'covert', 'https://x/s.png', $2, 5)`,
+        [`Sticker | Team${i} | ${t}`, p],
+      );
+    }
+  }
+  resetCasesCache();
+  const list = await listCases();
+  const austin = list.find((c) => c.slug === 'stk-austin');
+  assert.ok(austin, 'кейс собрался');
+  assert.equal(austin.kind, 'sticker');
+  assert.equal(austin.fresh, true);
+  assert.ok(austin.image);
+  assert.ok(austin.items.every((i) => i.weapon === 'Sticker' && i.hashName.endsWith(' | Austin 2025')));
+  for (const c of list.filter((x) => x.kind !== 'sticker')) assert.ok(c.items.every((i) => i.weapon !== 'Sticker'), c.slug);
+  assert.equal(list.find((c) => c.slug === 'starter')?.fresh, false);
+});
