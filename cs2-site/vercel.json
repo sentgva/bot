@@ -2,7 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
   "installCommand": "npm install",
-  "buildCommand": "node scripts/migrate.js && node scripts/telegram-setup.js",
+  "buildCommand": "node scripts/migrate.js && node scripts/telegram-setup.js && node scripts/asset-version.js",
   "outputDirectory": "public",
   "cleanUrls": true,
   "regions": [
@@ -27,6 +27,10 @@
   ],
   "rewrites": [
     {
+      "source": "/assets/v/:ver/:path*",
+      "destination": "/assets/:path*"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "/api"
     }
@@ -40,6 +44,15 @@
   "headers": [
     {
       "source": "/assets/fonts/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/assets/v/(.*)",
       "headers": [
         {
           "key": "Cache-Control",
