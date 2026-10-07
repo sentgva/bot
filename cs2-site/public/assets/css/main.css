@@ -1130,3 +1130,6 @@ textarea.input { min-height: 84px; resize: vertical; padding-block: 10px; }
   .ctr .skin-meta { display: none; }
   .ctr .skin-price { font-size: 11.5px; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 }
+
+/* В круге апгрейдера — только шанс (подпись и номер броска скрыты) */
+.wheel .wheel-label, .wheel .wheel-roll { display: none; }

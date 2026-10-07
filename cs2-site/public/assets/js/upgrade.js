@@ -360,10 +360,6 @@ const s = await session();
 state.user = s.user;
 if (s.config) {
   state.cfg = s.config.upgrade;
-  // Границы шанса из настроек админки
-  const fmt = (x) => `${String(Math.round(x * 10000) / 100).replace('.', ',')}%`;
-  $('[data-cfg-max]').textContent = fmt(state.cfg.maxChance);
-  $('[data-cfg-min]').textContent = state.cfg.minChance > 0 ? fmt(state.cfg.minChance) : 'без ограничения';
 }
 await loadOwned();
 renderInput();
