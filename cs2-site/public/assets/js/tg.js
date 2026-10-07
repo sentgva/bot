@@ -3,7 +3,7 @@
 //   • тема и цвета Telegram, без меню и футера сайта, вкладки внизу;
 //   • кнопка «Апгрейдить» — нативная MainButton, вибрация на результат броска;
 //   • «Назад» — кнопка Telegram, внешние ссылки открываются средствами Telegram.
-import { $, $$, api, icon, setToken } from './core.js';
+import { $, $$, api, getRef, icon, setToken } from './core.js';
 
 const SDK = 'https://telegram.org/js/telegram-web-app.js';
 const BG = { dark: '#0a0906', light: '#f8f4ea' }; // совпадает с --bg в main.css
@@ -25,7 +25,7 @@ function loadSdk() {
 export async function login() {
   if (!tg?.initData) return false;
   try {
-    const r = await api('/api/auth/telegram', { method: 'POST', body: { initData: tg.initData } });
+    const r = await api('/api/auth/telegram', { method: 'POST', body: { initData: tg.initData, ref: getRef() } });
     setToken(r.token);
     return true;
   } catch (err) {

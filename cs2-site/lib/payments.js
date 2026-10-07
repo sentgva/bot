@@ -16,6 +16,7 @@ import { canEncrypt, decrypt, encrypt } from './crypto-box.js';
 import { notifyAdmin, rub } from './notify.js';
 import { floorLc, fmtLc, isWholeLc, starsToLc } from './lc.js';
 import { tgApi } from './telegram.js';
+import { rewardReferrer } from './referrals.js';
 import * as cryptopay from './providers/cryptopay.js';
 
 export const BANKS = ['Сбербанк', 'Т-Банк', 'Альфа-Банк', 'ВТБ', 'Газпромбанк', 'Райффайзенбанк', 'Озон Банк', 'Яндекс Банк', 'Другой банк'];
@@ -79,6 +80,7 @@ export async function handleCryptoWebhook(rawBody, signature) {
       [p.id, JSON.stringify({ paidAsset: inv.paid_asset, paidAmount: inv.paid_amount })],
     );
     await changeBalance(q, p.user_id, p.amount, 'deposit', { ref: `payment:${p.id}`, note: `крипта ${inv.paid_asset || ''}`.trim() });
+    await rewardReferrer(q, p.user_id, p.amount, `payment:${p.id}`);
     return { ok: true };
   });
 }
@@ -153,6 +155,7 @@ export async function handleStarsPaid(message, fetchImpl) {
       [p.id, sp.telegram_payment_charge_id, JSON.stringify({ payerTelegramId: message.from?.id ?? null })],
     );
     const balance = await changeBalance(q, p.user_id, p.amount, 'deposit', { ref: `payment:${p.id}`, note: `${p.details.stars} ⭐` });
+    await rewardReferrer(q, p.user_id, p.amount, `payment:${p.id}`);
     return { ok: true, p, balance };
   });
   if (result.ok) {

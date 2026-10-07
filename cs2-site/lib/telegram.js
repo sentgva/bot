@@ -86,7 +86,10 @@ export async function tgApi(method, body, fetchImpl = fetch) {
   return data.result;
 }
 
-const openButton = (text = '🎯 Открыть LuxeDrop') => ({ inline_keyboard: [[{ text, web_app: { url: webAppUrl() } }]] });
+// ref — код пригласившего из /start КОД: передаём его на сайт, чтобы засчитать приглашение при первом входе
+const openButton = (text = '🎯 Открыть LuxeDrop', ref = null) => ({
+  inline_keyboard: [[{ text, web_app: { url: ref ? `${webAppUrl()}?ref=${encodeURIComponent(ref)}` : webAppUrl() } }]],
+});
 
 // Обработка входящего сообщения боту. Отвечаем на любое сообщение в личке кнопкой Mini App.
 export async function handleUpdate(update, fetchImpl = fetch) {
@@ -97,6 +100,7 @@ export async function handleUpdate(update, fetchImpl = fetch) {
     ? `Привет, ${msg.from?.first_name || 'игрок'}! Это LuxeDrop — апгрейд скинов CS2.\n\n`
       + '• Ставь немного — выигрывай много: шанс до 80%\n• Пополнение звёздами ⭐ — баланс в LuxeCoin (1 LC = 1 ₽)\n• Вывод в USDT за 2 минуты, на карту — в среднем за 15\n\nЖми кнопку ниже — LuxeDrop откроется прямо в Telegram.'
     : 'LuxeDrop открывается кнопкой ниже 👇\nВопросы — в поддержку: @luxedrop_support'; // ЗАМЕНИТЬ: контакт поддержки
-  await tgApi('sendMessage', { chat_id: msg.chat.id, text, reply_markup: openButton() }, fetchImpl);
+  const ref = isStart ? (msg.text.split(/\s+/)[1] || '').match(/^[0-9A-Za-z]{2,12}$/)?.[0] || null : null;
+  await tgApi('sendMessage', { chat_id: msg.chat.id, text, reply_markup: openButton(undefined, ref) }, fetchImpl);
   return { ok: true };
 }

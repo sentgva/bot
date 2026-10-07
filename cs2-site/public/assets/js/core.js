@@ -33,6 +33,19 @@ export class ApiError extends Error {
   }
 }
 
+// Код пригласившего (?ref=КОД в ссылке) — запоминаем на 30 дней, отправляем при первом входе
+const REF_TTL = 30 * 24 * 3600 * 1000;
+try {
+  const ref = new URLSearchParams(location.search).get('ref');
+  if (ref && /^[0-9A-Za-z]{2,12}$/.test(ref)) localStorage.setItem('ld-ref', JSON.stringify({ ref, at: Date.now() }));
+} catch { /* хранилище недоступно */ }
+export function getRef() {
+  try {
+    const v = JSON.parse(localStorage.getItem('ld-ref') || 'null');
+    return v && Date.now() - v.at < REF_TTL ? v.ref : null;
+  } catch { return null; }
+}
+
 // Токен сессии для Telegram Mini App (там cookie могут быть недоступны). На обычном сайте его нет.
 let memoryToken = null;
 export function getToken() {

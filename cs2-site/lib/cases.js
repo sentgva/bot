@@ -141,46 +141,45 @@ export async function getCase(slug) {
   return c;
 }
 
-export async function openCase(userId, slug) {
+export const MAX_OPEN = 5; // сколько кейсов можно открыть за раз
+
+// Открыть count одинаковых кейсов (1…5) одной транзакцией: каждый — свой бросок со своим nonce
+export async function openCase(userId, slug, count = 1) {
   const def = BY_SLUG.get(slug);
   if (!def) fail(404, 'Кейс не найден');
+  if (!Number.isSafeInteger(count) || count < 1 || count > MAX_OPEN) fail(400, `За раз можно открыть от 1 до ${MAX_OPEN} кейсов`);
   const s = await getSettings();
   const db = await getDb();
   return db.tx(async (q) => {
     const u = await lockUser(q, userId);
     const c = await buildCase(q, def, s.caseEdge);
     if (!c) fail(503, 'Кейс временно недоступен');
-    if (u.balance < c.price) fail(400, 'Недостаточно LC на балансе');
+    const total = c.price * count;
+    if (u.balance < total) fail(400, count > 1 ? `Недостаточно LC: нужно ${total / 100} LC за ${count} кейса` : 'Недостаточно LC на балансе');
+    const balance = await changeBalance(q, userId, -total, 'case', { note: `Кейс «${c.name}»${count > 1 ? ` ×${count}` : ''}` });
 
-    const nonce = u.nonce;
-    const roll = computeRoll(u.server_seed, u.client_seed, nonce);
-    let acc = 0;
-    let drop = c.items[c.items.length - 1];
-    // Сначала дешёвые: так бросок 0…N соответствует самому частому скину
-    for (const it of [...c.items].reverse()) {
-      acc += it.ppm;
-      if (roll < acc) { drop = it; break; }
+    const ascending = [...c.items].reverse(); // сначала дешёвые: бросок 0…N — самый частый скин
+    const drops = [];
+    for (let k = 0; k < count; k++) {
+      const nonce = u.nonce + k;
+      const roll = computeRoll(u.server_seed, u.client_seed, nonce);
+      let acc = 0;
+      let drop = ascending[ascending.length - 1];
+      for (const it of ascending) { acc += it.ppm; if (roll < acc) { drop = it; break; } }
+      const userItemId = (await q.one(
+        `insert into user_items (user_id, hash_name, price, source) values ($1, $2, $3, 'case') returning id`,
+        [userId, drop.row.hash_name, drop.row.price],
+      )).id;
+      const open = await q.one(
+        `insert into case_opens (user_id, case_slug, case_price, hash_name, item_price, chance_ppm, roll, server_seed_hash, client_seed, nonce, user_item_id)
+         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) returning id`,
+        [userId, c.slug, c.price, drop.row.hash_name, drop.row.price, drop.ppm, roll, hashSeed(u.server_seed), u.client_seed, nonce, userItemId],
+      );
+      drops.push({ id: open.id, item: { ...publicItem(drop.row), ppm: drop.ppm }, userItemId, sellPrice: sellPrice(drop.row.price, s), roll });
     }
-
-    await q.query('update users set nonce = nonce + 1 where id = $1', [userId]);
-    const userItemId = (await q.one(
-      `insert into user_items (user_id, hash_name, price, source) values ($1, $2, $3, 'case') returning id`,
-      [userId, drop.row.hash_name, drop.row.price],
-    )).id;
-    const open = await q.one(
-      `insert into case_opens (user_id, case_slug, case_price, hash_name, item_price, chance_ppm, roll, server_seed_hash, client_seed, nonce, user_item_id)
-       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) returning id`,
-      [userId, c.slug, c.price, drop.row.hash_name, drop.row.price, drop.ppm, roll, hashSeed(u.server_seed), u.client_seed, nonce, userItemId],
-    );
-    const balance = await changeBalance(q, userId, -c.price, 'case', { ref: `case:${open.id}`, note: `Кейс «${c.name}»` });
-    return {
-      id: open.id,
-      item: { ...publicItem(drop.row), ppm: drop.ppm },
-      userItemId,
-      sellPrice: sellPrice(drop.row.price, s),
-      roll,
-      balance,
-    };
+    await q.query('update users set nonce = nonce + $2 where id = $1', [userId, count]);
+    // Для совместимости с одиночным открытием — поля первого дропа на верхнем уровне
+    return { ...drops[0], drops, balance };
   });
 }
 

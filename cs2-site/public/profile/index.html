@@ -117,6 +117,7 @@
           <button class="tab" role="tab" id="tab-wallet" aria-controls="panel-wallet" aria-selected="false" tabindex="-1" data-tab="wallet"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-wallet"/></svg>Кошелёк</button>
           <button class="tab" role="tab" id="tab-history" aria-controls="panel-history" aria-selected="false" tabindex="-1" data-tab="history"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-history"/></svg>История</button>
           <button class="tab" role="tab" id="tab-upgrades" aria-controls="panel-upgrades" aria-selected="false" tabindex="-1" data-tab="upgrades"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-trending-up"/></svg>Апгрейды</button>
+          <button class="tab" role="tab" id="tab-referrals" aria-controls="panel-referrals" aria-selected="false" tabindex="-1" data-tab="referrals"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-users"/></svg>Друзья</button>
           <button class="tab" role="tab" id="tab-settings" aria-controls="panel-settings" aria-selected="false" tabindex="-1" data-tab="settings"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-settings"/></svg>Настройки</button>
         </div>
 
@@ -135,6 +136,18 @@
 
         <!-- Кошелёк -->
         <section role="tabpanel" id="panel-wallet" aria-labelledby="tab-wallet" tabindex="0" hidden>
+          <form class="card promo-card mb-4" id="promo-form" novalidate>
+            <div class="grow">
+              <h2 class="h3">Промокод</h2>
+              <p class="muted small">Есть код из нашего канала или от друга? Введи его — LC сразу придут на баланс.</p>
+            </div>
+            <div class="row promo-row">
+              <label class="sr-only" for="promo-code">Промокод</label>
+              <input class="input grow-1" id="promo-code" name="code" type="text" maxlength="32" autocomplete="off" spellcheck="false" placeholder="LUXE2026" aria-describedby="promo-code-error">
+              <button class="btn btn-primary" type="submit" data-loading="Проверяем…">Активировать</button>
+            </div>
+            <p class="error" id="promo-code-error" aria-live="polite"></p>
+          </form>
           <div class="two-col">
             <div class="card">
               <h2 class="h3">Пополнить баланс</h2>
@@ -206,6 +219,11 @@
         <!-- Апгрейды -->
         <section role="tabpanel" id="panel-upgrades" aria-labelledby="tab-upgrades" tabindex="0" hidden>
           <div class="list" data-upgrades></div>
+        </section>
+
+        <!-- Друзья (рефералы) -->
+        <section role="tabpanel" id="panel-referrals" aria-labelledby="tab-referrals" tabindex="0" hidden>
+          <div class="card" data-referrals><p class="muted">Загружаем…</p></div>
         </section>
 
         <!-- Настройки -->

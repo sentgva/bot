@@ -32,6 +32,19 @@ const user = (r) => `${esc(r.user_name || 'гость')} ${tgLink(r)}`;
 const btn = (action, label, cls = 'btn-secondary') => `<button class="btn ${cls} btn-sm" type="button" data-action="${action}">${label}</button>`;
 
 const RENDER = {
+  async promos() {
+    const list = await api('/api/admin/promos');
+    return list.map((p) => {
+      const expired = p.expires_at && new Date(p.expires_at) < new Date();
+      const state = !p.active ? 'Выключен' : expired ? 'Истёк' : p.uses >= p.max_uses ? 'Закончился' : 'Активен';
+      return `<div class="list-item" data-code="${esc(p.code)}">
+        <div class="grow"><p><b class="mono">${esc(p.code)}</b> · ${lc(p.amount)} <span class="badge${state === 'Активен' ? ' badge-success' : ''}">${state}</span></p>
+        <p class="small muted">Активаций ${p.uses} из ${p.max_uses}${p.expires_at ? ` · до ${dateTime(p.expires_at)}` : ' · без срока'} · создан ${dateTime(p.created_at)}</p></div>
+        <button class="btn btn-ghost btn-sm" type="button" data-copy-code="${esc(p.code)}">Копировать</button>
+        <button class="btn btn-secondary btn-sm" type="button" data-promo-toggle="${p.active ? '0' : '1'}">${p.active ? 'Выключить' : 'Включить'}</button>
+      </div>`;
+    });
+  },
   async withdrawals() {
     const list = await api(`/api/admin/withdrawals?status=${status}`);
     return list.map((p) => {
@@ -66,7 +79,7 @@ const RENDER = {
 };
 
 async function load() {
-  $('[data-status-filter]').hidden = tab === 'users' || tab === 'settings';
+  $('[data-status-filter]').hidden = !['withdrawals', 'skins'].includes(tab);
   if (tab === 'settings') return loadSettings();
   const box = $(`[data-list="${tab}"]`);
   try {
@@ -77,7 +90,7 @@ async function load() {
 
 const KIND = {
   deposit: 'Пополнение', withdraw: 'Вывод', refund: 'Возврат', buy: 'Покупка', sell: 'Продажа', upgrade: 'Апгрейд', buyback: 'Выкуп',
-  admin: 'Админ', demo: 'Тест', bonus: 'Бонус', case: 'Кейс',
+  admin: 'Админ', demo: 'Тест', bonus: 'Бонус', case: 'Кейс', promo: 'Промокод', referral: 'Реферал',
 };
 const QUICK = [100, 1000, 10000, 50000];
 
@@ -110,6 +123,7 @@ async function openUser(id) {
       </form>
       <dl class="adm-facts">
         ${row('Пополнил', lc(st.deposits))}${row('Вывел', lc(st.withdrawn))}${row('Выдано админом и бонусами', lc(st.granted))}
+        ${row('Пригласил друзей', `${st.invited} · заработал ${lc(st.ref_earned)}`)}${row('Пришёл от', u.referrer_id ? `${esc(u.referrer_name)} (ID ${u.referrer_id})` : '—')}
         ${row('Апгрейдов', `${st.upgrades} (побед ${st.upgrades_won})`)}${row('Кейсов открыто', st.cases)}${row('Скинов в инвентаре', `${st.items} · ${lc(st.items_value)}`)}
         ${row('Зарегистрирован', dateTime(u.created_at))}${row('Последний вход', dateTime(u.last_seen_at))}
       </dl>
@@ -184,6 +198,43 @@ document.addEventListener('click', async (e) => {
   });
 });
 
+// ── Промокоды ──────────────────────────────────────────────
+
+const promoForm = $('[data-promo-form]');
+promoForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  $$('[data-err]', promoForm).forEach((el) => { el.textContent = ''; });
+  const f = promoForm.elements;
+  const body = { code: f.code.value.trim().toUpperCase(), amount: Number(f.amount.value), maxUses: Number(f.maxUses.value), days: f.days.value };
+  await withLoading(e.submitter, async () => {
+    try {
+      const r = await api('/api/admin/promos', { method: 'POST', body });
+      toast(`Промокод ${r.code} создан`, 'success');
+      promoForm.reset();
+      f.maxUses.value = '100';
+      load();
+    } catch (err) {
+      const field = err.data?.field;
+      if (field && $(`[data-err="${field}"]`, promoForm)) $(`[data-err="${field}"]`, promoForm).textContent = err.message; else toastError(err);
+    }
+  });
+});
+$('[data-promo-random]').addEventListener('click', () => {
+  const abc = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  promoForm.elements.code.value = 'LUXE-' + Array.from(crypto.getRandomValues(new Uint8Array(6)), (n) => abc[n % abc.length]).join('');
+});
+$('[data-list="promos"]').addEventListener('click', async (e) => {
+  const row = e.target.closest('[data-code]');
+  if (!row) return;
+  const copy = e.target.closest('[data-copy-code]');
+  if (copy) { try { await navigator.clipboard.writeText(copy.dataset.copyCode); toast('Код скопирован', 'success'); } catch { /* нет доступа к буферу */ } return; }
+  const t = e.target.closest('[data-promo-toggle]');
+  if (!t) return;
+  await withLoading(t, async () => {
+    try { await api(`/api/admin/promos/${encodeURIComponent(row.dataset.code)}`, { method: 'POST', body: { active: t.dataset.promoToggle === '1' } }); load(); } catch (err) { toastError(err); }
+  });
+});
+
 // Настройки экономики: в базе доли и сотые LC, в форме — проценты и LC
 const SETTINGS = [
   ['Апгрейдер', [
@@ -192,7 +243,11 @@ const SETTINGS = [
     ['maxUpgradeItems', 'Скинов в одном апгрейде', 'num'],
   ]],
   ['Кейсы', [['caseEdge', 'Край кейсов', 'pct', '10% — средний дроп 90% цены кейса']]],
-  ['Бонусы', [['signupBonus', 'Стартовый бонус новым игрокам', 'lc', '0 — выключен']]],
+  ['Бонусы и рефералы', [
+    ['signupBonus', 'Стартовый бонус новым игрокам', 'lc', '0 — выключен'],
+    ['refPercent', 'Рефералы: % от пополнений друга', 'pct', 'Получает пригласивший'],
+    ['refInviteeBonus', 'Рефералы: бонус новичку по ссылке', 'lc', 'Сверху стартового бонуса'],
+  ]],
   ['Маркет', [['marketMarkup', 'Наценка маркета', 'pct'], ['siteSellRate', 'Продажа скина сайту', 'pct', 'Доля от цены скина']]],
   ['Пополнение и вывод', [
     ['lcPerStar', 'LC за 1 звезду', 'num'], ['minStars', 'Мин. пополнение звёздами', 'num'], ['maxStars', 'Макс. пополнение звёздами', 'num'],

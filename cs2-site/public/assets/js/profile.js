@@ -366,11 +366,58 @@ loaders.wallet = async () => {
     : emptyState({ iconName: 'i-wallet', title: 'Операций пока нет', text: 'Здесь появятся пополнения и выводы.' });
 };
 
+// ── Промокод ───────────────────────────────────────────────
+
+$('#promo-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const form = e.currentTarget;
+  const err = $('#promo-code-error');
+  err.textContent = '';
+  const code = form.elements.code.value.trim();
+  if (!code) { err.textContent = 'Введи промокод'; form.elements.code.focus(); return; }
+  await withLoading(form.querySelector('[type="submit"]'), async () => {
+    try {
+      const r = await api('/api/promo', { method: 'POST', body: { code } });
+      user.balance = r.balance;
+      updateBalance(r.balance);
+      form.reset();
+      toast(`Промокод ${r.code} активирован: +${lc(r.amount)}`, 'success');
+      loaded.delete('history');
+    } catch (e2) { err.textContent = e2.message; }
+  });
+});
+
+// ── Друзья: реферальная ссылка ─────────────────────────────
+
+loaders.referrals = async () => {
+  const box = $('[data-referrals]');
+  try {
+    const r = await api('/api/me/referrals');
+    const percent = Math.round(r.percent * 100);
+    const link = (label, url) => url ? `<div class="field"><label>${label}</label><div class="row"><input class="input grow-1 mono" type="text" readonly value="${esc(url)}"><button class="btn btn-secondary" type="button" data-copy="${esc(url)}">${icon('i-copy')}<span>Копировать</span></button></div></div>` : '';
+    box.innerHTML = `
+      <h2 class="h3">Приглашай друзей — получай ${percent}% с их пополнений</h2>
+      <p class="muted mt-2">Друг заходит по твоей ссылке и входит через Telegram — он навсегда закрепляется за тобой.
+        С каждого его пополнения звёздами или криптой тебе на баланс приходит ${percent}%.${r.inviteeBonus > 0 ? ` Друг сразу получает ${lc(r.inviteeBonus)} бонусом.` : ''}</p>
+      <div class="ref-stats mt-4">
+        <div class="stat"><p class="stat-value">${r.invited}</p><p class="stat-label">приглашено</p></div>
+        <div class="stat"><p class="stat-value">${lc(r.earned)}</p><p class="stat-label">заработано</p></div>
+        <div class="stat"><p class="stat-value">${esc(r.code)}</p><p class="stat-label">твой код</p></div>
+      </div>
+      <div class="mt-4">${link('Ссылка на бота (лучше для Telegram)', r.bot)}${link('Ссылка на сайт', r.site)}</div>`;
+  } catch (err) { box.innerHTML = ''; toastError(err); }
+};
+$('[data-referrals]').addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-copy]');
+  if (!b) return;
+  try { await navigator.clipboard.writeText(b.dataset.copy); toast('Ссылка скопирована', 'success'); } catch { b.previousElementSibling.select(); }
+});
+
 // ── История баланса ────────────────────────────────────────
 
 const KIND = {
   deposit: 'Пополнение', withdraw: 'Вывод', refund: 'Возврат', buy: 'Покупка скина', sell: 'Продажа скина',
-  upgrade: 'Ставка в апгрейде', buyback: 'Выкуп скинов', admin: 'Корректировка', demo: 'Тестовое пополнение', bonus: 'Бонус', case: 'Открытие кейса',
+  upgrade: 'Ставка в апгрейде', buyback: 'Выкуп скинов', admin: 'Корректировка', demo: 'Тестовое пополнение', bonus: 'Бонус', case: 'Открытие кейса', promo: 'Промокод', referral: 'Реферальные',
 };
 loaders.history = async () => {
   const list = await api('/api/me/ledger').catch(() => []);

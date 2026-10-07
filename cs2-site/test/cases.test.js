@@ -64,3 +64,20 @@ test('занос из кейса (дроп дороже кейса) попада
   const live = await getLive('g:z');
   assert.ok(live.drops.some((d) => d.id === `c${hit.id}`));
 });
+
+test('открытие 5 кейсов за раз: одна оплата, пять бросков с разными nonce', async () => {
+  const [c] = await listCases();
+  const u = await makeUser(c.price * 5);
+  const r = await openCase(u.id, c.slug, 5);
+  assert.equal(r.drops.length, 5);
+  assert.equal(r.balance, 0);
+  const db = await getDb();
+  const nonces = (await db.query('select nonce from case_opens where user_id = $1 order by id', [u.id])).map((x) => x.nonce);
+  assert.deepEqual(nonces, [0, 1, 2, 3, 4]);
+  assert.equal((await db.one('select nonce from users where id = $1', [u.id])).nonce, 5);
+  assert.equal((await db.one("select count(*)::int as n from user_items where user_id = $1 and source = 'case'", [u.id])).n, 5);
+  await assert.rejects(openCase(u.id, c.slug, 6), /от 1 до 5/);
+  const poor = await makeUser(c.price * 2);
+  await assert.rejects(openCase(poor.id, c.slug, 3), /Недостаточно/);
+  assert.equal((await balanceOf(poor.id)).balance, c.price * 2, 'при нехватке ничего не списано');
+});

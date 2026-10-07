@@ -66,7 +66,9 @@ export async function findUsers(query) {
 export async function userDetail(id) {
   const db = await getDb();
   const user = await db.one(
-    'select id, telegram_id, tg_username, name, avatar, balance, is_banned, trade_url, created_at, last_seen_at from users where id = $1',
+    `select u.id, u.telegram_id, u.tg_username, u.name, u.avatar, u.balance, u.is_banned, u.trade_url, u.created_at, u.last_seen_at,
+            r.id as referrer_id, r.name as referrer_name
+     from users u left join users r on r.id = u.referred_by where u.id = $1`,
     [id],
   );
   if (!user) fail(404, 'Пользователь не найден');
@@ -78,6 +80,8 @@ export async function userDetail(id) {
       (select count(*) from upgrades where user_id = $1)::int as upgrades,
       (select count(*) from upgrades where user_id = $1 and won)::int as upgrades_won,
       (select count(*) from case_opens where user_id = $1)::int as cases,
+      (select count(*) from users where referred_by = $1)::int as invited,
+      (select coalesce(sum(amount), 0)::bigint from ledger where user_id = $1 and kind = 'referral') as ref_earned,
       (select count(*) from user_items where user_id = $1 and status = 'owned')::int as items,
       (select coalesce(sum(price), 0)::bigint from user_items where user_id = $1 and status = 'owned') as items_value`, [id]);
   const ledger = await db.query(

@@ -10,7 +10,7 @@ import { floorLc } from './lc.js';
 import { config } from './config.js';
 
 // Вход через Telegram (Mini App или Telegram Login на сайте): аккаунт привязан к Telegram ID
-export async function upsertTelegramUser(tg) {
+export async function upsertTelegramUser(tg, { ref = null } = {}) {
   const db = await getDb();
   const name = [tg.first_name, tg.last_name].filter(Boolean).join(' ').slice(0, 64) || tg.username || `Игрок ${String(tg.id).slice(-5)}`;
   const { signupBonus } = await getSettings();
@@ -28,6 +28,10 @@ export async function upsertTelegramUser(tg) {
     // Стартовый бонус новому игроку (настройка signupBonus в админке, 0 — выключен)
     const bonus = floorLc(signupBonus);
     if (inserted && bonus > 0) user.balance = await changeBalance(q, user.id, bonus, 'bonus', { note: 'Стартовый бонус' });
+    if (inserted && ref) {
+      const { attachReferrer } = await import('./referrals.js'); // ленивый импорт: referrals.js сам импортирует users.js
+      if (await attachReferrer(q, user.id, ref)) Object.assign(user, await q.one('select balance, referred_by from users where id = $1', [user.id]));
+    }
     return user;
   });
 }

@@ -3,7 +3,7 @@
 //   2. Telegram спрашивает подтверждение и возвращает на страницу с #tgAuthResult=<base64 JSON>.
 //   3. Отправляем данные на сервер, он проверяет подпись ключом бота и ставит сессию.
 // В BotFather у бота должен быть указан домен сайта: /setdomain.
-import { $, api, session, toastError } from './core.js';
+import { $, api, getRef, session, toastError } from './core.js';
 
 const params = new URLSearchParams(location.search);
 const next = /^\/(?!\/)/.test(params.get('next') || '') ? params.get('next') : '/';
@@ -25,7 +25,7 @@ function decodeResult(hash) {
 async function finish(data) {
   text.textContent = 'Проверяем вход…';
   try {
-    await api('/api/auth/telegram-widget', { method: 'POST', body: { data } });
+    await api('/api/auth/telegram-widget', { method: 'POST', body: { data, ref: getRef() } });
     location.replace(next);
   } catch (err) {
     history.replaceState(null, '', location.pathname + location.search.replace(/[?&]auto=1/, ''));

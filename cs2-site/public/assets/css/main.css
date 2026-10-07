@@ -1031,3 +1031,31 @@ h3, .h3 { font-weight: 600; letter-spacing: -.01em; font-size: clamp(17px, 1.8vw
   position: absolute; z-index: 3; top: 10px; left: 10px; padding: 3px 9px; border-radius: 999px; font-family: var(--font-display); font-size: 10px; font-weight: 700;
   letter-spacing: .05em; text-transform: uppercase; background: var(--case); color: #0b0a07; box-shadow: 0 0 16px -2px var(--case);
 }
+
+/* Открытие нескольких кейсов */
+.roulettes { display: grid; gap: var(--s2); }
+.roulettes .roulette { position: relative; }
+.roulettes.is-multi .roulette { padding: 6px 0; }
+.roulettes.is-multi .r-card { width: 112px; height: 88px; }
+.roulettes.is-multi .r-card img, .roulettes.is-multi .r-card .silhouette { width: 88px; height: 58px; }
+.roulettes.is-multi .r-name { font-size: 10px; }
+.case-counts .chip { min-width: 46px; justify-content: center; }
+.case-result { display: grid; gap: var(--s3); }
+.case-result-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s3); }
+.case-drops { display: grid; gap: var(--s3); }
+.case-drops.is-multi { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 760px) { .case-drops.is-multi { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+.case-drops.is-multi .case-drop { grid-template-columns: 1fr; padding: var(--s3); text-align: center; justify-items: center; }
+.case-drops.is-multi .case-drop-price { font-size: 18px; }
+.case-drop-name { font-weight: 650; overflow-wrap: anywhere; }
+.case-drops.is-multi .case-drop-name { font-size: 13px; }
+
+/* Промокод и рефералы в профиле, промокоды в админке */
+.promo-card { display: grid; gap: var(--s3); align-items: center; }
+@media (min-width: 760px) { .promo-card { grid-template-columns: minmax(0, 1fr) minmax(0, 420px); } .promo-card .error { grid-column: 2; } }
+.promo-row { flex-wrap: nowrap; }
+.promo-row .input { text-transform: uppercase; }
+.ref-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s3); }
+.ref-stats .stat { padding: var(--s3); border-radius: var(--r-md); background: var(--surface-2); }
+.ref-stats .stat-value { font-family: var(--font-display); font-weight: 700; font-size: 20px; overflow-wrap: anywhere; }
+.ref-stats .stat-label { font-size: 12px; color: var(--muted); }

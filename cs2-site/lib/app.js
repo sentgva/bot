@@ -22,6 +22,8 @@ import { isValidClientSeed } from './fair.js';
 import { parseTradeUrl, rublesToKop } from './validate.js';
 import * as admin from './admin.js';
 import { getCase, listCases, openCase } from './cases.js';
+import { createPromo, listPromos, redeemPromo, setPromoActive } from './promo.js';
+import { referralStats } from './referrals.js';
 
 const r = createRouter();
 
@@ -60,10 +62,10 @@ function refreshPricesInBackground() {
 // Сайт: Telegram Login. Страница /login/ получает подписанные данные от oauth.telegram.org и пересылает сюда.
 r.post('/api/auth/telegram-widget', async (req, res) => {
   await rateLimit(`tg-login:${ipKey(req)}`, 30, 600);
-  const { data } = await readJson(req);
+  const { data, ref } = await readJson(req);
   const tg = verifyLoginWidget(data);
   if (!tg) fail(401, 'Не получилось войти через Telegram. Попробуй ещё раз');
-  const user = await upsertTelegramUser(tg);
+  const user = await upsertTelegramUser(tg, { ref: str(ref, 12) });
   if (user.is_banned) fail(403, 'Аккаунт заблокирован. Напиши в поддержку');
   startSession(res, user.id);
   return { user: publicUser(user) };
@@ -73,7 +75,7 @@ r.post('/api/auth/telegram-widget', async (req, res) => {
 r.get('/api/auth/dev', async (req, res, { url }) => {
   if (!config.devLogin) fail(404, 'Не найдено');
   const id = int(url.searchParams.get('tgId')) || 100001;
-  const user = await upsertTelegramUser({ id, first_name: url.searchParams.get('name') || 'Тестовый игрок', username: `tester${id}` });
+  const user = await upsertTelegramUser({ id, first_name: url.searchParams.get('name') || 'Тестовый игрок', username: `tester${id}` }, { ref: str(url.searchParams.get('ref'), 12) });
   startSession(res, user.id);
   redirect(res, safeNext(url.searchParams.get('next')));
 });
@@ -81,10 +83,11 @@ r.get('/api/auth/dev', async (req, res, { url }) => {
 // Вход из Telegram Mini App: initData подписаны Telegram ключом нашего бота
 r.post('/api/auth/telegram', async (req, res) => {
   await rateLimit(`tg-login:${ipKey(req)}`, 30, 600);
-  const { initData } = await readJson(req);
+  const { initData, ref } = await readJson(req);
   const tg = verifyInitData(str(initData, 4096));
   if (!tg) fail(401, 'Не получилось войти через Telegram. Закрой и снова открой приложение из бота');
-  const user = await upsertTelegramUser(tg);
+  // Код пригласившего: из ссылки на сайт (?ref=) или из подписанного start_param (t.me/бот?startapp=КОД)
+  const user = await upsertTelegramUser(tg, { ref: str(ref, 12) || new URLSearchParams(str(initData, 4096)).get('start_param') });
   if (user.is_banned) fail(403, 'Аккаунт заблокирован. Напиши в поддержку');
   return { token: startSession(res, user.id), user: publicUser(user) };
 });
@@ -214,6 +217,16 @@ r.get('/api/upgrades/recent', async (req, res) => {
   return recentWins(12);
 });
 
+// ── Промокоды и рефералы ───────────────────────────────────
+
+r.post('/api/promo', async (req) => {
+  const u = await requireUser(req);
+  await rateLimit(`promo:${u.id}`, 10, 600);
+  const { code } = await readJson(req);
+  return redeemPromo(u.id, str(code, 40));
+});
+r.get('/api/me/referrals', async (req) => referralStats((await requireUser(req)).id));
+
 // ── Кейсы ──────────────────────────────────────────────────
 
 r.get('/api/cases', async (req, res) => {
@@ -228,7 +241,8 @@ r.get('/api/cases/:slug', async (req, res, { params }) => {
 r.post('/api/cases/:slug/open', async (req, res, { params }) => {
   const u = await requireUser(req);
   await rateLimit(`case:${u.id}`, 60, 60);
-  return openCase(u.id, str(params.slug, 40));
+  const { count } = await readJson(req).catch(() => ({}));
+  return openCase(u.id, str(params.slug, 40), int(count) || 1);
 });
 
 // ── Деньги ─────────────────────────────────────────────────
@@ -316,6 +330,20 @@ r.post('/api/admin/users/:id', async (req, res, { params }) => {
   const b = await readJson(req);
   const amount = b.amount === undefined ? undefined : Math.round(Number(b.amount) * 100);
   return admin.updateUser(int(params.id), { action: b.action, amount, note: str(b.note, 200) });
+});
+r.get('/api/admin/promos', async (req) => { await requireAdmin(req); return listPromos(); });
+r.post('/api/admin/promos', async (req) => {
+  await requireAdmin(req);
+  const b = await readJson(req);
+  return createPromo({
+    code: str(b.code, 40), amount: Math.round(Number(b.amount) * 100), maxUses: int(b.maxUses),
+    days: b.days === '' || b.days == null ? null : int(b.days),
+  });
+});
+r.post('/api/admin/promos/:code', async (req, res, { params }) => {
+  await requireAdmin(req);
+  const { active } = await readJson(req);
+  return setPromoActive(str(params.code, 40), active);
 });
 r.get('/api/admin/settings', async (req) => { await requireAdmin(req); return getSettings(); });
 r.post('/api/admin/settings', async (req) => { await requireAdmin(req); return updateSettings(await readJson(req)); });

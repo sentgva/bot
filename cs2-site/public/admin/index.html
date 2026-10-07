@@ -85,6 +85,7 @@
         <button class="tab" role="tab" id="t-users" aria-controls="p-users" aria-selected="true" data-tab="users">Игроки</button>
         <button class="tab" role="tab" id="t-withdrawals" aria-controls="p-withdrawals" aria-selected="false" tabindex="-1" data-tab="withdrawals">Выводы денег <span class="badge" data-count="withdrawals"></span></button>
         <button class="tab" role="tab" id="t-skins" aria-controls="p-skins" aria-selected="false" tabindex="-1" data-tab="skins">Выводы скинов <span class="badge" data-count="skin_withdrawals"></span></button>
+        <button class="tab" role="tab" id="t-promos" aria-controls="p-promos" aria-selected="false" tabindex="-1" data-tab="promos">Промокоды</button>
         <button class="tab" role="tab" id="t-settings" aria-controls="p-settings" aria-selected="false" tabindex="-1" data-tab="settings">Настройки</button>
       </div>
       <div class="row mb-4" data-status-filter hidden>
@@ -110,6 +111,19 @@
       </section>
       <section role="tabpanel" id="p-withdrawals" aria-labelledby="t-withdrawals" hidden><div class="list" data-list="withdrawals"></div></section>
       <section role="tabpanel" id="p-skins" aria-labelledby="t-skins" hidden><div class="list" data-list="skins"></div></section>
+      <section role="tabpanel" id="p-promos" aria-labelledby="t-promos" hidden>
+        <form class="card form promo-new mb-4" data-promo-form novalidate>
+          <h2 class="h3">Новый промокод</h2>
+          <div class="grid grid-4">
+            <div class="field"><label for="pr-code">Код</label><input class="input mono" id="pr-code" name="code" type="text" maxlength="32" placeholder="LUXE2026" autocomplete="off" spellcheck="false" required><p class="error" data-err="code"></p></div>
+            <div class="field"><label for="pr-amount">Сумма</label><div class="input-group"><input class="input num" id="pr-amount" name="amount" type="number" min="1" step="1" placeholder="100" required><span class="suffix" aria-hidden="true">LC</span></div><p class="error" data-err="amount"></p></div>
+            <div class="field"><label for="pr-uses">Активаций</label><input class="input num" id="pr-uses" name="maxUses" type="number" min="1" step="1" value="100" required><p class="error" data-err="maxUses"></p></div>
+            <div class="field"><label for="pr-days">Срок, дней</label><input class="input num" id="pr-days" name="days" type="number" min="1" step="1" placeholder="без срока"><p class="error" data-err="days"></p></div>
+          </div>
+          <div class="row"><button class="btn btn-primary" type="submit" data-loading="Создаём…">Создать промокод</button><button class="btn btn-ghost" type="button" data-promo-random>Случайный код</button></div>
+        </form>
+        <div class="list" data-list="promos"></div>
+      </section>
       <section role="tabpanel" id="p-settings" aria-labelledby="t-settings" hidden>
         <form class="adm-settings" data-settings-form></form>
       </section>

@@ -52,7 +52,7 @@ create table if not exists ledger (
   user_id       bigint not null references users(id),
   amount        bigint not null,           -- + пополнение, − списание
   balance_after bigint not null,
-  kind          text not null,             -- deposit | withdraw | refund | buy | sell | upgrade | buyback | admin | demo | bonus | case
+  kind          text not null,             -- deposit | withdraw | refund | buy | sell | upgrade | buyback | admin | demo | bonus | case | promo | referral
   ref           text,
   note          text,
   created_at    timestamptz not null default now()
@@ -108,6 +108,27 @@ create table if not exists case_opens (
 );
 create index if not exists case_opens_user_idx on case_opens (user_id, id desc);
 create index if not exists case_opens_drop_idx on case_opens (id desc) where item_price > case_price;
+
+-- Промокоды (lib/promo.js)
+create table if not exists promo_codes (
+  code       text primary key,
+  amount     bigint not null,            -- сотые LC
+  max_uses   integer not null,
+  uses       integer not null default 0,
+  active     boolean not null default true,
+  expires_at timestamptz,
+  created_at timestamptz not null default now()
+);
+create table if not exists promo_redemptions (
+  code       text not null references promo_codes(code),
+  user_id    bigint not null references users(id),
+  created_at timestamptz not null default now(),
+  primary key (code, user_id)
+);
+
+-- Рефералы (lib/referrals.js): кто пригласил игрока
+alter table users add column if not exists referred_by bigint references users(id);
+create index if not exists users_referred_by_idx on users (referred_by) where referred_by is not null;
 
 -- Денежные операции: пополнения (in) и выводы (out)
 create table if not exists payments (
@@ -179,3 +200,12 @@ create index if not exists presence_seen_idx on presence (seen_at);
 
 -- LuxeCoin: цены скинов — целые LC (1 LC = 1 ₽), округление вниз. Безопасно повторять.
 update items set price = price - price % 100 where price % 100 <> 0;
+
+-- Разовая смена стартового бонуса на 1 000 LC (перезаписывает значение, сохранённое в админке до этого)
+do $$
+begin
+  if not exists (select 1 from meta where key = 'migration_signup_bonus_1000') then
+    insert into settings (key, value) values ('signupBonus', '100000') on conflict (key) do update set value = excluded.value;
+    insert into meta (key, value) values ('migration_signup_bonus_1000', 'true');
+  end if;
+end $$;
