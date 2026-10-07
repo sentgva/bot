@@ -160,7 +160,9 @@ export async function syncCatalog({ fetchImpl = fetch, forceMeta = false } = {})
 export async function pricesAreStale() {
   const db = await getDb();
   const at = await getMeta(db, 'prices_at');
-  if (at && Date.now() - at < config.priceTtlMinutes * 60_000) return false;
+  const fresh = at && Date.now() - at < config.priceTtlMinutes * 60_000;
+  // Новая версия метаданных (например, добавили наклейки) — обновляем сразу, не ждём часа
+  if (fresh && (await getMeta(db, 'catalog_meta_v')) === META_VERSION) return false;
   // Захватываем «замок» на 5 минут, чтобы параллельные запросы не дёргали Skinport
   const lock = await db.one(
     `insert into meta(key, value) values ('prices_lock', $1) on conflict (key) do update set value = excluded.value
