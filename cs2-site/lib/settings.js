@@ -28,7 +28,7 @@ export const DEFAULTS = {
 
 // Границы, чтобы опечатка в админке не сломала экономику
 const LIMITS = {
-  houseEdge: [0, 0.5], maxChance: [0.05, 0.95], minChance: [0.0001, 0.5], maxUpgradeItems: [1, 20],
+  houseEdge: [0, 0.5], maxChance: [0.05, 1], minChance: [0, 0.5], maxUpgradeItems: [1, 20],
   minUpgradeValue: [100, 10_000_000], marketMarkup: [0, 1], siteSellRate: [0.1, 1],
   cardFee: [0, 0.5], cryptoFee: [0, 0.5], minWithdraw: [100, 100_000_000], maxWithdraw: [100, 1_000_000_000],
   minDeposit: [100, 100_000_000], cryptoAutoLimit: [0, 1_000_000_000], statsMinPaid: [0, 1e12], bestDropMaxPrice: [10_000, 1e12],

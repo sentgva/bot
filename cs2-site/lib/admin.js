@@ -1,4 +1,4 @@
-// Запросы для админки. Доступ проверяется в api/index.js (Steam ID из ADMIN_STEAM_IDS).
+// Запросы для админки. Доступ проверяется в lib/app.js (requireAdmin: ADMIN_TG_IDS / ADMIN_TG_USERNAMES).
 
 import { getDb } from './db.js';
 import { fail } from './http.js';
@@ -15,7 +15,13 @@ export async function overview() {
       (select count(*) from users)::int as users,
       (select coalesce(sum(balance), 0)::bigint from users) as total_balance,
       (select coalesce(sum(amount), 0)::bigint from payments where direction = 'in' and status = 'paid' and method <> 'demo') as deposits,
-      (select coalesce(sum(amount - fee), 0)::bigint from payments where direction = 'out' and status = 'paid') as payouts
+      (select coalesce(sum(amount - fee), 0)::bigint from payments where direction = 'out' and status = 'paid') as payouts,
+      (select count(*) from users where created_at > now() - interval '24 hours')::int as users_day,
+      (select count(*) from case_opens)::int as cases_opened,
+      (select coalesce(sum(case_price - item_price), 0)::bigint from case_opens) as cases_profit,
+      (select count(*) from upgrades)::int as upgrades,
+      (select coalesce(sum(input_value), 0)::bigint - coalesce(sum(target_price) filter (where won), 0)::bigint from upgrades) as upgrades_profit,
+      (select coalesce(sum(amount), 0)::bigint from ledger where kind in ('admin', 'bonus') and amount > 0) as granted
   `);
 }
 
@@ -54,6 +60,31 @@ export async function findUsers(query) {
      order by last_seen_at desc limit 50`,
     [q, `%${q.replace(/[%_\\]/g, '\\$&')}%`],
   );
+}
+
+// Карточка игрока: профиль, сводка и последние операции по балансу
+export async function userDetail(id) {
+  const db = await getDb();
+  const user = await db.one(
+    'select id, telegram_id, tg_username, name, avatar, balance, is_banned, trade_url, created_at, last_seen_at from users where id = $1',
+    [id],
+  );
+  if (!user) fail(404, 'Пользователь не найден');
+  const stats = await db.one(`
+    select
+      (select coalesce(sum(amount), 0)::bigint from payments where user_id = $1 and direction = 'in' and status = 'paid' and method <> 'demo') as deposits,
+      (select coalesce(sum(amount), 0)::bigint from payments where user_id = $1 and direction = 'out' and status = 'paid') as withdrawn,
+      (select coalesce(sum(amount), 0)::bigint from ledger where user_id = $1 and kind in ('admin', 'bonus') and amount > 0) as granted,
+      (select count(*) from upgrades where user_id = $1)::int as upgrades,
+      (select count(*) from upgrades where user_id = $1 and won)::int as upgrades_won,
+      (select count(*) from case_opens where user_id = $1)::int as cases,
+      (select count(*) from user_items where user_id = $1 and status = 'owned')::int as items,
+      (select coalesce(sum(price), 0)::bigint from user_items where user_id = $1 and status = 'owned') as items_value`, [id]);
+  const ledger = await db.query(
+    'select id, amount, balance_after, kind, note, created_at from ledger where user_id = $1 order by id desc limit 40',
+    [id],
+  );
+  return { user, stats, ledger };
 }
 
 export async function updateUser(id, { action, amount, note }) {

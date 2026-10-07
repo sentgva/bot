@@ -33,3 +33,22 @@ test('стартовый бонус: начисляется один раз пр
   await updateSettings({ signupBonus: 0 });
   assert.equal((await upsertTelegramUser({ id: 555002, first_name: 'Без бонуса' })).balance, 0);
 });
+
+test('шанс апгрейда настраивается от 0 до 100%, карточка игрока со сводкой', async () => {
+  const { updateSettings, getSettings } = await import('../lib/settings.js');
+  const { userDetail } = await import('../lib/admin.js');
+  const r = await updateSettings({ maxChance: 1, minChance: 0 });
+  assert.deepEqual(r.errors, {});
+  const s = await getSettings();
+  assert.equal(s.maxChance, 1);
+  assert.equal(s.minChance, 0);
+  assert.ok((await updateSettings({ maxChance: 1.5 })).errors.maxChance, 'больше 100% нельзя');
+
+  const u = await makeUser(0);
+  await updateUser(u.id, { action: 'adjust', amount: 1_000_000, note: 'Бонус' });
+  const d = await userDetail(u.id);
+  assert.equal(d.user.balance, 1_000_000);
+  assert.equal(Number(d.stats.granted), 1_000_000);
+  assert.equal(d.ledger[0].note, 'Бонус');
+  await assert.rejects(userDetail(999_999), /не найден/);
+});

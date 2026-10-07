@@ -310,6 +310,7 @@ r.post('/api/admin/skin-withdrawals/:id', async (req, res, { params }) => {
   return finishSkinWithdrawal(int(params.id), action, str(note, 300) || null);
 });
 r.get('/api/admin/users', async (req, res, { url }) => { await requireAdmin(req); return admin.findUsers(url.searchParams.get('q')); });
+r.get('/api/admin/users/:id', async (req, res, { params }) => { await requireAdmin(req); return admin.userDetail(int(params.id)); });
 r.post('/api/admin/users/:id', async (req, res, { params }) => {
   await requireAdmin(req);
   const b = await readJson(req);

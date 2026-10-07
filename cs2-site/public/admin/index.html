@@ -74,33 +74,44 @@
 
   <main id="main">
     <div class="container page-head">
-      <h1 class="h2">Админка</h1>
-      <p class="lead" data-denied hidden>Нет доступа. Войди через Telegram аккаунтом из списка ADMIN_TG_IDS.</p>
+      <p class="eyebrow"><svg class="icon icon-sm" aria-hidden="true"><use href="/assets/icons.svg#i-sliders-horizontal"/></svg>Админ-панель</p>
+      <h1 class="h2">Управление LuxeDrop</h1>
+      <p class="lead" data-denied hidden>Нет доступа. Войди через Telegram аккаунтом из списка ADMIN_TG_IDS или ADMIN_TG_USERNAMES.</p>
     </div>
     <div class="container app-section" data-app hidden>
-      <div class="stats mb-4" data-overview></div>
+      <div class="adm-stats" data-overview></div>
+
       <div class="tabs mt-6" role="tablist" aria-label="Разделы админки">
-        <button class="tab" role="tab" id="t-withdrawals" aria-controls="p-withdrawals" aria-selected="true" data-tab="withdrawals">Выводы денег <span class="badge" data-count="withdrawals"></span></button>
+        <button class="tab" role="tab" id="t-users" aria-controls="p-users" aria-selected="true" data-tab="users">Игроки</button>
+        <button class="tab" role="tab" id="t-withdrawals" aria-controls="p-withdrawals" aria-selected="false" tabindex="-1" data-tab="withdrawals">Выводы денег <span class="badge" data-count="withdrawals"></span></button>
         <button class="tab" role="tab" id="t-skins" aria-controls="p-skins" aria-selected="false" tabindex="-1" data-tab="skins">Выводы скинов <span class="badge" data-count="skin_withdrawals"></span></button>
-        <button class="tab" role="tab" id="t-users" aria-controls="p-users" aria-selected="false" tabindex="-1" data-tab="users">Игроки</button>
         <button class="tab" role="tab" id="t-settings" aria-controls="p-settings" aria-selected="false" tabindex="-1" data-tab="settings">Настройки</button>
       </div>
-      <div class="row mb-4" data-status-filter>
+      <div class="row mb-4" data-status-filter hidden>
         <button class="chip" type="button" aria-pressed="true" data-status="open">Открытые</button>
         <button class="chip" type="button" aria-pressed="false" data-status="closed">Закрытые</button>
       </div>
-      <section role="tabpanel" id="p-withdrawals" aria-labelledby="t-withdrawals"><div class="list" data-list="withdrawals"></div></section>
-      <section role="tabpanel" id="p-skins" aria-labelledby="t-skins" hidden><div class="list" data-list="skins"></div></section>
-      <section role="tabpanel" id="p-users" aria-labelledby="t-users" hidden>
-        <form class="row mb-4" data-user-search role="search">
-          <label class="sr-only" for="u-q">Telegram ID, ник или ID</label>
-          <input class="input grow-1" id="u-q" name="q" type="search" placeholder="Telegram ID, @ник, имя или ID">
-          <button class="btn btn-secondary" type="submit">Найти</button>
-        </form>
-        <div class="list" data-list="users"></div>
+
+      <section role="tabpanel" id="p-users" aria-labelledby="t-users">
+        <div class="adm-users">
+          <div>
+            <form class="row mb-4" data-user-search role="search">
+              <label class="sr-only" for="u-q">Telegram ID, ник или ID</label>
+              <input class="input grow-1" id="u-q" name="q" type="search" placeholder="Telegram ID, @ник, имя или ID игрока">
+              <button class="btn btn-secondary" type="submit">Найти</button>
+              <button class="btn btn-ghost" type="button" data-me>Мой аккаунт</button>
+            </form>
+            <div class="list" data-list="users"></div>
+          </div>
+          <aside class="card adm-user" data-user-card aria-live="polite">
+            <p class="muted">Выбери игрока слева — здесь появятся его баланс, статистика и выдача LC.</p>
+          </aside>
+        </div>
       </section>
+      <section role="tabpanel" id="p-withdrawals" aria-labelledby="t-withdrawals" hidden><div class="list" data-list="withdrawals"></div></section>
+      <section role="tabpanel" id="p-skins" aria-labelledby="t-skins" hidden><div class="list" data-list="skins"></div></section>
       <section role="tabpanel" id="p-settings" aria-labelledby="t-settings" hidden>
-        <form class="card form" data-settings-form></form>
+        <form class="adm-settings" data-settings-form></form>
       </section>
     </div>
   </main>

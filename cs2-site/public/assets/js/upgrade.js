@@ -47,7 +47,7 @@ function calc() {
   const raw = (value / state.target.price) * (1 - state.cfg.houseEdge);
   if (value < state.cfg.minValue) return { value, chance: raw, ok: false, reason: `Минимальная ставка — ${lc(state.cfg.minValue)}` };
   if (raw > state.cfg.maxChance) return { value, chance: raw, ok: false, reason: `Шанс выше ${Math.round(state.cfg.maxChance * 100)}% — выбери цель дороже` };
-  if (raw < state.cfg.minChance) return { value, chance: raw, ok: false, reason: 'Шанс меньше 1% — выбери цель дешевле или добавь ставку' };
+  if (raw < state.cfg.minChance || raw * 1_000_000 < 1) return { value, chance: raw, ok: false, reason: `Шанс меньше ${pct(Math.max(1, Math.round(state.cfg.minChance * 1_000_000)), 2)} — выбери цель дешевле или добавь ставку` };
   return { value, chance: raw, ok: true, reason: '' };
 }
 
@@ -143,7 +143,7 @@ function targetRange() {
   const { houseEdge, maxChance, minChance } = state.cfg;
   if (!value) return { min: 0, max: 0 };
   let min = Math.ceil((value * (1 - houseEdge)) / maxChance);
-  const max = Math.floor((value * (1 - houseEdge)) / minChance);
+  const max = minChance > 0 ? Math.floor((value * (1 - houseEdge)) / minChance) : 0; // 0 — без верхней границы цены
   if (state.mult) min = Math.max(min, Math.ceil(value * state.mult));
   return { min, max };
 }
@@ -338,7 +338,13 @@ async function loadOwned() {
 buildTicks();
 const s = await session();
 state.user = s.user;
-if (s.config) state.cfg = s.config.upgrade;
+if (s.config) {
+  state.cfg = s.config.upgrade;
+  // Границы шанса из настроек админки
+  const fmt = (x) => `${String(Math.round(x * 10000) / 100).replace('.', ',')}%`;
+  $('[data-cfg-max]').textContent = fmt(state.cfg.maxChance);
+  $('[data-cfg-min]').textContent = fmt(state.cfg.minChance);
+}
 await loadOwned();
 renderInput();
 render();

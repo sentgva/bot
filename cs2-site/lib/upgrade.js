@@ -38,6 +38,7 @@ export async function runUpgrade(userId, { itemIds = [], balance = 0, target }) 
     if (raw > s.maxChance) fail(400, `Шанс больше ${Math.round(s.maxChance * 100)}% — выбери скин дороже`);
     if (raw < s.minChance) fail(400, `Шанс меньше ${s.minChance * 100}% — выбери скин дешевле`);
     const chance = Math.floor(raw * ROLL_MAX);
+    if (chance < 1) fail(400, 'Шанс слишком мал — добавь ставку или выбери скин дешевле');
 
     const nonce = u.nonce;
     const roll = computeRoll(u.server_seed, u.client_seed, nonce);
