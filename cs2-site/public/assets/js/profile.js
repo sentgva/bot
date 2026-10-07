@@ -273,7 +273,7 @@ async function pollBalance() {
 
 function setupWithdraw() {
   const p = cfg.payments;
-  for (const m of ['card', 'sbp', 'crypto']) $(`[data-method="${m}"]`, wdForm).hidden = !p[m].enabled;
+  for (const m of ['card', 'sbp']) { const el = $(`[data-method="${m}"]`, wdForm); if (el) el.hidden = !p[m].enabled; }
   const bank = wdForm.elements.bank;
   bank.innerHTML = '<option value="">Выбери банк</option>' + p.banks.map((b) => `<option>${esc(b)}</option>`).join('');
   $('[data-limits]').textContent = `От ${lc(p.minWithdraw)} до ${lc(p.maxWithdraw)} за раз`;
@@ -309,7 +309,7 @@ function setupWithdraw() {
     e.preventDefault();
     if (!v.validateAll()) return;
     const f = wdForm.elements;
-    const body = { method: method(), amount: f.amount.value, card: f.card.value, phone: f.phone.value, bank: f.bank.value, asset: f.asset.value };
+    const body = { method: method(), amount: f.amount.value, card: f.card.value, phone: f.phone.value, bank: f.bank.value };
     await withLoading(wdForm.querySelector('[type="submit"]'), async () => {
       try {
         const r = await api('/api/withdraw', { method: 'POST', body });
@@ -398,7 +398,7 @@ loaders.referrals = async () => {
     box.innerHTML = `
       <h2 class="h3">Приглашай друзей — получай ${percent}% с их пополнений</h2>
       <p class="muted mt-2">Друг заходит по твоей ссылке и входит через Telegram — он навсегда закрепляется за тобой.
-        С каждого его пополнения звёздами или криптой тебе на баланс приходит ${percent}%.${r.inviteeBonus > 0 ? ` Друг сразу получает ${lc(r.inviteeBonus)} бонусом.` : ''}</p>
+        С каждого его пополнения звёздами тебе на баланс приходит ${percent}%.${r.inviteeBonus > 0 ? ` Друг сразу получает ${lc(r.inviteeBonus)} бонусом.` : ''}</p>
       <div class="ref-stats mt-4">
         <div class="stat"><p class="stat-value">${r.invited}</p><p class="stat-label">приглашено</p></div>
         <div class="stat"><p class="stat-value">${lc(r.earned)}</p><p class="stat-label">заработано</p></div>

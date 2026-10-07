@@ -23,7 +23,7 @@ try {
       ],
     }).catch((err) => console.warn(`Команды для ${id}: ${err.message}`));
   }
-  await tgApi('setMyDescription', { description: 'Апгрейд скинов CS2 прямо в Telegram: ставь немного — выигрывай много. Шанс до 80%, пополнение звёздами, вывод в USDT за 2 минуты и на карту.' });
+  await tgApi('setMyDescription', { description: 'Апгрейд скинов CS2 прямо в Telegram: ставь немного — выигрывай много. Кейсы CS2, апгрейд до 80%, пополнение звёздами, вывод на карту и по СБП.' });
   console.log(`Бот настроен: Mini App → ${webAppUrl()}`);
 } catch (err) {
   // Ошибка настройки бота не должна ломать деплой сайта

@@ -216,14 +216,19 @@ export async function openCase(userId, slug, count = 1, expectedPrice = null) {
   });
 }
 
-// Последние заносы из кейсов для живой ленты: дроп дороже цены кейса
+// Последние дропы из кейсов для живой ленты (все, не только дороже кейса)
 export async function recentCaseDrops(limit = 20) {
   const db = await getDb();
   const rows = await db.query(
-    `select co.id, co.chance_ppm, co.case_price, co.created_at, i.*
+    `select co.id, co.case_slug, co.chance_ppm, co.case_price, co.created_at, i.*
      from case_opens co join items i on i.hash_name = co.hash_name
-     where co.item_price > co.case_price order by co.id desc limit $1`,
+     order by co.id desc limit $1`,
     [limit],
   );
-  return rows.map((r) => ({ id: `c${r.id}`, chance: r.chance_ppm, inputValue: r.case_price, at: r.created_at, item: publicItem(r) }));
+  const names = new Map(ALL.map((c) => [c.slug, c.name]));
+  // Кейсы, которых больше нет на сайте, в ленте не показываем
+  return rows.filter((r) => names.has(r.case_slug)).map((r) => ({
+    id: `c${r.id}`, source: 'case', caseSlug: r.case_slug, caseName: names.get(r.case_slug) || null,
+    chance: r.chance_ppm, inputValue: r.case_price, at: r.created_at, item: publicItem(r),
+  }));
 }

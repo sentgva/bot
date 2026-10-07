@@ -138,3 +138,15 @@ test('контракт: 3–10 скинов → один скин в диапа�
   assert.equal((await db.one('select source from user_items where id = $1', [r.userItemId])).source, 'contract');
   await assert.rejects(signContract(u.id, ids), /недоступна/);
 });
+
+test('лента: любой дроп из кейса (даже дешевле кейса) попадает в живую ленту со ссылкой на кейс', async () => {
+  const [c] = await listCases();
+  const u = await makeUser(c.price);
+  const r = await openCase(u.id, c.slug);
+  const live = await getLive('g:feed');
+  const d = live.drops.find((x) => x.id === `c${r.id}`);
+  assert.ok(d, 'дроп в ленте');
+  assert.equal(d.source, 'case');
+  assert.equal(d.caseSlug, c.slug);
+  assert.equal(d.caseName, c.name);
+});

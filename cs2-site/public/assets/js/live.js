@@ -14,7 +14,7 @@ export function onLive(cb) {
   if (last) cb(last);
 }
 
-const card = (item, cls, title) => `<a class="drop${cls}" href="/upgrade/" data-rarity="${esc(item.rarity || '')}" title="${esc(title)}">
+const card = (item, cls, title, href = '/upgrade/') => `<a class="drop${cls}" href="${esc(href)}" data-rarity="${esc(item.rarity || '')}" title="${esc(title)}">
       ${skinImage(item, '').replace('<div class="skin-img">', '').replace(/<\/div>$/, '')}
       <span class="drop-text"><span class="drop-name">${esc(item.name)}</span><span class="drop-price">${lc(item.price)}</span></span>
     </a>`;
@@ -32,8 +32,10 @@ function renderDrops(drops, targets = []) {
     return;
   }
   const first = seen.size === 0;
-  let html = drops.map((d) => card(d.item, !first && !seen.has(d.id) ? ' is-new' : '',
-    `Выигрыш: ${d.item.hashName}, шанс ${(d.chance / 10000).toFixed(1).replace('.', ',')}%`)).join('');
+  // Дроп из кейса ведёт на этот кейс, выигрыш апгрейда — в апгрейдер
+  let html = drops.map((d) => card(d.item, `${!first && !seen.has(d.id) ? ' is-new' : ''}${d.source === 'case' ? ' is-case' : ''}`,
+    d.source === 'case' ? `Из кейса «${d.caseName || 'кейс'}»: ${d.item.hashName}` : `Апгрейд: ${d.item.hashName}, шанс ${(d.chance / 10000).toFixed(1).replace('.', ',')}%`,
+    d.source === 'case' && d.caseSlug ? `/cases/?c=${encodeURIComponent(d.caseSlug)}` : '/upgrade/')).join('');
   // Настоящих выигрышей мало — добираем реальными скинами каталога и честно подписываем
   if (targets.length) {
     html += '<span class="drop-sep">Можно выбить</span>'

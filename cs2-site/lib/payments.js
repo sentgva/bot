@@ -25,8 +25,9 @@ export function methodsInfo(s) {
   return {
     card: { enabled: canEncrypt(), fee: s.cardFee },
     sbp: { enabled: true, fee: s.cardFee },
-    crypto: { enabled: cryptopay.isConfigured(), fee: s.cryptoFee, assets: cryptopay.ASSETS },
-    deposit: { stars: Boolean(config.tgBotToken), crypto: cryptopay.isConfigured(), demo: config.demoTopup },
+    // Крипта отключена: пополнение — только звёзды, вывод — карта и СБП
+    crypto: { enabled: false, fee: s.cryptoFee, assets: cryptopay.ASSETS },
+    deposit: { stars: Boolean(config.tgBotToken), crypto: false, demo: config.demoTopup },
     stars: { lcPerStar: s.lcPerStar, min: s.minStars, max: s.maxStars },
     minWithdraw: s.minWithdraw,
     maxWithdraw: s.maxWithdraw,
@@ -39,7 +40,7 @@ export function methodsInfo(s) {
 
 export async function createCryptoDeposit(userId, amount) {
   const s = await getSettings();
-  if (!cryptopay.isConfigured()) fail(503, 'Пополнение криптой временно недоступно');
+  fail(410, 'Пополнение криптой отключено — пополняй звёздами Telegram');
   amount = floorLc(amount); // пополнение — целые LC
   if (!Number.isSafeInteger(amount) || amount < s.minDeposit) fail(400, `Минимальное пополнение — ${fmtLc(s.minDeposit)}`);
   if (amount > 100_000_000) fail(400, 'Слишком большая сумма за раз');

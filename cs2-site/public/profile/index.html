@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Профиль — баланс, инвентарь и вывод | LuxeDrop</title>
-  <meta name="description" content="Личный кабинет LuxeDrop: баланс, пополнение и вывод на карту, СБП или в крипту, скины на сайте и история апгрейдов.">
+  <meta name="description" content="Личный кабинет LuxeDrop: баланс, пополнение звёздами и вывод на карту или по СБП, скины на сайте и история апгрейдов.">
   <meta name="robots" content="noindex, nofollow">
   <link rel="canonical" href="https://luxedrop.gg/profile/">
   <meta property="og:type" content="website">
@@ -159,7 +159,6 @@
                   <legend class="legend">Куда вывести</legend>
                   <label class="chip" data-method="card"><input type="radio" name="method" value="card" id="wd-method">Карта</label>
                   <label class="chip" data-method="sbp"><input type="radio" name="method" value="sbp">СБП</label>
-                  <label class="chip" data-method="crypto"><input type="radio" name="method" value="crypto">USDT / TON</label>
                   <p class="error error-full" id="wd-method-error" aria-live="polite"></p>
                 </fieldset>
                 <div class="field" data-for="card" hidden>
@@ -177,13 +176,6 @@
                   <select class="select" id="wd-bank" name="bank" aria-describedby="wd-bank-error"><option value="">Выбери банк</option></select>
                   <p class="error" id="wd-bank-error" aria-live="polite"></p>
                 </div>
-                <fieldset class="field radio-group" data-for="crypto" hidden aria-describedby="wd-asset-error">
-                  <legend class="legend">Монета</legend>
-                  <label class="chip"><input type="radio" name="asset" value="USDT" id="wd-asset" checked>USDT</label>
-                  <label class="chip"><input type="radio" name="asset" value="TON">TON</label>
-                  <p class="hint error-full">Придёт чеком в @CryptoBot — оттуда можно вывести на любой кошелёк.</p>
-                  <p class="error error-full" id="wd-asset-error" aria-live="polite"></p>
-                </fieldset>
                 <div class="field">
                   <label for="wd-amount">Сумма</label>
                   <div class="row">
@@ -256,7 +248,7 @@
           <a class="logo" href="/" aria-label="LuxeDrop — на главную">
             <img src="/assets/img/logo.webp" srcset="/assets/img/logo.webp 1x, /assets/img/logo@2x.webp 2x" alt="LuxeDrop" width="151" height="48" loading="lazy">
           </a>
-          <p class="muted small footer-about">Кейсы и апгрейд скинов CS2. Вход через Telegram, вывод на карту, по СБП и в крипту.</p>
+          <p class="muted small footer-about">Кейсы и апгрейд скинов CS2. Вход через Telegram, вывод на карту и по СБП.</p>
           <!-- ЗАМЕНИТЬ: ссылки на ваши соцсети -->
           <div class="socials">
             <a href="https://t.me/luxedrop" rel="noopener" target="_blank" aria-label="Telegram-канал LuxeDrop"><svg aria-hidden="true"><use href="/assets/icons.svg#b-telegram"/></svg></a>

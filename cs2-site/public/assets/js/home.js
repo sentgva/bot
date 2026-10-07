@@ -24,7 +24,7 @@ api('/api/stats').then((s) => {
   edge = 0.05;
   maxChance = s.maxChance;
   $('[data-stat="maxChance"]').textContent = `до ${pctText(s.maxChance, 0)}`;
-  $('[data-stat="cryptoFee"]').textContent = pctText(s.cryptoFee, 0);
+  $('[data-stat="cardFee"]').textContent = pctText(s.cardFee, 0);
   $('[data-stat="minWithdraw"]').textContent = lc(s.minWithdraw);
   if (s.paid) {
     // Когда выплат достаточно — показываем, сколько реально выплачено
