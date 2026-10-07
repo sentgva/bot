@@ -404,7 +404,7 @@ loaders.referrals = async () => {
         <div class="stat"><p class="stat-value">${lc(r.earned)}</p><p class="stat-label">заработано</p></div>
         <div class="stat"><p class="stat-value">${esc(r.code)}</p><p class="stat-label">твой код</p></div>
       </div>
-      <div class="mt-4">${link('Ссылка на бота (лучше для Telegram)', r.bot)}${link('Ссылка на сайт', r.site)}</div>`;
+      <div class="mt-4">${r.bot ? link('Твоя ссылка для друзей', r.bot) : link('Твоя ссылка для друзей', r.site)}</div>`;
   } catch (err) { box.innerHTML = ''; toastError(err); }
 };
 $('[data-referrals]').addEventListener('click', async (e) => {
