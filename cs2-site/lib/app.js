@@ -25,6 +25,7 @@ import { getCase, listCases, openCase } from './cases.js';
 import { previewContract, signContract } from './contracts.js';
 import { createPromo, listPromos, redeemPromo, setPromoActive } from './promo.js';
 import { referralStats } from './referrals.js';
+import { handleBroadcastCallback, isOwnerTelegram, ownerBotMessage, rememberBotUser, runBroadcast } from './broadcast.js';
 import { adminBotMessage, adminReply, getTicket, isAdminTelegram, listTickets, setTicketStatus, userMessage } from './support.js';
 
 const r = createRouter();
@@ -102,7 +103,10 @@ r.post('/api/telegram/webhook', async (req) => {
     // Оплата звёздами: проверка перед списанием и зачисление после оплаты
     if (update.pre_checkout_query) await handlePreCheckout(update.pre_checkout_query);
     else if (update.message?.successful_payment) await handleStarsPaid(update.message);
-    else if (update.message?.chat?.type === 'private' && update.message.from) await handlePrivateMessage(update);
+    else if (update.callback_query) {
+      await rememberBotUser(update.callback_query.from);
+      await handleBroadcastCallback(update.callback_query, { schedule: (p) => waitUntil(p.catch((err) => console.error('broadcast:', err.message))) });
+    } else if (update.message?.chat?.type === 'private' && update.message.from) await handlePrivateMessage(update);
     else await handleUpdate(update);
   } catch (err) {
     console.error('telegram update:', err.message);
@@ -115,6 +119,9 @@ async function handlePrivateMessage(update) {
   const msg = update.message;
   const text = typeof msg.text === 'string' ? msg.text : '';
   const command = text.startsWith('/') ? text.split(/[\s@]/)[0] : null;
+  await rememberBotUser(msg.from);
+  // Владелец: рассылка новостей (/news → сообщение → подтверждение)
+  if (await isOwnerTelegram(msg.from) && (await ownerBotMessage(msg)).handled) return;
   if (await isAdminTelegram(msg.from.id)) {
     if ((await adminBotMessage(msg)).handled) return;
     if (!command) {
@@ -335,6 +342,14 @@ r.get('/api/live', async (req, res) => {
 
 // ── Крон (Vercel Cron шлёт Authorization: Bearer CRON_SECRET) ──
 
+// Продолжение длинной рассылки в новом вызове функции (вызывает сама рассылка, секрет — CRON_SECRET)
+r.post('/api/broadcast/continue', async (req) => {
+  if (!config.cronSecret || req.headers.authorization !== `Bearer ${config.cronSecret}`) fail(401, 'unauthorized');
+  const { id } = await readJson(req);
+  waitUntil(runBroadcast(int(id)).catch((err) => console.error('broadcast:', err.message)));
+  return { ok: true };
+});
+
 r.get('/api/cron/prices', async (req) => {
   if (!config.cronSecret || req.headers.authorization !== `Bearer ${config.cronSecret}`) fail(401, 'unauthorized');
   const prices = await syncCatalog();
@@ -399,7 +414,7 @@ r.post('/api/admin/settings', async (req) => { await requireAdmin(req); return u
 // ── Точка входа ────────────────────────────────────────────
 
 const MUTATING = new Set(['POST', 'PATCH', 'PUT', 'DELETE']);
-const WEBHOOKS = new Set(['/api/webhooks/cryptopay', '/api/telegram/webhook']);
+const WEBHOOKS = new Set(['/api/webhooks/cryptopay', '/api/telegram/webhook', '/api/broadcast/continue']);
 
 export async function handler(req, res) {
   const url = new URL(req.url, config.siteUrl);

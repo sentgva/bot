@@ -151,6 +151,33 @@ create table if not exists contracts (
 );
 create index if not exists contracts_user_idx on contracts (user_id, id desc);
 
+-- Рассылка новостей через бота (lib/broadcast.js)
+create table if not exists bot_users (       -- кто писал боту; blocked — заблокировал бота / недоступен
+  telegram_id  text primary key,
+  first_name   text,
+  username     text,
+  blocked      boolean not null default false,
+  first_seen_at timestamptz not null default now(),
+  last_seen_at timestamptz not null default now()
+);
+create table if not exists bot_state (       -- ожидание ввода в боте (например, текста новости после /news)
+  telegram_id text primary key,
+  value       text not null
+);
+create table if not exists broadcasts (
+  id           bigserial primary key,
+  from_chat_id text not null,                -- откуда копировать сообщение новости
+  message_id   bigint not null,
+  created_by   text not null,
+  status       text not null default 'draft', -- draft | sending | done | cancelled
+  cursor       text,                          -- до какого telegram_id уже разослали
+  sent         integer not null default 0,
+  failed       integer not null default 0,
+  created_at   timestamptz not null default now(),
+  started_at   timestamptz,
+  finished_at  timestamptz
+);
+
 -- Поддержка в Telegram-боте (lib/support.js)
 create table if not exists tickets (
   id          bigserial primary key,

@@ -10,9 +10,19 @@ if (!manual && process.env.VERCEL_ENV && process.env.VERCEL_ENV !== 'production'
 if (!config.siteUrl.startsWith('https://')) { console.log('SITE_URL должен быть https:// — Telegram открывает Mini App только по https'); process.exit(0); }
 
 try {
-  await tgApi('setWebhook', { url: `${config.siteUrl}/api/telegram/webhook`, secret_token: webhookSecret(), allowed_updates: ['message', 'pre_checkout_query'], drop_pending_updates: true }); // pre_checkout_query — для оплаты звёздами
+  await tgApi('setWebhook', { url: `${config.siteUrl}/api/telegram/webhook`, secret_token: webhookSecret(), allowed_updates: ['message', 'pre_checkout_query', 'callback_query'], drop_pending_updates: true }); // pre_checkout_query — оплата звёздами, callback_query — кнопки рассылки
   await tgApi('setChatMenuButton', { menu_button: { type: 'web_app', text: 'LuxeDrop', web_app: { url: webAppUrl() } } });
   await tgApi('setMyCommands', { commands: [{ command: 'start', description: 'Открыть LuxeDrop' }, { command: 'support', description: 'Написать в поддержку' }] });
+  // Владельцам — ещё команды рассылки и поддержки (видны только им)
+  for (const id of config.adminTgIds) {
+    await tgApi('setMyCommands', {
+      scope: { type: 'chat', chat_id: Number(id) },
+      commands: [
+        { command: 'news', description: 'Разослать новость всем' }, { command: 'tickets', description: 'Открытые обращения' },
+        { command: 'start', description: 'Открыть LuxeDrop' }, { command: 'cancel', description: 'Отменить ввод новости' },
+      ],
+    }).catch((err) => console.warn(`Команды для ${id}: ${err.message}`));
+  }
   await tgApi('setMyDescription', { description: 'Апгрейд скинов CS2 прямо в Telegram: ставь немного — выигрывай много. Шанс до 80%, пополнение звёздами, вывод в USDT за 2 минуты и на карту.' });
   console.log(`Бот настроен: Mini App → ${webAppUrl()}`);
 } catch (err) {
