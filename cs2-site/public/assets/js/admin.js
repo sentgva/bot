@@ -52,7 +52,7 @@ const RENDER = {
       <div class="grow"><p><b>${esc(u.name)}</b> ${u.is_banned ? '<span class="badge">Бан</span>' : ''}</p>
       <p class="small muted">ID ${u.id} · ${tgLink(u)} · был ${dateTime(u.last_seen_at)}</p></div>
       <span class="amount">${lc(u.balance)}</span>
-      ${btn('adjust', 'Баланс ±')}${btn(u.is_banned ? 'unban' : 'ban', u.is_banned ? 'Разбанить' : 'Забанить')}
+      ${btn('adjust', 'Начислить / списать LC')}${btn(u.is_banned ? 'unban' : 'ban', u.is_banned ? 'Разбанить' : 'Забанить')}
     </div>`);
   },
 };
@@ -81,11 +81,13 @@ document.addEventListener('click', async (e) => {
     if (note === null) return;
     body.note = note;
   } else if (action === 'adjust') {
-    const amount = prompt('Сколько рублей добавить (минус — списать):', '');
+    const amount = prompt('Сколько LC начислить? Целое число, минус — списать (например 5000 или -300):', '1000');
     if (!amount) return;
-    const note = prompt('Причина корректировки:', '');
+    const lcAmount = Number(amount.replace(/\s/g, ''));
+    if (!Number.isInteger(lcAmount) || lcAmount === 0) { toast('Нужно целое число LC', 'error'); return; }
+    const note = prompt('Причина (игрок увидит её в истории баланса):', lcAmount > 0 ? 'Бонус от LuxeDrop' : 'Корректировка');
     if (!note) return;
-    body = { action, amount: Number(amount.replace(',', '.')), note };
+    body = { action, amount: lcAmount, note };
   } else if (action === 'paid' || action === 'send' || action === 'ban') {
     const ok = await confirmDialog({
       title: { paid: 'Отметить как выплачено?', send: 'Создать чек в @CryptoBot?', ban: 'Забанить игрока?' }[action],

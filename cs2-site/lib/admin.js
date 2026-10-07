@@ -3,6 +3,7 @@
 import { getDb } from './db.js';
 import { fail } from './http.js';
 import { changeBalance } from './users.js';
+import { isWholeLc } from './lc.js';
 import { revealCard } from './payments.js';
 
 export async function overview() {
@@ -64,6 +65,8 @@ export async function updateUser(id, { action, amount, note }) {
   }
   if (action === 'adjust') {
     if (!Number.isSafeInteger(amount) || amount === 0) fail(400, 'Укажи сумму');
+    if (!isWholeLc(amount)) fail(400, 'Сумма — целое число LC');
+    if (Math.abs(amount) > 100_000_000) fail(400, 'Не больше 1 000 000 LC за раз');
     if (!note) fail(400, 'Укажи причину корректировки');
     return db.tx(async (q) => {
       const u = await q.one('select id from users where id = $1 for update', [id]);
