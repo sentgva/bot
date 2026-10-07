@@ -26,6 +26,8 @@ export const config = {
   tgBotUsername: (env.TG_BOT_USERNAME || '').replace(/^@/, ''),
   tgAdminChatId: env.TG_ADMIN_CHAT_ID || '',
   adminTgIds: (env.ADMIN_TG_IDS || '').split(',').map((s) => s.trim()).filter(Boolean),
+  // Админы по нику Telegram (без @). Ник берётся из подписанных Telegram данных при входе
+  adminTgUsernames: (env.ADMIN_TG_USERNAMES || '').split(',').map((s) => s.trim().replace(/^@/, '').toLowerCase()).filter(Boolean),
 
   // Цены: валюта Skinport и курс, если валюта не рубли
   priceCurrency: env.PRICE_CURRENCY || 'RUB',

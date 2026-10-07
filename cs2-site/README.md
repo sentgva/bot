@@ -66,7 +66,7 @@
 
 **Подключение:**
 1. В @BotFather создайте **отдельного** бота для LuxeDrop (`/newbot`). Не используйте токен SOVSIDE: при деплое у бота перенастраивается вебхук, и SOVSIDE перестанет отвечать.
-2. В Vercel добавьте `TG_BOT_TOKEN` (токен нового бота), `TG_BOT_USERNAME` (имя бота без @) и `ADMIN_TG_IDS` (ваш Telegram ID — узнать у @userinfobot).
+2. В Vercel добавьте `TG_BOT_TOKEN` (токен нового бота), `TG_BOT_USERNAME` (имя бота без @) и `ADMIN_TG_IDS` (ваш Telegram ID — узнать у @userinfobot) или `ADMIN_TG_USERNAMES` (ник без @).
 3. **Вход на сайте:** в @BotFather → `/setdomain` → выберите бота → укажите домен сайта. Без этого Telegram Login на сайте не откроется (в Mini App вход работает и так).
 4. Сделайте Redeploy. При сборке `scripts/telegram-setup.js` сам поставит вебхук, кнопку меню «Апгрейд» и команду /start. Вручную: `npm run telegram`.
 5. Откройте бота и нажмите /start или кнопку «Апгрейд» слева от поля ввода.
@@ -78,7 +78,7 @@
 cd cs2-site
 npm install
 npm run dev          # http://localhost:3000
-npm test             # 40 тестов: экономика, честность, платежи, звёзды и LuxeCoin, вход через Telegram, API, каталог, лента
+npm test             # 41 тест: экономика, честность, платежи, звёзды и LuxeCoin, вход через Telegram, API, каталог, лента
 ```
 
 Без `DATABASE_URL` используется встроенный Postgres (PGlite) в папке `.data/`. Ничего ставить не нужно.

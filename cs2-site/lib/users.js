@@ -22,7 +22,8 @@ export async function upsertTelegramUser(tg) {
 }
 
 // Админ — Telegram ID из ADMIN_TG_IDS
-export const isAdmin = (u) => Boolean(u?.telegram_id) && config.adminTgIds.includes(String(u.telegram_id));
+export const isAdmin = (u) => Boolean(u?.telegram_id) && (config.adminTgIds.includes(String(u.telegram_id))
+  || (Boolean(u.tg_username) && config.adminTgUsernames.includes(String(u.tg_username).toLowerCase())));
 
 export async function getUser(id) {
   if (!id) return null;

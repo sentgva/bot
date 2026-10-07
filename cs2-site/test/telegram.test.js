@@ -75,6 +75,20 @@ test('админ по Telegram ID', async () => {
   }
 });
 
+test('админ по нику Telegram (без учёта регистра и @)', async () => {
+  config.adminTgUsernames = [String(TG_USER.username).toLowerCase()];
+  try {
+    const { token } = await (await post('/api/auth/telegram', { initData: signInitData(TG_USER, TOKEN) })).json();
+    const res = await fetch(base + '/api/admin/overview', { headers: { Authorization: `Bearer ${token}` } });
+    assert.equal(res.status, 200);
+  } finally {
+    config.adminTgUsernames = [];
+  }
+  const { token } = await (await post('/api/auth/telegram', { initData: signInitData(TG_USER, TOKEN) })).json();
+  const res = await fetch(base + '/api/admin/overview', { headers: { Authorization: `Bearer ${token}` } });
+  assert.equal(res.status, 403, 'без ника в списке доступа нет');
+});
+
 test('вебхук бота: без секрета — отказ; /start — кнопка Mini App', async () => {
   const res = await post('/api/telegram/webhook', { message: {} }, { 'X-Telegram-Bot-Api-Secret-Token': 'wrong' });
   assert.equal(res.status, 401);
