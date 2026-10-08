@@ -80,6 +80,7 @@ function renderTabs() {
     ['/cases/', 'i-package', 'Кейсы'],
     ['/contracts/', 'i-layers', 'Контракты'],
     ['/upgrade/', 'i-trending-up', 'Апгрейд'],
+    ['/casino/', 'i-dices', 'Казино'],
     ['/profile/', 'i-wallet', 'Профиль'],
   ];
   const nav = document.createElement('nav');
@@ -107,7 +108,7 @@ function setupHaptics() {
   const h = tg.HapticFeedback;
   if (!h) return;
   document.addEventListener('click', (e) => {
-    if (e.target.closest('[data-owned], [data-target], [data-asset], .chip')) h.selectionChanged();
+    if (e.target.closest('[data-owned], [data-target], [data-asset], [data-cell], .chip')) h.selectionChanged();
   });
   const result = $('[data-result]');
   if (result) {

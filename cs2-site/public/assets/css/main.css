@@ -723,9 +723,10 @@ html.tg .tg-tabs {
   border-top: 1px solid var(--border);
 }
 .tg-tabs a {
-  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 60px;
-  color: var(--muted); font-size: 12px; font-weight: 650; text-decoration: none;
+  flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 60px;
+  color: var(--muted); font-size: 12px; font-weight: 650; text-decoration: none; white-space: nowrap;
 }
+@media (max-width: 400px) { .tg-tabs a { font-size: 10.5px; letter-spacing: -.01em; } }
 .tg-tabs a[aria-current="page"] { color: var(--accent-text); }
 /* В Telegram кнопку броска заменяет нативная MainButton */
 /* Кнопка «Апгрейдить» в Telegram — та же, что под колесом (нативная MainButton не нужна) */
