@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="ru" class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Казино CS2 — ракетка, мины и кости | LuxeDrop</title>
+  <meta name="description" content="Казино в стиле CS2: ракетка, мины с C4 и кости. Честные броски от твоего сида, средний возврат 95%.">
+  <link rel="canonical" href="https://luxedrop.gg/casino/">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://luxedrop.gg/casino/">
+  <meta property="og:title" content="Казино CS2 — LuxeDrop">
+  <meta property="og:description" content="Ракетка, мины и кости в стиле CS2. Честные броски, возврат 95%.">
+  <!-- partial:head -->
+  <meta name="theme-color" content="#0a0906">
+  <meta property="og:site_name" content="LuxeDrop">
+  <meta property="og:locale" content="ru_RU">
+  <meta property="og:image" content="https://luxedrop.gg/assets/img/og-image.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="LuxeDrop: апгрейд скинов CS2 и быстрый вывод денег">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="/favicon.ico" sizes="32x32">
+  <link rel="icon" href="/favicon-64.png" type="image/png" sizes="64x64">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="preload" href="/assets/fonts/inter-cyrillic-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/unbounded-cyrillic-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preconnect" href="https://community.akamai.steamstatic.com">
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <script>try{var t=localStorage.getItem('ld-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+  <!-- /partial:head -->
+  <script type="module" src="/assets/js/casino.js"></script>
+</head>
+<body>
+  <!-- partial:header -->
+  <a class="skip-link" href="#main">Перейти к содержимому</a>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="logo" href="/" aria-label="LuxeDrop — на главную">
+        <img src="/assets/img/logo.webp" srcset="/assets/img/logo.webp 1x, /assets/img/logo@2x.webp 2x" alt="LuxeDrop" width="151" height="48">
+      </a>
+      <nav class="nav" id="site-nav" aria-label="Основное меню">
+        <ul>
+          <li><a href="/cases/">Кейсы</a></li>
+          <li><a href="/contracts/">Контракты</a></li>
+          <li><a href="/upgrade/">Апгрейд</a></li>
+          <li><a href="/casino/" aria-current="page">Казино</a></li>
+          <li class="nav-theme">
+            <button class="btn btn-ghost" type="button" data-theme-toggle aria-label="Сменить тему">
+              <svg class="icon i-sun" aria-hidden="true"><use href="/assets/icons.svg#i-sun"/></svg>
+              <svg class="icon i-moon" aria-hidden="true"><use href="/assets/icons.svg#i-moon"/></svg>
+              <span>Сменить тему</span>
+            </button>
+          </li>
+        </ul>
+      </nav>
+      <div class="header-actions">
+        <button class="icon-btn" type="button" data-theme-toggle aria-label="Сменить тему">
+          <svg class="icon i-sun" aria-hidden="true"><use href="/assets/icons.svg#i-sun"/></svg>
+          <svg class="icon i-moon" aria-hidden="true"><use href="/assets/icons.svg#i-moon"/></svg>
+        </button>
+        <div class="auth" data-auth>
+          <a class="btn btn-primary btn-sm" href="/login/"><svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#b-telegram"/></svg><span>Войти<span class="hide-sm"> через Telegram</span></span></a>
+        </div>
+        <button class="icon-btn nav-toggle" type="button" data-nav-toggle aria-controls="site-nav" aria-expanded="false" aria-label="Открыть меню">
+          <svg class="icon" aria-hidden="true"><use href="/assets/icons.svg#i-menu"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+  <!-- Живая лента: последние выигрыши и скины «Можно выбить» (настоящие данные из /api/live) -->
+  <div class="live-strip" data-live>
+    <div class="container live-inner">
+      <div class="live-drops" data-live-drops aria-label="Последние выигрыши и цели апгрейда"><p class="live-empty">Загружаем…</p></div>
+    </div>
+  </div>
+  <!-- /partial:header -->
+
+  <main id="main">
+    <!-- Значки для полей: C4 и кейс-«клад» -->
+    <svg class="sr-only" aria-hidden="true" focusable="false">
+      <symbol id="g-c4" viewBox="0 0 48 48">
+        <rect x="6" y="14" width="36" height="22" rx="3" fill="#3b3a2a" stroke="#1d1c12" stroke-width="2"/>
+        <rect x="9" y="17" width="10" height="16" rx="1.5" fill="#c9a96b"/><rect x="21" y="17" width="10" height="16" rx="1.5" fill="#c9a96b"/>
+        <rect x="33" y="18" width="7" height="9" rx="1" fill="#111"/><circle cx="36.5" cy="31" r="2" fill="#ff3b30"/>
+        <path d="M14 14c0-5 6-6 10-3s10 2 10-3" fill="none" stroke="#e5484d" stroke-width="2"/>
+      </symbol>
+      <symbol id="g-gem" viewBox="0 0 48 48">
+        <path d="M14 8h20l9 12-19 22L5 20z" fill="#f2c94c"/><path d="M5 20h38L24 42z" fill="#d49b1f"/>
+        <path d="M14 8l4 12h12l4-12M18 20l6 22 6-22" fill="none" stroke="#fff3c4" stroke-width="1.5" stroke-linejoin="round"/>
+      </symbol>
+    </svg>
+
+    <div class="container page-head upg-head">
+      <p class="eyebrow"><svg class="icon icon-sm" aria-hidden="true"><use href="/assets/icons.svg#i-dices"/></svg>Казино</p>
+      <h1 class="h2">Казино</h1>
+      <p class="lead">Ракетка, мины с C4 и кости. Каждый бросок считается от твоего сида — как в апгрейдере, средний возврат <span data-rtp>95%</span>.</p>
+    </div>
+
+    <div class="container app-section">
+      <div class="cas-tabs" role="tablist" aria-label="Игры">
+        <button class="cas-tab" role="tab" id="tab-crash" aria-controls="game-crash" aria-selected="true" data-game="crash"><span aria-hidden="true">🚀</span>Ракетка</button>
+        <button class="cas-tab" role="tab" id="tab-mines" aria-controls="game-mines" aria-selected="false" tabindex="-1" data-game="mines"><span aria-hidden="true">💣</span>Мины</button>
+        <button class="cas-tab" role="tab" id="tab-dice" aria-controls="game-dice" aria-selected="false" tabindex="-1" data-game="dice"><span aria-hidden="true">🎲</span>Кости</button>
+      </div>
+
+      <!-- Ракетка -->
+      <section class="cas" id="game-crash" role="tabpanel" aria-labelledby="tab-crash" data-panel="crash">
+        <div class="card cas-controls">
+          <div class="field" data-bet-field></div>
+          <div class="field">
+            <label class="legend" for="crash-auto">Автовывод</label>
+            <div class="input-group">
+              <input class="input num" id="crash-auto" type="number" inputmode="decimal" min="1.01" max="1000" step="0.01" placeholder="Выключен" data-crash-auto>
+              <span class="suffix" aria-hidden="true">×</span>
+            </div>
+            <p class="hint">Заберём сами, когда ракетка долетит до этого множителя.</p>
+          </div>
+          <button class="btn btn-primary btn-lg btn-block" type="button" data-crash-go data-loading="Запускаем…"><span>Запустить</span></button>
+          <p class="hint" data-crash-why aria-live="polite"></p>
+        </div>
+        <div class="card cas-stage cas-crash" data-crash-stage>
+          <canvas data-crash-canvas aria-hidden="true"></canvas>
+          <div class="cas-crash-mult" aria-live="polite"><b data-crash-mult>×1,00</b><span class="small muted" data-crash-status>Сделай ставку и жми «Запустить»</span></div>
+          <div class="cas-crash-hist" data-crash-hist aria-label="Последние раунды"></div>
+        </div>
+      </section>
+
+      <!-- Мины -->
+      <section class="cas" id="game-mines" role="tabpanel" aria-labelledby="tab-mines" data-panel="mines" hidden>
+        <div class="card cas-controls">
+          <div class="field" data-bet-field></div>
+          <div class="field">
+            <span class="legend" id="mines-count-label">Сколько C4 на поле</span>
+            <div class="row cas-chips" role="radiogroup" aria-labelledby="mines-count-label" data-mines-count>
+              <button type="button" class="chip" role="radio" aria-checked="false" data-mines="1">1</button>
+              <button type="button" class="chip" role="radio" aria-checked="true" data-mines="3">3</button>
+              <button type="button" class="chip" role="radio" aria-checked="false" data-mines="5">5</button>
+              <button type="button" class="chip" role="radio" aria-checked="false" data-mines="10">10</button>
+              <button type="button" class="chip" role="radio" aria-checked="false" data-mines="20">20</button>
+              <button type="button" class="chip" role="radio" aria-checked="false" data-mines="24">24</button>
+            </div>
+          </div>
+          <div class="upg-summary cas-sum">
+            <div class="box"><span class="tiny muted">Сейчас</span><b data-mines-mult>×1,00</b></div>
+            <svg class="icon accent" aria-hidden="true"><use href="/assets/icons.svg#i-arrow-right"/></svg>
+            <div class="box"><span class="tiny muted">Следующая клетка</span><b data-mines-next>—</b></div>
+          </div>
+          <button class="btn btn-primary btn-lg btn-block" type="button" data-mines-go data-loading="…"><span>Начать</span></button>
+          <p class="hint" data-mines-why aria-live="polite">Открывай клетки и забирай выигрыш, пока не нашёл C4.</p>
+        </div>
+        <div class="card cas-stage">
+          <div class="mines-grid" data-mines-grid role="grid" aria-label="Поле 5 на 5"></div>
+        </div>
+      </section>
+
+      <!-- Кости -->
+      <section class="cas" id="game-dice" role="tabpanel" aria-labelledby="tab-dice" data-panel="dice" hidden>
+        <div class="card cas-controls">
+          <div class="field" data-bet-field></div>
+          <div class="field">
+            <label class="legend" for="dice-chance">Шанс выигрыша: <b class="num" data-dice-chance-label>50%</b></label>
+            <input class="range" id="dice-chance" type="range" min="1" max="95" step="1" value="50" data-dice-chance>
+          </div>
+          <div class="row cas-chips" role="radiogroup" aria-label="Направление">
+            <button type="button" class="chip" role="radio" aria-checked="true" data-dice-dir="under">Меньше</button>
+            <button type="button" class="chip" role="radio" aria-checked="false" data-dice-dir="over">Больше</button>
+          </div>
+          <div class="upg-summary cas-sum">
+            <div class="box"><span class="tiny muted">Множитель</span><b data-dice-mult>×1,90</b></div>
+            <svg class="icon accent" aria-hidden="true"><use href="/assets/icons.svg#i-arrow-right"/></svg>
+            <div class="box"><span class="tiny muted">Выигрыш</span><b data-dice-win>—</b></div>
+          </div>
+          <button class="btn btn-primary btn-lg btn-block" type="button" data-dice-go data-loading="Бросаем…"><span>Бросить</span></button>
+          <p class="hint" data-dice-why aria-live="polite"></p>
+        </div>
+        <div class="card cas-stage cas-dice">
+          <p class="cas-dice-num num" data-dice-num aria-live="polite">50,00</p>
+          <p class="small muted" data-dice-target>Выигрыш, если выпадет меньше 50,00</p>
+          <div class="dice-bar" data-dice-bar><span class="dice-zone" data-dice-zone></span><span class="dice-marker" data-dice-marker hidden></span></div>
+          <div class="dice-scale tiny muted" aria-hidden="true"><span>0</span><span>25</span><span>50</span><span>75</span><span>100</span></div>
+        </div>
+      </section>
+
+      <section class="mt-7" aria-labelledby="cas-hist-title">
+        <h2 class="h3 mb-4" id="cas-hist-title">Мои игры</h2>
+        <div class="list" data-cas-history><p class="muted small">Здесь появятся твои игры.</p></div>
+        <p class="hint mt-4">Броски — HMAC-SHA256 от твоего серверного и клиентского сида (как в апгрейдере). Средний возврат — <span data-rtp>95%</span> ставки. Играй на сумму, которую не жалко: это игра на удачу, а не способ заработать.</p>
+      </section>
+    </div>
+  </main>
+
+  <!-- partial:footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a class="logo" href="/" aria-label="LuxeDrop — на главную">
+            <img src="/assets/img/logo.webp" srcset="/assets/img/logo.webp 1x, /assets/img/logo@2x.webp 2x" alt="LuxeDrop" width="151" height="48" loading="lazy">
+          </a>
+          <p class="muted small footer-about">Кейсы и апгрейд скинов CS2. Вход через Telegram, вывод на карту и по СБП.</p>
+          <!-- ЗАМЕНИТЬ: ссылки на ваши соцсети -->
+          <div class="socials">
+            <a href="https://t.me/luxedrop" rel="noopener" target="_blank" aria-label="Telegram-канал LuxeDrop"><svg aria-hidden="true"><use href="/assets/icons.svg#b-telegram"/></svg></a>
+            <a href="https://discord.gg/luxedrop" rel="noopener" target="_blank" aria-label="Discord-сервер LuxeDrop"><svg aria-hidden="true"><use href="/assets/icons.svg#b-discord"/></svg></a>
+            <a href="https://vk.com/luxedrop" rel="noopener" target="_blank" aria-label="LuxeDrop во ВКонтакте"><svg aria-hidden="true"><use href="/assets/icons.svg#b-vk"/></svg></a>
+            <a href="https://youtube.com/@luxedrop" rel="noopener" target="_blank" aria-label="LuxeDrop на YouTube"><svg aria-hidden="true"><use href="/assets/icons.svg#b-youtube"/></svg></a>
+          </div>
+        </div>
+        <nav aria-label="Сервис">
+          <p class="footer-title">Сервис</p>
+          <ul class="footer-links">
+            <li><a href="/cases/">Кейсы</a></li>
+            <li><a href="/contracts/">Контракты</a></li>
+            <li><a href="/upgrade/">Апгрейдер</a></li>
+          <li><a href="/casino/">Казино</a></li>
+          </ul>
+        </nav>
+        <nav aria-label="Помощь">
+          <p class="footer-title">Помощь</p>
+          <ul class="footer-links">
+            <li><a href="/#faq">Частые вопросы</a></li>
+            <!-- ЗАМЕНИТЬ: контакты поддержки -->
+            <li><a href="https://t.me/luxedrop_support" rel="noopener" target="_blank">Поддержка в Telegram</a></li>
+            <li><a href="mailto:support@luxedrop.gg">support@luxedrop.gg</a></li>
+            <li><a href="/profile/">Личный кабинет</a></li>
+          </ul>
+        </nav>
+        <nav aria-label="Документы">
+          <p class="footer-title">Документы</p>
+          <ul class="footer-links">
+            <li><a href="/legal/terms/">Пользовательское соглашение</a></li>
+            <li><a href="/legal/privacy/">Политика конфиденциальности</a></li>
+            <li><a href="/legal/responsible/">Ответственная игра</a></li>
+          </ul>
+        </nav>
+      </div>
+      <div class="footer-bottom">
+        <p><span class="age-badge" aria-label="Только для лиц старше 18 лет">18+</span>&nbsp; © 2026 LuxeDrop. Сервис для совершеннолетних.</p>
+        <p>Не связан с Valve Corporation. Counter-Strike и Steam — товарные знаки Valve.</p>
+      </div>
+    </div>
+  </footer>
+  <!-- /partial:footer -->
+</body>
+</html>

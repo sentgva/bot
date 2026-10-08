@@ -3,14 +3,14 @@
 // Опыт (очки) копится за активность. Больше всего — за пополнения, меньше — за игру (зависит от суммы):
 //   • пополнение: 1 очко за 1 LC;
 //   • апгрейд и кейсы: 0,1 очка за 1 LC ставки / цены кейса;
-//   • контракт: 0,05 очка за 1 LC стоимости вложенных скинов.
+//   • контракт и казино: 0,05 очка за 1 LC стоимости вложенных скинов / ставки.
 // Бонусы уровня:
 //   • deposit  — +N% LC к каждому пополнению звёздами;
 //   • upgrade  — шанс апгрейда × (1 + N%), но не выше максимального;
 //   • cashback — N% от цены открытых кейсов возвращается на баланс.
 // Опыт хранится в сотых долях очка (как деньги в сотых LC), пороги — в очках.
 
-export const XP_WEIGHT = { deposit: 1, upgrade: 0.1, case: 0.1, contract: 0.05 };
+export const XP_WEIGHT = { deposit: 1, upgrade: 0.1, case: 0.1, casino: 0.05, contract: 0.05 };
 
 export const TIERS = [
   { key: 'newbie', name: 'Новичок', xp: 0, deposit: 0, upgrade: 0, cashback: 0 },
@@ -45,7 +45,7 @@ export function vipInfo(u) {
   };
 }
 
-// Начислить опыт в транзакции: amount — сумма в сотых LC, kind — deposit | upgrade | case | contract.
+// Начислить опыт в транзакции: amount — сумма в сотых LC, kind — deposit | upgrade | case | casino | contract.
 // Возвращает уровень до и после (чтобы при желании поздравить с новым).
 export async function addXp(q, userId, amount, kind) {
   const add = Math.floor(Math.max(0, Number(amount) || 0) * (XP_WEIGHT[kind] || 0));

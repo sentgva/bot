@@ -481,7 +481,7 @@ $('[data-referrals]').addEventListener('click', async (e) => {
 
 const KIND = {
   deposit: 'Пополнение', withdraw: 'Вывод', refund: 'Возврат', buy: 'Покупка скина', sell: 'Продажа скина',
-  upgrade: 'Ставка в апгрейде', buyback: 'Выкуп скинов', admin: 'Корректировка', demo: 'Тестовое пополнение', bonus: 'Бонус', case: 'Открытие кейса', promo: 'Промокод', referral: 'Реферальные', vip: 'Бонус уровня',
+  upgrade: 'Ставка в апгрейде', buyback: 'Выкуп скинов', admin: 'Корректировка', demo: 'Тестовое пополнение', bonus: 'Бонус', case: 'Открытие кейса', promo: 'Промокод', referral: 'Реферальные', vip: 'Бонус уровня', casino: 'Казино', contract: 'Контракт',
 };
 loaders.history = async () => {
   const list = await api('/api/me/ledger').catch(() => []);

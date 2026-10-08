@@ -317,3 +317,23 @@ update ticket_messages set admin_name = null where admin_name is not null;
 
 -- Поддержка: альбомы (несколько фото одним сообщением) — подтверждение и шапка тикета только для первого
 alter table tickets add column if not exists last_media_group text;
+
+-- Казино: ракетка, мины, кости. Одна строка — одна игра. state — скрытые от игрока данные (точка взрыва, мины) и ход игры.
+create table if not exists casino_games (
+  id               bigserial primary key,
+  user_id          bigint not null references users(id),
+  game             text not null,                     -- crash | mines | dice
+  bet              bigint not null,                   -- ставка, сотые LC
+  status           text not null default 'active',    -- active | won | lost
+  payout           bigint not null default 0,         -- выплата, сотые LC
+  multiplier       double precision,                  -- итоговый множитель
+  state            jsonb not null default '{}'::jsonb,
+  roll             integer,
+  server_seed_hash text not null,
+  client_seed      text not null,
+  nonce            integer not null,
+  created_at       timestamptz not null default now(),
+  finished_at      timestamptz
+);
+create index if not exists casino_games_user_idx on casino_games (user_id, id desc);
+create index if not exists casino_games_active_idx on casino_games (user_id, game) where status = 'active';

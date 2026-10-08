@@ -30,6 +30,10 @@ export const DEFAULTS = {
   contractMaxItems: 10,     // и максимум            // край сервиса в кейсах: средний дроп = цена кейса × (1 − caseEdge)
   refPercent: 0.1,          // рефералы: доля от пополнений друга, которую получает пригласивший
   refInviteeBonus: 0,       // рефералы: бонус новичку, пришедшему по ссылке, сотые LC
+  casinoEdge: 0.05,         // казино (ракетка, мины, кости): средний возврат = ставка × (1 − casinoEdge)
+  casinoMinBet: 100,        // казино: минимальная ставка, сотые LC (1 LC)
+  casinoMaxBet: 5000000,    // казино: максимальная ставка, сотые LC (50 000 LC)
+  casinoMaxWin: 100000000,  // казино: максимальный выигрыш за игру, сотые LC (1 000 000 LC)
   signupBonus: 100000,      // стартовый бонус новому игроку при первом входе, сотые LC (1 000 LC); 0 — выключен
 };
 
@@ -40,6 +44,7 @@ const LIMITS = {
   cardFee: [0, 0.5], cryptoFee: [0, 0.5], minWithdraw: [100, 100_000_000], maxWithdraw: [100, 1_000_000_000],
   minDeposit: [100, 100_000_000], cryptoAutoLimit: [0, 1_000_000_000], statsMinPaid: [0, 1e12], bestDropMaxPrice: [10_000, 1e12],
   lcPerStar: [0.01, 100], minStars: [1, 100_000], maxStars: [1, 1_000_000], signupBonus: [0, 100_000_000], refPercent: [0, 0.5], refInviteeBonus: [0, 100_000_000], caseEdge: [0.01, 0.5], contractEdge: [0.01, 0.5], contractMinMult: [0.05, 0.9], contractMaxMult: [1.5, 20], contractMinItems: [1, 10], contractMaxItems: [2, 20],
+  casinoEdge: [0.01, 0.25], casinoMinBet: [100, 10_000_000], casinoMaxBet: [100, 1_000_000_000], casinoMaxWin: [10_000, 1e12],
 };
 
 let cache = { at: 0, value: null };

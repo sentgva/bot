@@ -23,6 +23,9 @@ import { parseTradeUrl, rublesToKop } from './validate.js';
 import * as admin from './admin.js';
 import { getCase, listCases, openCase } from './cases.js';
 import { previewContract, signContract } from './contracts.js';
+import {
+  activeMines, cashoutCrash, cashoutMines, myCasinoGames, openMine, playDice, startCrash, startMines, waitCrash, CRASH_K, CRASH_MAX,
+} from './casino.js';
 import { TIERS, XP_WEIGHT, vipInfo } from './vip.js';
 import { createPromo, listPromos, redeemPromo, setPromoActive } from './promo.js';
 import { referralStats } from './referrals.js';
@@ -171,6 +174,7 @@ r.get('/api/me', async (req) => {
       market: { markup: s.marketMarkup, sellRate: s.siteSellRate },
       cases: { edge: s.caseEdge },
       vip: { tiers: TIERS, weights: XP_WEIGHT },
+      casino: { edge: s.casinoEdge, minBet: s.casinoMinBet, maxBet: s.casinoMaxBet, maxWin: s.casinoMaxWin, crashK: CRASH_K, crashMax: CRASH_MAX },
       contracts: { edge: s.contractEdge, minMult: s.contractMinMult, maxMult: s.contractMaxMult, minItems: s.contractMinItems, maxItems: s.contractMaxItems },
       // Для страницы входа: ID и имя бота LuxeDrop (не секретные), тестовый вход — только локально
       auth: { telegramBotId: botId(), botUsername: config.tgBotUsername || null, devLogin: config.devLogin },
@@ -281,6 +285,55 @@ r.post('/api/contracts/sign', async (req) => {
   await rateLimit(`contract:${u.id}`, 30, 60);
   const { ids, value } = await readJson(req);
   return signContract(u.id, Array.isArray(ids) ? ids.map(int) : [], Number.isSafeInteger(value) ? value : null);
+});
+
+// ── Казино: ракетка, мины, кости ───────────────────────────
+
+const num = (v) => (typeof v === 'number' ? v : Number.NaN);
+r.post('/api/casino/dice', async (req) => {
+  const u = await requireUser(req);
+  await rateLimit(`casino:${u.id}`, 240, 60);
+  const { bet, chance, over } = await readJson(req);
+  return playDice(u.id, { bet: num(bet), chance: num(chance), over: over === true });
+});
+r.get('/api/casino/mines', async (req) => ({ game: await activeMines((await requireUser(req)).id) }));
+r.post('/api/casino/mines/start', async (req) => {
+  const u = await requireUser(req);
+  await rateLimit(`casino:${u.id}`, 240, 60);
+  const { bet, mines } = await readJson(req);
+  return startMines(u.id, { bet: num(bet), mines: num(mines) });
+});
+r.post('/api/casino/mines/open', async (req) => {
+  const u = await requireUser(req);
+  await rateLimit(`casino:${u.id}`, 240, 60);
+  const { id, cell } = await readJson(req);
+  return openMine(u.id, int(id), num(cell));
+});
+r.post('/api/casino/mines/cashout', async (req) => {
+  const u = await requireUser(req);
+  const { id } = await readJson(req);
+  return cashoutMines(u.id, int(id));
+});
+r.post('/api/casino/crash/start', async (req) => {
+  const u = await requireUser(req);
+  await rateLimit(`casino:${u.id}`, 240, 60);
+  const { bet, auto } = await readJson(req);
+  return startCrash(u.id, { bet: num(bet), auto: auto == null || auto === '' ? null : num(auto) });
+});
+r.post('/api/casino/crash/cashout', async (req) => {
+  const u = await requireUser(req);
+  const { id } = await readJson(req);
+  return cashoutCrash(u.id, int(id));
+});
+r.get('/api/casino/crash/:id/wait', async (req, res, { params }) => {
+  const u = await requireUser(req);
+  await rateLimit(`crash-wait:${u.id}`, 120, 60);
+  return waitCrash(u.id, int(params.id));
+});
+r.get('/api/casino/history', async (req, res, { url }) => {
+  const u = await requireUser(req);
+  const game = url.searchParams.get('game');
+  return myCasinoGames(u.id, ['crash', 'mines', 'dice'].includes(game) ? game : null);
 });
 
 // ── Кейсы ──────────────────────────────────────────────────
