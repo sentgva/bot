@@ -140,9 +140,11 @@ async function openUser(id) {
       <form class="adm-grant" data-ban-form hidden novalidate>
         <p class="legend">Бан: срок и причина</p>
         <div class="chips">
-          <button type="button" class="chip" data-ban-days="1" aria-pressed="true">1 день</button>
-          <button type="button" class="chip" data-ban-days="7" aria-pressed="false">7 дней</button>
-          <button type="button" class="chip" data-ban-days="30" aria-pressed="false">30 дней</button>
+          <button type="button" class="chip" data-ban-days="1" aria-pressed="false">1 час</button>
+          <button type="button" class="chip" data-ban-days="24" aria-pressed="true">1 день</button>
+          <button type="button" class="chip" data-ban-days="72" aria-pressed="false">3 дня</button>
+          <button type="button" class="chip" data-ban-days="168" aria-pressed="false">7 дней</button>
+          <button type="button" class="chip" data-ban-days="720" aria-pressed="false">30 дней</button>
           <button type="button" class="chip" data-ban-days="forever" aria-pressed="false">Навсегда</button>
         </div>
         <input class="input" name="reason" type="text" maxlength="200" placeholder="Причина — игрок увидит её на сайте" aria-label="Причина бана">
@@ -226,12 +228,13 @@ $('[data-user-card]').addEventListener('submit', async (e) => {
   const reason = form.elements.reason.value.trim();
   if (!reason) { toast('Укажи причину бана', 'error'); form.elements.reason.focus(); return; }
   const picked = $('[data-ban-days][aria-pressed="true"]', form);
-  const days = picked.dataset.banDays === 'forever' ? null : Number(picked.dataset.banDays);
+  const hours = picked.dataset.banDays === 'forever' ? null : Number(picked.dataset.banDays);
+  const termText = hours == null ? 'навсегда' : `на ${picked.textContent.trim()}`;
   await withLoading(e.submitter, async () => {
     try {
       const full = form.elements.full.checked;
-      await api(`/api/admin/users/${currentUserId}`, { method: 'POST', body: { action: 'ban', days, note: reason, full } });
-      toast(`${full ? 'Полный бан' : 'Забанен'} ${days ? `на ${days} дн.` : 'навсегда'}`, 'success');
+      await api(`/api/admin/users/${currentUserId}`, { method: 'POST', body: { action: 'ban', hours, note: reason, full } });
+      toast(`${full ? 'Полный бан' : 'Забанен'} ${termText}`, 'success');
       openUser(currentUserId);
       load();
     } catch (err) { toastError(err); }
@@ -428,6 +431,10 @@ const SETTINGS = [
   ['Казино', [
     ['casinoEdge', 'Край казино', 'pct', '5% — средний возврат 95% ставки (ракетка, мины, кости)'],
     ['casinoMinBet', 'Мин. ставка', 'lc'], ['casinoMaxBet', 'Макс. ставка', 'lc'], ['casinoMaxWin', 'Макс. выигрыш за игру', 'lc'],
+  ]],
+  ['Ежедневная награда', [
+    ['dailyNeed', 'Нужно поставить за день', 'lc', 'Кейсы, апгрейд и казино вместе'], ['dailyBase', 'Награда за 1-й день', 'lc'],
+    ['dailyStep', 'Прибавка за каждый день подряд', 'lc'], ['dailyMax', 'Максимальная награда', 'lc'],
   ]],
   ['Бонусы и рефералы', [
     ['signupBonus', 'Стартовый бонус новым игрокам', 'lc', '0 — выключен'],

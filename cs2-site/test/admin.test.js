@@ -93,7 +93,7 @@ test('бан: срок 1/7/30 дней или навсегда, с причин�
   const db = await getDb();
   const u = await makeUser(1_000_000);
   await assert.rejects(updateUser(u.id, { action: 'ban', days: 7 }), /причину/);
-  await assert.rejects(updateUser(u.id, { action: 'ban', days: 3, note: 'x' }), /1, 7, 30/);
+  await assert.rejects(updateUser(u.id, { action: 'ban', days: 2, note: 'x' }), /Срок бана/);
   await updateUser(u.id, { action: 'ban', days: 7, note: 'Мультиаккаунт' });
   let row = await db.one('select * from users where id = $1', [u.id]);
   const ban = activeBan(row);

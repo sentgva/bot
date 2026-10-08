@@ -1321,3 +1321,56 @@ html.is-banned .site-header { top: auto; }
 .adm-item img { width: 48px; height: 36px; object-fit: contain; }
 .adm-item:has(input:checked) { box-shadow: inset 0 0 0 2px var(--danger); }
 .adm-item.is-locked { opacity: .55; cursor: default; }
+
+/* ---------- Экран блокировки: чёрный, на весь экран, с поддержкой ---------- */
+html.is-banned, html.is-banned body { overflow: hidden !important; }
+.ban-screen {
+  position: fixed; inset: 0; z-index: 2147483000; display: flex; align-items: center; justify-content: center;
+  padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom)); background: #000; color: #f3e9e9;
+  font-family: var(--font); overflow-y: auto;
+}
+.ban-box { width: 100%; max-width: 520px; max-height: 100%; display: flex; flex-direction: column; gap: 16px; }
+.ban-head { text-align: center; display: grid; gap: 6px; justify-items: center; }
+.ban-head .ban-icon { font-size: 44px; }
+.ban-head h1 { margin: 0; font-family: var(--font-display); font-size: clamp(22px, 5vw, 30px); color: #fff; }
+.ban-when { margin: 0; color: #ffb4b4; font-size: 15px; }
+.ban-when b { color: #fff; }
+.ban-head .ban-reason { margin: 0; color: #ffd0d0; font-size: 15px; overflow-wrap: anywhere; }
+.ban-support { display: flex; flex-direction: column; gap: 10px; min-height: 0; flex: 1 1 auto; padding: 14px; border-radius: 16px; background: #111; border: 1px solid #2a2a2a; }
+.ban-support-title { margin: 0; font-weight: 700; color: #fff; }
+.ban-chat { display: flex; flex-direction: column; gap: 8px; min-height: 120px; max-height: 42vh; overflow-y: auto; padding-right: 4px; }
+.ban-chat .ban-hint { margin: 0; font-size: 14px; color: #9a9a9a; }
+.ban-msg { max-width: 85%; padding: 8px 12px; border-radius: 14px; font-size: 14px; line-height: 1.4; display: grid; gap: 2px; overflow-wrap: anywhere; white-space: pre-wrap; }
+.ban-msg time { font-size: 11px; opacity: .6; }
+.ban-msg.is-me { align-self: flex-end; background: #2b2412; color: #ffe9b0; border-bottom-right-radius: 4px; }
+.ban-msg.is-admin { align-self: flex-start; background: #1d1d1d; color: #eee; border-bottom-left-radius: 4px; }
+.ban-form { display: flex; gap: 8px; align-items: flex-end; }
+.ban-form textarea {
+  flex: 1; min-height: 44px; max-height: 140px; resize: vertical; padding: 10px 12px; border-radius: 12px; border: 1px solid #333;
+  background: #0a0a0a; color: #fff; font: inherit; font-size: 16px;
+}
+.ban-form textarea:focus { outline: none; border-color: #e2b13c; }
+.ban-form button { min-height: 44px; padding: 0 16px; border-radius: 12px; border: 0; background: #e2b13c; color: #1a1203; font-weight: 700; cursor: pointer; }
+.ban-form button:disabled { opacity: .5; }
+.ban-closed { margin: 0; color: #ff9b9b; font-size: 14px; }
+
+/* Ежедневная награда */
+.daily-card { padding: var(--s4); display: grid; gap: var(--s3); border-color: var(--accent); background: linear-gradient(160deg, color-mix(in srgb, var(--accent) 12%, var(--surface)), var(--surface)); }
+.daily-head { display: flex; justify-content: space-between; align-items: center; gap: var(--s3); }
+.daily-head .h3 { margin: 0; }
+.daily-amount { font-family: var(--font-display); font-size: 24px; color: var(--accent-text); white-space: nowrap; }
+.daily-bar { height: 10px; border-radius: var(--r-pill); background: var(--surface-2); overflow: hidden; }
+.daily-bar span { --w: 0%; display: block; height: 100%; width: var(--w); background: linear-gradient(90deg, var(--accent), #ffe08a); border-radius: inherit; transition: width .4s var(--ease); }
+.daily-done { margin: 0; color: var(--success); font-weight: 600; }
+.daily-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.daily-day { display: grid; gap: 2px; justify-items: center; padding: 6px 2px; border-radius: var(--r-md); background: var(--surface-2); text-align: center; }
+.daily-day b { font-size: 12px; white-space: nowrap; }
+.daily-day.is-today { box-shadow: inset 0 0 0 2px var(--accent); }
+@media (max-width: 420px) { .daily-day b { font-size: 10.5px; } }
+.daily-badge {
+  position: fixed; z-index: 60; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 16px; border-radius: var(--r-pill); background: var(--accent); color: #1a1203; font-weight: 700; text-decoration: none;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .45), 0 0 24px rgba(226, 177, 60, .45); animation: cell-pop .4s var(--ease);
+}
+html.tg .daily-badge { bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
+html.is-banned .daily-badge { display: none; }

@@ -36,6 +36,10 @@ export const DEFAULTS = {
   casinoMaxWin: 100000000000, // казино: максимальный выигрыш за игру, сотые LC (1 000 000 000 LC)
   depositBonus: 0,          // акция: +N к каждому пополнению звёздами (0,1 = +10%); 0 — выключена
   depositBonusUntil: 0,     // акция действует до этого момента (мс с 1970 г.); 0 — пока не выключат
+  dailyNeed: 19900,         // ежедневная награда: сколько поставить за день (кейсы, апгрейд, казино), сотые LC (199 LC)
+  dailyBase: 4000,          // награда за первый день серии, сотые LC (40 LC)
+  dailyStep: 1000,          // +N за каждый следующий день подряд, сотые LC (+10 LC)
+  dailyMax: 20000,          // потолок награды, сотые LC (200 LC)
   signupBonus: 100000,      // стартовый бонус новому игроку при первом входе, сотые LC (1 000 LC); 0 — выключен
 };
 
@@ -48,6 +52,7 @@ const LIMITS = {
   lcPerStar: [0.01, 100], minStars: [1, 100_000], maxStars: [1, 1_000_000], signupBonus: [0, 100_000_000], refPercent: [0, 0.5], refInviteeBonus: [0, 100_000_000], caseEdge: [0.01, 0.5], contractEdge: [0.01, 0.5], contractMinMult: [0.05, 0.9], contractMaxMult: [1.5, 20], contractMinItems: [1, 10], contractMaxItems: [2, 20],
   casinoEdge: [0.01, 0.25], casinoMinBet: [100, 10_000_000], casinoMaxBet: [100, 100_000_000_000], casinoMaxWin: [10_000, 100_000_000_000],
   depositBonus: [0, 1], depositBonusUntil: [0, 1e14],
+  dailyNeed: [0, 100_000_000], dailyBase: [0, 100_000_000], dailyStep: [0, 100_000_000], dailyMax: [0, 1_000_000_000],
 };
 
 // Акция на пополнение сейчас: доля бонуса (0 — нет) и до какого момента

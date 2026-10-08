@@ -429,7 +429,38 @@ $('#promo-form').addEventListener('submit', async (e) => {
 // ── Уровень (VIP) ──────────────────────────────────────────
 
 const pctNum = (x) => `${String(Math.round(x * 1000) / 10).replace('.', ',')}%`;
+// Ежедневная награда: прогресс ставок за сегодня, серия дней и кнопка «Забрать»
+async function renderDaily() {
+  const box = $('[data-daily]');
+  const d = await api('/api/daily').catch(() => null);
+  if (!d) { box.hidden = true; return; }
+  const pct = Math.min(100, Math.floor((d.wagered / Math.max(1, d.need)) * 100));
+  box.innerHTML = `
+    <div class="daily-head">
+      <div><p class="h3">🎁 Ежедневная награда</p><p class="small muted">День ${d.streak} подряд · обновится в 00:00 МСК</p></div>
+      <b class="daily-amount">${lc(d.reward)}</b>
+    </div>
+    ${d.claimed ? '<p class="daily-done">✅ Сегодня получено. Завтра — больше, если не пропустишь день.</p>' : `
+      <div class="daily-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><span data-daily-fill></span></div>
+      <p class="small muted">Поставлено сегодня: <b>${lc(Math.min(d.wagered, d.need))}</b> из ${lc(d.need)} — кейсы, апгрейд, казино</p>
+      <button class="btn ${d.ready ? 'btn-primary' : 'btn-secondary'} btn-block" type="button" data-daily-claim ${d.ready ? '' : 'disabled'} data-loading="Забираем…">${d.ready ? `Забрать ${lc(d.reward)}` : `Поставь ещё ${lc(d.need - d.wagered)}`}</button>`}
+    <div class="daily-days">${d.upcoming.map((v, i) => `<div class="daily-day${i === 0 && !d.claimed ? ' is-today' : ''}"><span class="tiny muted">${d.streak + i + (d.claimed ? 1 : 0)}-й</span><b>${lc(v)}</b></div>`).join('')}</div>`;
+  $('[data-daily-fill]', box)?.style.setProperty('--w', `${pct}%`);
+  $('[data-daily-claim]', box)?.addEventListener('click', async (e) => {
+    await withLoading(e.currentTarget, async () => {
+      try {
+        const r = await api('/api/daily/claim', { method: 'POST' });
+        updateBalance(r.balance);
+        toast(`+${lc(r.reward)} — ежедневная награда, день ${r.streak}`, 'success');
+        $('[data-daily-badge]')?.remove();
+        renderDaily();
+      } catch (err) { toastError(err); }
+    });
+  });
+}
+
 loaders.vip = () => {
+  renderDaily();
   const v = user.vip;
   const tiers = cfg.vip?.tiers || [];
   const perks = (t) => [t.deposit ? `+${pctNum(t.deposit)} к пополнению` : null, t.upgrade ? `+${pctNum(t.upgrade)} к шансу апгрейда` : null, t.cashback ? `кэшбэк ${pctNum(t.cashback)} за кейсы` : null].filter(Boolean);

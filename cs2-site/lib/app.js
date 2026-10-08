@@ -24,6 +24,7 @@ import * as admin from './admin.js';
 import { getCase, listCases, openCase } from './cases.js';
 import { previewContract, signContract } from './contracts.js';
 import { slotsInfo } from './slots.js';
+import { claimDaily, getDaily } from './daily.js';
 import {
   activeMines, cashoutCrash, cashoutMines, myCasinoGames, openMine, playDice, playSlots, startCrash, startMines, waitCrash, CRASH_K, CRASH_MAX,
 } from './casino.js';
@@ -31,7 +32,7 @@ import { TIERS, XP_WEIGHT, vipInfo } from './vip.js';
 import { createPromo, listPromos, redeemPromo, setPromoActive } from './promo.js';
 import { referralStats } from './referrals.js';
 import { handleBroadcastCallback, isOwnerTelegram, ownerBotMessage, rememberBotUser, runBroadcast } from './broadcast.js';
-import { adminBotMessage, adminReply, getTicket, isAdminTelegram, listTickets, mediaOf, setTicketStatus, supportBan, FULL_BAN_TEXT, userMessage } from './support.js';
+import { adminBotMessage, adminReply, getTicket, isAdminTelegram, listTickets, mediaOf, myTicket, setTicketStatus, supportBan, FULL_BAN_TEXT, userMessage, webMessage } from './support.js';
 
 const r = createRouter();
 
@@ -273,6 +274,30 @@ r.post('/api/promo', async (req) => {
 });
 r.get('/api/me/referrals', async (req) => referralStats((await requireUser(req)).id));
 
+// ── Ежедневная награда ─────────────────────────────────────
+
+r.get('/api/daily', async (req) => getDaily((await requireUser(req)).id));
+r.post('/api/daily/claim', async (req) => {
+  const u = await requireUser(req);
+  await rateLimit(`daily:${u.id}`, 20, 60);
+  return claimDaily(u.id);
+});
+
+// ── Поддержка с сайта (доступна и забаненным — экран блокировки) ──
+
+r.get('/api/support', async (req) => {
+  const u = await currentUser(req);
+  if (!u) fail(401, 'Войди через Telegram');
+  return myTicket(u);
+});
+r.post('/api/support', async (req) => {
+  const u = await currentUser(req);
+  if (!u) fail(401, 'Войди через Telegram');
+  await rateLimit(`support:${u.id}`, 10, 60);
+  const { text } = await readJson(req);
+  return webMessage(u, str(text, 3500));
+});
+
 // ── Контракты ──────────────────────────────────────────────
 
 r.post('/api/contracts/preview', async (req) => {
@@ -459,7 +484,8 @@ r.post('/api/admin/users/:id', async (req, res, { params }) => {
   const b = await readJson(req);
   const amount = b.amount === undefined ? undefined : Math.round(Number(b.amount) * 100);
   const days = b.days === null || b.days === undefined || b.days === '' ? null : int(b.days);
-  return admin.updateUser(int(params.id), { action: b.action, amount, note: str(b.note, 200), days, full: b.full === true }, me);
+  const hours = b.hours === null || b.hours === undefined || b.hours === '' ? null : int(b.hours);
+  return admin.updateUser(int(params.id), { action: b.action, amount, note: str(b.note, 200), days, hours, full: b.full === true }, me);
 });
 r.get('/api/admin/tickets', async (req, res, { url }) => { await requireAdmin(req); return listTickets(url.searchParams.get('status') || 'open'); });
 r.get('/api/admin/tickets/:id', async (req, res, { params }) => { await requireAdmin(req); return getTicket(int(params.id)); });

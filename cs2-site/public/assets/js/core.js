@@ -290,31 +290,96 @@ const fmtLeft = (ms) => {
 export function renderBan(ban) {
   if (!ban) return;
   const until = ban.until ? new Date(ban.until) : null;
+  // Экран блокировки: чёрный, на весь экран, сверху — срок и причина, ниже — окно поддержки
   const build = () => {
-    const bar = document.createElement('div');
-    bar.className = 'ban-bar';
-    bar.setAttribute('role', 'alert');
-    bar.dataset.banBar = '';
+    const el = document.createElement('div');
+    el.className = 'ban-screen';
+    el.setAttribute('role', 'alertdialog');
+    el.setAttribute('aria-modal', 'true');
+    el.setAttribute('aria-labelledby', 'ban-title');
+    el.dataset.banBar = '';
     const when = until
       ? `до ${until.toLocaleString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })} · осталось <b data-ban-left>${fmtLeft(until - Date.now())}</b>`
       : '<b>навсегда</b>';
-    bar.innerHTML = `<span class="ban-icon" aria-hidden="true">⛔</span><div><p><b>Аккаунт ${ban.full ? 'полностью ' : ''}заблокирован</b> ${when}</p>${ban.reason ? `<p class="ban-reason">Причина: ${esc(ban.reason)}</p>` : ''}<p class="ban-hint">${ban.full ? 'Полная блокировка: играть, выводить и писать в поддержку нельзя.' : 'Играть и выводить нельзя. Вопросы — в поддержку в нашем Telegram-боте.'}</p></div>`;
-    document.body.prepend(bar);
-    return bar;
+    el.innerHTML = `
+      <div class="ban-box">
+        <div class="ban-head">
+          <span class="ban-icon" aria-hidden="true">⛔</span>
+          <h1 id="ban-title">Аккаунт ${ban.full ? 'полностью ' : ''}заблокирован</h1>
+          <p class="ban-when">${when}</p>
+          ${ban.reason ? `<p class="ban-reason">Причина: <b>${esc(ban.reason)}</b></p>` : ''}
+        </div>
+        <section class="ban-support" aria-label="Поддержка">
+          <p class="ban-support-title">💬 Поддержка</p>
+          ${ban.full
+    ? '<p class="ban-closed">Полная блокировка: обращения в поддержку для этого аккаунта не принимаются.</p>'
+    : `<div class="ban-chat" data-ban-chat><p class="ban-hint">Если считаешь блокировку ошибкой — напиши здесь. Ответ придёт сюда и в нашего Telegram-бота.</p></div>
+          <form class="ban-form" data-ban-form novalidate>
+            <textarea name="text" rows="2" maxlength="3500" placeholder="Сообщение в поддержку…" aria-label="Сообщение в поддержку" required></textarea>
+            <button type="submit">Отправить</button>
+          </form>`}
+        </section>
+      </div>`;
+    document.body.append(el);
+    if (!ban.full) setupBanSupport(el);
+    return el;
   };
-  let bar = build();
+  let screen = build();
   document.documentElement.classList.add('is-banned');
-  // Удалили плашку (например, через инструменты разработчика) — возвращаем
-  new MutationObserver(() => { if (!document.body.contains(bar)) bar = build(); }).observe(document.body, { childList: true });
+  // Удалили экран (например, через инструменты разработчика) — возвращаем
+  new MutationObserver(() => { if (!document.body.contains(screen)) screen = build(); }).observe(document.body, { childList: true });
   if (until) {
-    const tick = () => {
+    setInterval(() => {
       const left = until - Date.now();
       if (left <= 0) { location.reload(); return; } // срок вышел — бан снимется на сервере сам
-      const el = bar.querySelector('[data-ban-left]');
+      const el = screen.querySelector('[data-ban-left]');
       if (el) el.textContent = fmtLeft(left);
-    };
-    setInterval(tick, 30_000);
+    }, 30_000);
   }
+}
+
+// Чат с поддержкой на экране блокировки: история обращения + отправка, обновление раз в 15 секунд
+function setupBanSupport(root) {
+  const chat = root.querySelector('[data-ban-chat]');
+  const form = root.querySelector('[data-ban-form]');
+  const hint = chat.innerHTML;
+  const load = async () => {
+    try {
+      const r = await api('/api/support');
+      if (!r.messages?.length) return;
+      chat.innerHTML = r.messages.map((m) => `<div class="ban-msg ${m.sender === 'admin' ? 'is-admin' : 'is-me'}"><span>${esc(m.text)}</span><time>${new Date(m.created_at).toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</time></div>`).join('');
+      chat.scrollTop = chat.scrollHeight;
+    } catch { if (!chat.children.length) chat.innerHTML = hint; }
+  };
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const text = form.elements.text.value.trim();
+    if (!text) { form.elements.text.focus(); return; }
+    const btn = form.querySelector('button');
+    btn.disabled = true;
+    try {
+      await api('/api/support', { method: 'POST', body: { text } });
+      form.elements.text.value = '';
+      await load();
+    } catch (err) { toastError(err); }
+    btn.disabled = false;
+  });
+  form.elements.text.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); form.requestSubmit(); } });
+  load();
+  setInterval(load, 15_000);
+}
+
+// Ежедневная награда готова — значок-подарок внизу экрана, ведёт в профиль
+async function dailyBadge(user) {
+  if (!user || user.ban || location.pathname.startsWith('/admin') || location.pathname.startsWith('/profile')) return;
+  const d = await api('/api/daily').catch(() => null);
+  if (!d?.ready) return;
+  const a = document.createElement('a');
+  a.className = 'daily-badge';
+  a.href = '/profile/#vip';
+  a.dataset.dailyBadge = '';
+  a.innerHTML = `<span aria-hidden="true">🎁</span><span>Забрать ${lc(d.reward)}</span>`;
+  document.body.append(a);
 }
 
 // Плашка акции на пополнение (включается в админке): «+50% к пополнению · осталось 3 ч 12 мин»
@@ -377,5 +442,5 @@ initTheme();
 initNav();
 initReveal();
 loginNotice();
-session().then((s) => { renderAuth(s.user); renderBan(s.user?.ban); renderPromo(s.config); });
+session().then((s) => { renderAuth(s.user); renderBan(s.user?.ban); renderPromo(s.config); dailyBadge(s.user); });
 import('./live.js'); // живая лента: онлайн и выигрыши

@@ -373,3 +373,13 @@ create index if not exists item_confiscations_user_idx on item_confiscations (us
 
 -- Полный бан: как обычный, но ещё и без поддержки (бот не принимает обращения)
 alter table users add column if not exists ban_full boolean not null default false;
+
+-- Ежедневные награды: одна строка — одна полученная награда (день по Москве)
+create table if not exists daily_rewards (
+  user_id    bigint not null references users(id),
+  day        text not null,                   -- 'YYYY-MM-DD' по Москве
+  streak     integer not null,                -- какой это день подряд
+  amount     bigint not null,
+  created_at timestamptz not null default now(),
+  primary key (user_id, day)
+);

@@ -103,6 +103,28 @@ export async function userMessage(from, text, fetchImpl = fetch, media = null) {
   return ticket;
 }
 
+// Поддержка с сайта (в том числе с экрана блокировки): то же обращение, что из бота
+export async function webMessage(user, text, fetchImpl = fetch) {
+  if (!user?.telegram_id) fail(400, 'Поддержка работает через Telegram — войди через Telegram');
+  if (await supportBan(user.telegram_id)) fail(403, 'Обращения в поддержку для этого аккаунта не принимаются');
+  const body = clip(text);
+  if (!body) fail(400, 'Напиши сообщение');
+  const t = await userMessage({ id: user.telegram_id, first_name: user.name, username: user.tg_username }, body, fetchImpl);
+  return { ok: true, ticketId: t?.id ?? null };
+}
+
+// Переписка игрока с поддержкой: последнее обращение и его сообщения
+export async function myTicket(user) {
+  if (!user?.telegram_id) return { ticket: null, messages: [], blocked: false };
+  const db = await getDb();
+  const blocked = Boolean(await supportBan(user.telegram_id));
+  const t = await db.one('select id, status, created_at from tickets where telegram_id = $1 order by id desc limit 1', [String(user.telegram_id)]);
+  const messages = t ? await db.query(
+    `select id, sender, text, created_at from (select * from ticket_messages where ticket_id = $1 order by id desc limit 30) m order by id`, [t.id],
+  ) : [];
+  return { ticket: t, messages, blocked };
+}
+
 // Ответ админа (из бота или панели) → игроку
 // media — из mediaOf(msg): админ ответил фото, кружком и т.п. (копия, без «переслано от»)
 export async function adminReply(ticketId, text, _admin, fetchImpl = fetch, media = null) {

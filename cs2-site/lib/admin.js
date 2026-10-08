@@ -156,7 +156,7 @@ export async function confiscateItems(userId, ids, reason, actor) {
   return { ok: true, count: result.rows.length, total };
 }
 
-export async function updateUser(id, { action, amount, note, days, full = false }, actor = null) {
+export async function updateUser(id, { action, amount, note, days, hours = null, full = false }, actor = null) {
   const db = await getDb();
   // Выдать или снять админку может только владелец
   if (action === 'make_admin' || action === 'remove_admin') {
@@ -179,15 +179,16 @@ export async function updateUser(id, { action, amount, note, days, full = false 
       await tellUser(r.telegram_id, '✅ Блокировка аккаунта LuxeDrop снята. С возвращением!');
       return { id };
     }
-    // Срок: 1, 7, 30 дней или null — навсегда
-    if (days != null && ![1, 7, 30].includes(days)) fail(400, 'Срок бана: 1, 7, 30 дней или навсегда');
+    // Срок в часах: 1 час, 1 / 3 / 7 / 30 дней; null — навсегда (days — старый формат, тоже принимаем)
+    const term = hours ?? (days != null ? days * 24 : null);
+    if (term != null && ![1, 24, 72, 168, 720].includes(term)) fail(400, 'Срок бана: 1 час, 1, 3, 7, 30 дней или навсегда');
     const reason = String(note || '').trim();
     if (!reason) fail(400, 'Укажи причину бана');
     const r = await db.one(
       `update users set is_banned = true, ban_reason = $2, ban_full = $4,
-         banned_until = case when $3::int is null then null else now() + make_interval(days => $3::int) end
+         banned_until = case when $3::int is null then null else now() + make_interval(hours => $3::int) end
        where id = $1 returning id, banned_until, telegram_id, ban_reason, ban_full`,
-      [id, reason.slice(0, 200), days ?? null, Boolean(full)],
+      [id, reason.slice(0, 200), term, Boolean(full)],
     );
     if (!r) fail(404, 'Пользователь не найден');
     await tellUser(r.telegram_id, `⛔ ${banMessage({ reason: r.ban_reason, until: r.banned_until, full: r.ban_full })}.\n\n${r.ban_full ? 'Обращения в поддержку тоже не принимаются.' : 'Если считаешь это ошибкой — напиши сюда, в поддержку.'}`);
