@@ -178,6 +178,7 @@ function renderDeposit() {
   if (p.deposit.stars) {
     const rate = String(p.stars.lcPerStar).replace('.', ',');
     html += `
+      ${p.depositBonus ? `<div class="callout callout-promo mb-4"><span aria-hidden="true">🔥</span><p><b>Акция: +${Math.round(p.depositBonus.percent * 100)}% к пополнению</b>${p.depositBonus.until ? ` до ${new Date(p.depositBonus.until).toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}` : ''}. Бонус придёт вместе с оплатой.</p></div>` : ''}
       <form class="form" id="stars-form" novalidate>
         <div class="field">
           <label for="stars-amount">Звёзды Telegram</label>
@@ -252,7 +253,10 @@ function setupStars(p) {
   const input = form.elements.stars;
   const preview = () => {
     const n = Math.floor(Number(input.value) || 0);
-    $('[data-stars-lc]').textContent = n > 0 ? lc(Math.floor(n * p.stars.lcPerStar) * 100) : '—';
+    // С акцией показываем и бонус: «1 000 LC + 500 LC бонус»
+    const base = Math.floor(n * p.stars.lcPerStar) * 100;
+    const promo = p.depositBonus && (!p.depositBonus.until || Date.now() < p.depositBonus.until) ? Math.floor((base * p.depositBonus.percent) / 100) * 100 : 0;
+    $('[data-stars-lc]').textContent = n > 0 ? (promo ? `${lc(base)} + ${lc(promo)} бонус` : lc(base)) : '—';
   };
   form.addEventListener('click', (e) => { const c = e.target.closest('[data-stars]'); if (c) { input.value = c.dataset.stars; preview(); } });
   input.addEventListener('input', preview);

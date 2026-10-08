@@ -337,3 +337,13 @@ create table if not exists casino_games (
 );
 create index if not exists casino_games_user_idx on casino_games (user_id, id desc);
 create index if not exists casino_games_active_idx on casino_games (user_id, game) where status = 'active';
+
+-- Разово: лимиты казино — ставка до 1 000 000 LC, выигрыш за игру до 1 000 000 000 LC (раньше выигрыш упирался в 1 млн)
+do $$
+begin
+  if not exists (select 1 from meta where key = 'migration_casino_limits_1b') then
+    insert into settings (key, value) values ('casinoMaxWin', '100000000000'), ('casinoMaxBet', '100000000')
+      on conflict (key) do update set value = excluded.value;
+    insert into meta (key, value) values ('migration_casino_limits_1b', 'true');
+  end if;
+end $$;

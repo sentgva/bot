@@ -1260,3 +1260,14 @@ html.is-banned .site-header { top: auto; }
   .cas-tabs { display: grid; grid-template-columns: repeat(3, 1fr); overflow: visible; }
   .cas-tab { justify-content: center; padding: 0 var(--s2); font-size: 13px; gap: 6px; }
 }
+
+/* Акция на пополнение: плашка под шапкой и в кошельке */
+.promo-bar {
+  display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 6px var(--s3); padding: 10px var(--gutter);
+  background: linear-gradient(90deg, #3a2208, #5a3410 50%, #3a2208); border-bottom: 1px solid var(--border-strong);
+  color: #ffe6a8; font-size: 14px; text-decoration: none; text-align: center;
+}
+.promo-bar b { color: #fff3cf; }
+.promo-bar .promo-cta { font-weight: 700; color: var(--accent-text); white-space: nowrap; }
+.promo-bar:hover .promo-cta { text-decoration: underline; }
+.callout-promo { display: flex; gap: var(--s3); align-items: flex-start; border-color: var(--accent); background: var(--accent-soft); }

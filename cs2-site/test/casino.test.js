@@ -69,7 +69,7 @@ test('кости: ставка списывается, выигрыш = став
   assert.equal(r2.won, r2.roll >= 500_000);
   await assert.rejects(playDice(u.id, { bet: 100 * LC, chance: 990_000 }), /от 1 до 95%/);
   await assert.rejects(playDice(u.id, { bet: 50 }), /целое число LC/);
-  await assert.rejects(playDice(u.id, { bet: 1_000_000 * LC, chance: 500_000 }), /Максимальная ставка/);
+  await assert.rejects(playDice(u.id, { bet: 2_000_000 * LC, chance: 500_000 }), /Максимальная ставка/);
   const poor = await makeUser(0);
   await (await getDb()).query('update users set balance = 0 where id = $1', [poor.id]);
   await assert.rejects(playDice(poor.id, { bet: 10 * LC, chance: 500_000 }), /Недостаточно/);
@@ -141,4 +141,19 @@ test('ракетка: точка взрыва скрыта, забрать до 
   const w4 = await waitCrash(u.id, g4.id, noSleep);
   assert.equal(w4.status, 'lost');
   assert.equal(await bal(u.id), start - 400 * LC + c.payout + 150 * LC);
+});
+
+test('казино: выигрыш больше миллиона LC не обрезается (лимит — 1 млрд LC)', async () => {
+  const u = await makeUser(0);
+  const db = await getDb();
+  await db.query('update users set balance = 100000000 where id = $1', [u.id]); // 1 000 000 LC
+  await db.query(`update ledger set amount = 100000000, balance_after = 100000000 where user_id = $1`, [u.id]);
+  await db.query(`delete from ledger where user_id = $1 and id not in (select min(id) from ledger where user_id = $1)`, [u.id]);
+  const g = await startMines(u.id, { bet: 1_000_000 * LC, mines: 24 });
+  const { state } = await db.one('select state from casino_games where id = $1', [g.id]);
+  const safe = [...Array(25).keys()].find((c) => !state.positions.includes(c));
+  const r = await openMine(u.id, g.id, safe); // единственная чистая клетка — забирается сама, ×23,75
+  assert.equal(r.status, 'won');
+  assert.equal(r.payout, 23_750_000 * LC);
+  assert.equal((await balanceOf(u.id)).balance, 23_750_000 * LC);
 });

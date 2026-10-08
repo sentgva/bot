@@ -317,6 +317,29 @@ export function renderBan(ban) {
   }
 }
 
+// Плашка акции на пополнение (включается в админке): «+50% к пополнению · осталось 3 ч 12 мин»
+export function renderPromo(cfg) {
+  const b = cfg?.payments?.depositBonus;
+  if (!b || document.querySelector('[data-promo-bar]')) return;
+  const until = b.until ? new Date(b.until) : null;
+  if (until && until <= Date.now()) return;
+  const bar = document.createElement('a');
+  bar.className = 'promo-bar';
+  bar.href = '/profile/#wallet';
+  bar.dataset.promoBar = '';
+  const pct = Math.round(b.percent * 100);
+  bar.innerHTML = `<span aria-hidden="true">🔥</span><span><b>${pct >= 100 ? 'x2' : `+${pct}%`} к пополнению</b>${until ? ` · осталось <b data-promo-left>${fmtLeft(until - Date.now())}</b>` : ''}</span><span class="promo-cta">Пополнить →</span>`;
+  const anchor = document.querySelector('.live-strip') || document.querySelector('.site-header');
+  anchor ? anchor.after(bar) : document.body.prepend(bar);
+  if (until) {
+    const t = setInterval(() => {
+      const left = until - Date.now();
+      if (left <= 0) { bar.remove(); clearInterval(t); return; }
+      bar.querySelector('[data-promo-left]').textContent = fmtLeft(left);
+    }, 30_000);
+  }
+}
+
 // Обновить баланс в шапке без перезагрузки
 export function setBalance(kop) {
   $$('[data-balance]').forEach((el) => { el.textContent = lc(kop); });
@@ -354,5 +377,5 @@ initTheme();
 initNav();
 initReveal();
 loginNotice();
-session().then((s) => { renderAuth(s.user); renderBan(s.user?.ban); });
+session().then((s) => { renderAuth(s.user); renderBan(s.user?.ban); renderPromo(s.config); });
 import('./live.js'); // живая лента: онлайн и выигрыши

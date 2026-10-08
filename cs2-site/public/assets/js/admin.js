@@ -390,8 +390,41 @@ const UNIT = { pct: '%', lc: 'LC', num: '' };
 const toForm = (v, u) => (u === 'pct' ? Math.round(v * 1e6) / 1e4 : u === 'lc' ? v / 100 : v);
 const fromForm = (v, u) => (u === 'pct' ? Number(v) / 100 : u === 'lc' ? Math.round(Number(v) * 100) : Number(v));
 
+// Акция на пополнение (отдельно от формы настроек: включается кнопкой на N часов)
+function renderBonus(s) {
+  const on = s.depositBonus > 0 && (!s.depositBonusUntil || Date.now() < s.depositBonusUntil);
+  const until = s.depositBonusUntil ? new Date(s.depositBonusUntil).toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : null;
+  $('[data-bonus-status]').innerHTML = on
+    ? `<span class="badge badge-success">Идёт</span> +${Math.round(s.depositBonus * 100)}% к каждому пополнению звёздами${until ? ` · до ${esc(until)}` : ' · пока не выключишь'}`
+    : 'Выключена. Игроки видят плашку с таймером, пока акция идёт.';
+  $('[data-bonus-off]').disabled = !on;
+}
+const bonusForm = $('[data-bonus-form]');
+bonusForm.addEventListener('click', (e) => {
+  const p = e.target.closest('[data-bonus-preset]');
+  if (!p) return;
+  const [pct, h] = p.dataset.bonusPreset.split(':');
+  bonusForm.elements.percent.value = pct;
+  bonusForm.elements.hours.value = h;
+});
+async function setBonus(btn, percent, hours) {
+  await withLoading(btn, async () => {
+    try {
+      await api('/api/admin/deposit-bonus', { method: 'POST', body: { percent, hours } });
+      renderBonus(await api('/api/admin/settings'));
+      toast(percent ? `Акция включена: +${percent}% к пополнению` : 'Акция выключена', 'success');
+    } catch (err) { toastError(err); }
+  });
+}
+bonusForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  setBonus(e.submitter || $('[type="submit"]', bonusForm), Number(bonusForm.elements.percent.value), Number(bonusForm.elements.hours.value) || 0);
+});
+$('[data-bonus-off]').addEventListener('click', (e) => setBonus(e.currentTarget, 0, 0));
+
 async function loadSettings() {
   const s = await api('/api/admin/settings');
+  renderBonus(s);
   const form = $('[data-settings-form]');
   form.innerHTML = SETTINGS.map(([title, fields]) => `
     <fieldset class="card adm-group"><legend class="h3">${title}</legend><div class="grid grid-3">${fields.map(([k, label, u, hint]) => `

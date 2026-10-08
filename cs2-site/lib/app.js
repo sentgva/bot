@@ -17,7 +17,7 @@ import {
 } from './payments.js';
 import { getStats } from './stats.js';
 import { getLive } from './live.js';
-import { getSettings, updateSettings } from './settings.js';
+import { depositBonusNow, getSettings, updateSettings } from './settings.js';
 import { isValidClientSeed } from './fair.js';
 import { parseTradeUrl, rublesToKop } from './validate.js';
 import * as admin from './admin.js';
@@ -478,6 +478,17 @@ r.post('/api/admin/promos/:code', async (req, res, { params }) => {
 });
 r.get('/api/admin/settings', async (req) => { await requireAdmin(req); return getSettings(); });
 r.post('/api/admin/settings', async (req) => { await requireAdmin(req); return updateSettings(await readJson(req)); });
+// Акция на пополнение: percent — 10…100 (0 — выключить), hours — сколько длится (0 — пока не выключат)
+r.post('/api/admin/deposit-bonus', async (req) => {
+  await requireAdmin(req);
+  const { percent, hours } = await readJson(req);
+  const pct = Number(percent);
+  const h = Number(hours) || 0;
+  if (pct !== 0 && !(Number.isInteger(pct) && pct >= 10 && pct <= 100)) fail(400, 'Бонус — от 10 до 100%');
+  if (!(h >= 0 && h <= 24 * 30)) fail(400, 'Длительность — до 30 дней');
+  const { settings } = await updateSettings({ depositBonus: pct / 100, depositBonusUntil: pct && h ? Date.now() + Math.round(h * 3600_000) : 0 });
+  return { depositBonus: depositBonusNow(settings) };
+});
 
 // ── Точка входа ────────────────────────────────────────────
 

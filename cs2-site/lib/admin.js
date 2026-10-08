@@ -151,7 +151,7 @@ export async function updateUser(id, { action, amount, note, days }, actor = nul
   if (action === 'adjust') {
     if (!Number.isSafeInteger(amount) || amount === 0) fail(400, 'Укажи сумму');
     if (!isWholeLc(amount)) fail(400, 'Сумма — целое число LC');
-    if (Math.abs(amount) > 100_000_000) fail(400, 'Не больше 1 000 000 LC за раз');
+    if (Math.abs(amount) > 100_000_000_000) fail(400, 'Не больше 1 000 000 000 LC за раз');
     if (!note) fail(400, 'Укажи причину корректировки');
     return db.tx(async (q) => {
       const u = await q.one('select id from users where id = $1 for update', [id]);

@@ -73,3 +73,32 @@ test('звёзды: счёт → проверка перед оплатой → 
     config.tgBotToken = '';
   }
 });
+
+test('акция на пополнение: +N% к оплате звёздами, пока идёт; после окончания — без бонуса', async () => {
+  const { updateSettings, depositBonusNow } = await import('../lib/settings.js');
+  config.tgBotToken = '123:stars-test';
+  try {
+    const u = await makeUser(0);
+    const start = (await balanceOf(u.id)).balance;
+    const tg = fakeTelegram();
+    const pay = async (charge) => {
+      const inv = await createStarsInvoice(u.id, 77, tg.fetchImpl);
+      return handleStarsPaid({ chat: { id: 5 }, from: { id: 5 }, successful_payment: { currency: 'XTR', total_amount: 77, invoice_payload: `stars:${inv.id}`, telegram_payment_charge_id: charge } }, tg.fetchImpl);
+    };
+    await updateSettings({ depositBonus: 0.5, depositBonusUntil: Date.now() + 3600_000 });
+    const r = await pay('ch_a');
+    assert.equal(r.promoBonus, 5_000, '100 LC + 50% = +50 LC');
+    assert.match(tg.calls.filter((c) => c.method === 'sendMessage').at(-1).body.text, /Акция \+50%: \+50 LC/);
+    // Акция закончилась по времени
+    await updateSettings({ depositBonusUntil: Date.now() - 1000 });
+    assert.equal(depositBonusNow({ depositBonus: 0.5, depositBonusUntil: Date.now() - 1000 }), null);
+    assert.equal((await pay('ch_b')).promoBonus, 0);
+    const b = await balanceOf(u.id);
+    assert.equal(b.balance, start + 10_000 + 5_000 + 10_000);
+    assert.equal(b.ledger, b.balance);
+  } finally {
+    config.tgBotToken = '';
+    const { updateSettings } = await import('../lib/settings.js');
+    await updateSettings({ depositBonus: 0, depositBonusUntil: 0 });
+  }
+});

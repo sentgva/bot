@@ -9,7 +9,7 @@
 import { config } from './config.js';
 import { getDb } from './db.js';
 import { fail } from './http.js';
-import { getSettings } from './settings.js';
+import { depositBonusNow, getSettings } from './settings.js';
 import { changeBalance, lockUser } from './users.js';
 import { maskCard, normalizeCard, normalizePhone } from './validate.js';
 import { canEncrypt, decrypt, encrypt } from './crypto-box.js';
@@ -30,6 +30,7 @@ export function methodsInfo(s) {
     crypto: { enabled: false, fee: s.cryptoFee, assets: cryptopay.ASSETS },
     deposit: { stars: Boolean(config.tgBotToken), crypto: false, demo: config.demoTopup },
     stars: { lcPerStar: s.lcPerStar, min: s.minStars, max: s.maxStars },
+    depositBonus: depositBonusNow(s),
     minWithdraw: s.minWithdraw,
     maxWithdraw: s.maxWithdraw,
     minDeposit: s.minDeposit,
@@ -162,10 +163,14 @@ export async function handleStarsPaid(message, fetchImpl) {
     const { before } = await addXp(q, p.user_id, p.amount, 'deposit');
     const bonus = floorLc(Math.floor(p.amount * before.deposit));
     if (bonus > 0) balance = await changeBalance(q, p.user_id, bonus, 'vip', { ref: `payment:${p.id}`, note: `${before.name}: +${Math.round(before.deposit * 100)}% к пополнению` });
-    return { ok: true, p, balance, bonus };
+    // Акция из админки: +N% к пополнению, пока она идёт (на момент оплаты)
+    const promo = depositBonusNow(await getSettings());
+    const promoBonus = promo ? floorLc(Math.floor(p.amount * promo.percent)) : 0;
+    if (promoBonus > 0) balance = await changeBalance(q, p.user_id, promoBonus, 'bonus', { ref: `payment:${p.id}`, note: `Акция: +${Math.round(promo.percent * 100)}% к пополнению` });
+    return { ok: true, p, balance, bonus, promoBonus, promoPercent: promo?.percent };
   });
   if (result.ok) {
-    await tgApi('sendMessage', { chat_id: message.chat.id, text: `✅ Зачислено ${fmtLc(result.p.amount)} за ${result.p.details.stars} ⭐${result.bonus ? `\n🎁 Бонус уровня: +${fmtLc(result.bonus)}` : ''}\nБаланс: ${fmtLc(result.balance)}` }, fetchImpl).catch(() => {});
+    await tgApi('sendMessage', { chat_id: message.chat.id, text: `✅ Зачислено ${fmtLc(result.p.amount)} за ${result.p.details.stars} ⭐${result.promoBonus ? `\n🔥 Акция +${Math.round(result.promoPercent * 100)}%: +${fmtLc(result.promoBonus)}` : ''}${result.bonus ? `\n🎁 Бонус уровня: +${fmtLc(result.bonus)}` : ''}\nБаланс: ${fmtLc(result.balance)}` }, fetchImpl).catch(() => {});
   } else if (result.review) {
     await notifyAdmin([`⚠️ Оплата звёздами #${result.p.id}: сумма не совпала, проверь вручную`]);
   }

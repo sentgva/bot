@@ -137,6 +137,20 @@
         <div class="list" data-list="promos"></div>
       </section>
       <section role="tabpanel" id="p-settings" aria-labelledby="t-settings" hidden>
+        <form class="card adm-group mb-4" data-bonus-form novalidate>
+          <h2 class="h3">🔥 Акция на пополнение</h2>
+          <p class="muted small mb-4" data-bonus-status>Выключена</p>
+          <div class="grid grid-3">
+            <div class="field"><label for="bonus-percent">Бонус к пополнению</label>
+              <div class="input-group"><input class="input num" id="bonus-percent" name="percent" type="number" min="10" max="100" step="1" value="50" required><span class="suffix" aria-hidden="true">%</span></div>
+              <p class="hint">От 10 до 100%. 100% — это x2.</p></div>
+            <div class="field"><label for="bonus-hours">Сколько длится</label>
+              <div class="input-group"><input class="input num" id="bonus-hours" name="hours" type="number" min="0" step="0.5" value="5"><span class="suffix" aria-hidden="true">ч</span></div>
+              <p class="hint">0 — пока не выключишь.</p></div>
+          </div>
+          <div class="chips mb-4"><button type="button" class="chip" data-bonus-preset="100:5">x2 на 5 часов</button><button type="button" class="chip" data-bonus-preset="50:24">+50% на сутки</button><button type="button" class="chip" data-bonus-preset="25:3">+25% на 3 часа</button></div>
+          <div class="row"><button class="btn btn-primary" type="submit" data-loading="Включаем…">Включить акцию</button><button class="btn btn-ghost" type="button" data-bonus-off data-loading="…">Выключить</button></div>
+        </form>
         <form class="adm-settings" data-settings-form></form>
       </section>
     </div>

@@ -6,11 +6,13 @@ import {
 const LC = 100;
 const state = {
   user: null,
-  cfg: { edge: 0.05, minBet: 100, maxBet: 5_000_000, maxWin: 100_000_000, crashK: 0.1, crashMax: 1000 },
+  cfg: { edge: 0.05, minBet: 100, maxBet: 100_000_000, maxWin: 100_000_000_000, crashK: 0.1, crashMax: 1000 },
   game: 'crash',
 };
 const fmtMult = (m) => `×${(Math.floor(m * 100 + 1e-9) / 100).toFixed(2).replace('.', ',')}`;
 const floor2 = (x) => Math.floor(x * 100 + 1e-9) / 100;
+// Выплата как на сервере: вниз до целого LC и не больше максимального выигрыша за игру
+const payout = (bet, mult) => Math.min(Math.floor((bet * mult) / LC) * LC, state.cfg.maxWin);
 const store = {
   get: (k) => { try { return localStorage.getItem(k); } catch { return null; } },
   set: (k, v) => { try { localStorage.setItem(k, v); } catch { /* приватный режим */ } },
@@ -210,7 +212,7 @@ function renderCrash() {
   }
   if (!state.user) { label.textContent = 'Войти, чтобы играть'; crash.go.disabled = false; return; }
   if (flying && !rd.cashed && rd.status === 'active') {
-    label.textContent = `Забрать ${fmtMult(Math.max(1, m))} · ${lc(Math.floor((rd.bet * Math.max(1, m)) / LC) * LC)}`;
+    label.textContent = `Забрать ${fmtMult(Math.max(1, m))} · ${lc(payout(rd.bet, Math.max(1, m)))}`;
     crash.go.classList.add('btn-cashout');
     crash.go.disabled = now < rd.startAt;
   } else {
@@ -320,7 +322,7 @@ function renderMinesControls() {
   mines.go.classList.toggle('btn-cashout', Boolean(active));
   if (!state.user) { label.textContent = 'Войти, чтобы играть'; mines.go.disabled = false; return; }
   if (active) {
-    const pay = Math.floor((g.bet * g.multiplier) / LC) * LC;
+    const pay = payout(g.bet, g.multiplier);
     label.textContent = g.opened.length ? `Забрать ${fmtMult(g.multiplier)} · ${lc(pay)}` : 'Открой клетку';
     mines.go.disabled = !g.opened.length || mines.busy;
   } else {
@@ -392,7 +394,7 @@ function renderDice() {
   $('[data-dice-chance-label]').textContent = `${ch}%`;
   $('[data-dice-mult]').textContent = fmtMult(diceMult());
   const bet = betOf('dice');
-  $('[data-dice-win]').textContent = bet > 0 ? lc(Math.floor((bet * diceMult()) / LC) * LC) : '—';
+  $('[data-dice-win]').textContent = bet > 0 ? lc(payout(bet, diceMult())) : '—';
   $('[data-dice-target]').textContent = dice.dir === 'under'
     ? `Выигрыш, если выпадет меньше ${fmtNum(ch)}`
     : `Выигрыш, если выпадет ${fmtNum(100 - ch)} или больше`;
