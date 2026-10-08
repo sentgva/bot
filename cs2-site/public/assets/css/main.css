@@ -1192,3 +1192,7 @@ html.is-banned .site-header { top: auto; }
 .vip-tier[data-tier="obsidian"] { background: linear-gradient(160deg, #120d1a, var(--surface) 70%); border-color: color-mix(in srgb, #a855f7 40%, var(--border)); }
 .vip-perks { margin: 0; padding-left: 16px; font-size: 13px; display: grid; gap: 2px; }
 .vip-tier .tier-badge { justify-self: start; }
+
+/* Инвентарь: сводка и «Продать всё» */
+.inv-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s2) var(--s3); }
+.inv-head p { margin: 0; }

@@ -86,6 +86,7 @@ loaders.inventory = async () => {
       text: 'Купи скин в маркете или выиграй его в апгрейдере.',
       action: '<div class="row justify-center"><a class="btn btn-primary btn-sm" href="/cases/">Кейсы</a><a class="btn btn-secondary btn-sm" href="/upgrade/">Апгрейдер</a></div>',
     })}</div>`;
+  renderSellAll();
   const wd = await api('/api/me/skin-withdrawals').catch(() => []);
   const WD = { review: ['Готовим обмен', 'badge-warning'], processing: ['Отправляем', 'badge-blue'], sent: ['Отправлен', 'badge-success'], refunded: ['Возвращён на сайт', ''] };
   $('[data-skin-wd-box]').hidden = !wd.length;
@@ -93,6 +94,38 @@ loaders.inventory = async () => {
     <div class="list-item"><div class="grow"><p><b>${esc(w.hash_name)}</b></p><p class="small muted">${dateTime(w.created_at)}</p></div>
     <span class="amount">${lc(w.price)}</span><span class="badge ${WD[w.status]?.[1] || ''}">${WD[w.status]?.[0] || esc(w.status)}</span></div>`).join('');
 };
+
+// «Продать всё»: все скины в инвентаре (кроме тех, что выводятся) одной продажей
+const sellable = () => owned.filter((i) => i.status === 'owned').slice(0, 500); // сервер продаёт до 500 за раз
+function renderSellAll() {
+  const list = sellable();
+  const total = list.reduce((a, i) => a + i.sellPrice, 0);
+  $('[data-sell-all-box]').hidden = !list.length;
+  $('[data-inv-summary]').textContent = `${list.length} ${plural(list.length, 'скин', 'скина', 'скинов')} · продать можно за ${lc(total)}`;
+  $('[data-sell-all] span').textContent = `Продать всё за ${lc(total)}`;
+}
+const plural = (n, one, few, many) => (n % 10 === 1 && n % 100 !== 11 ? one : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? few : many);
+
+$('[data-sell-all]').addEventListener('click', async (e) => {
+  const btn = e.currentTarget;
+  const list = sellable();
+  if (!list.length) return;
+  const total = list.reduce((a, i) => a + i.sellPrice, 0);
+  const ok = await confirmDialog({
+    title: `Продать все скины (${list.length})?`,
+    html: `<p>На баланс придёт <b>${lc(total)}</b> — сразу, без ожидания. Скины, которые сейчас выводятся, не продаются.</p>`,
+    confirm: 'Продать всё',
+  });
+  if (!ok) return;
+  await withLoading(btn, async () => {
+    try {
+      const r = await api('/api/inventory/sell', { method: 'POST', body: { ids: list.map((i) => i.id) } });
+      updateBalance(r.balance);
+      toast(`Продано ${list.length} шт. за ${lc(r.total)}`, 'success');
+    } catch (err) { toastError(err); }
+  });
+  loaders.inventory();
+});
 
 $('[data-owned]').addEventListener('click', async (e) => {
   const sellBtn = e.target.closest('[data-sell]');

@@ -6,7 +6,7 @@ import { getDb } from '../lib/db.js';
 import { buyItem, buyPrice, listOwned, sellItems, sellPrice, withdrawItem, finishSkinWithdrawal } from '../lib/inventory.js';
 import { runUpgrade } from '../lib/upgrade.js';
 import { computeRoll } from '../lib/fair.js';
-import { DEFAULTS } from '../lib/settings.js';
+import { DEFAULTS, getSettings } from '../lib/settings.js';
 import { rotateSeed } from '../lib/users.js';
 
 const AK = 'AK-47 | Redline (Field-Tested)'; // 1 250 ₽ в демо-каталоге
@@ -127,4 +127,16 @@ test('вывод скина без трейд-ссылки запрещён, с 
   await assert.rejects(sellItems(u.id, [itemId]), /уже недоступна/, 'выводимый скин нельзя продать');
   await finishSkinWithdrawal(w.id, 'refunded');
   assert.equal((await listOwned(u.id))[0].status, 'owned');
+});
+
+test('«Продать всё»: много скинов одной продажей, выводимые не продаются', async () => {
+  const db = await getDb();
+  const u = await makeUser(0);
+  const { hash_name: hash, price } = await db.one('select hash_name, price from items where quantity > 0 order by price limit 1');
+  const ids = [];
+  for (let i = 0; i < 60; i++) ids.push((await db.one(`insert into user_items (user_id, hash_name, price, source) values ($1, $2, $3, 'case') returning id`, [u.id, hash, price])).id);
+  const r = await sellItems(u.id, ids);
+  assert.equal(r.total, sellPrice(price, await getSettings()) * 60);
+  assert.equal(r.balance, r.total);
+  assert.equal((await db.one(`select count(*)::int n from user_items where user_id = $1 and status = 'sold'`, [u.id])).n, 60);
 });

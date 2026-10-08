@@ -47,8 +47,10 @@ export async function listOwned(userId) {
   return rows.map((r) => ({ id: r.id, status: r.status, source: r.source, ...publicItem(r), sellPrice: sellPrice(r.price, s) }));
 }
 
+export const MAX_SELL = 500; // скинов за одну продажу («Продать всё»)
+
 export async function sellItems(userId, ids) {
-  if (!Array.isArray(ids) || !ids.length || ids.length > 50) fail(400, 'Выбери скины для продажи');
+  if (!Array.isArray(ids) || !ids.length || ids.length > MAX_SELL) fail(400, 'Выбери скины для продажи');
   const db = await getDb();
   const s = await getSettings();
   return db.tx(async (q) => {
@@ -61,7 +63,7 @@ export async function sellItems(userId, ids) {
     if (rows.length !== new Set(ids).size) fail(409, 'Часть скинов уже недоступна. Обнови страницу');
     const total = rows.reduce((sum, r) => sum + sellPrice(r.price, s), 0);
     await q.query(`update user_items set status = 'sold', updated_at = now() where id = any($1)`, [ids]);
-    const balance = await changeBalance(q, userId, total, 'sell', { ref: `items:${ids.join(',')}`, note: `${rows.length} шт.` });
+    const balance = await changeBalance(q, userId, total, 'sell', { ref: `items:${ids.slice(0, 50).join(',')}${ids.length > 50 ? ',…' : ''}`, note: `${rows.length} шт.` });
     return { total, balance };
   });
 }
