@@ -347,3 +347,12 @@ begin
     insert into meta (key, value) values ('migration_casino_limits_1b', 'true');
   end if;
 end $$;
+
+-- Разово: максимальная ставка в казино снова 50 000 LC (выигрыш за игру остаётся до 1 000 000 000 LC)
+do $$
+begin
+  if not exists (select 1 from meta where key = 'migration_casino_maxbet_50k') then
+    insert into settings (key, value) values ('casinoMaxBet', '5000000') on conflict (key) do update set value = excluded.value;
+    insert into meta (key, value) values ('migration_casino_maxbet_50k', 'true');
+  end if;
+end $$;

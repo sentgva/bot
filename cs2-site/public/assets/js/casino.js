@@ -6,7 +6,7 @@ import {
 const LC = 100;
 const state = {
   user: null,
-  cfg: { edge: 0.05, minBet: 100, maxBet: 100_000_000, maxWin: 100_000_000_000, crashK: 0.1, crashMax: 1000 },
+  cfg: { edge: 0.05, minBet: 100, maxBet: 5_000_000, maxWin: 100_000_000_000, crashK: 0.1, crashMax: 1000 },
   game: 'crash',
 };
 const fmtMult = (m) => `×${(Math.floor(m * 100 + 1e-9) / 100).toFixed(2).replace('.', ',')}`;
