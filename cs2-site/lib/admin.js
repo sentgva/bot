@@ -82,7 +82,7 @@ export async function findUsers(query) {
 export async function userDetail(id) {
   const db = await getDb();
   const user = await db.one(
-    `select u.id, u.telegram_id, u.tg_username, u.name, u.avatar, u.balance, u.is_banned, u.ban_reason, u.banned_until, u.is_admin, u.xp, u.trade_url, u.created_at, u.last_seen_at,
+    `select u.id, u.telegram_id, u.tg_username, u.name, u.avatar, u.balance, u.is_banned, u.ban_reason, u.banned_until, u.ban_full, u.is_admin, u.xp, u.trade_url, u.created_at, u.last_seen_at,
             r.id as referrer_id, r.name as referrer_name
      from users u left join users r on r.id = u.referred_by where u.id = $1`,
     [id],
@@ -156,7 +156,7 @@ export async function confiscateItems(userId, ids, reason, actor) {
   return { ok: true, count: result.rows.length, total };
 }
 
-export async function updateUser(id, { action, amount, note, days }, actor = null) {
+export async function updateUser(id, { action, amount, note, days, full = false }, actor = null) {
   const db = await getDb();
   // Выдать или снять админку может только владелец
   if (action === 'make_admin' || action === 'remove_admin') {
@@ -174,7 +174,7 @@ export async function updateUser(id, { action, amount, note, days }, actor = nul
       if (target?.is_admin && !isOwner(actor)) fail(403, 'Админа может забанить только владелец');
     }
     if (action === 'unban') {
-      const r = await db.one('update users set is_banned = false, ban_reason = null, banned_until = null where id = $1 returning id, telegram_id', [id]);
+      const r = await db.one('update users set is_banned = false, ban_full = false, ban_reason = null, banned_until = null where id = $1 returning id, telegram_id', [id]);
       if (!r) fail(404, 'Пользователь не найден');
       await tellUser(r.telegram_id, '✅ Блокировка аккаунта LuxeDrop снята. С возвращением!');
       return { id };
@@ -184,14 +184,14 @@ export async function updateUser(id, { action, amount, note, days }, actor = nul
     const reason = String(note || '').trim();
     if (!reason) fail(400, 'Укажи причину бана');
     const r = await db.one(
-      `update users set is_banned = true, ban_reason = $2,
+      `update users set is_banned = true, ban_reason = $2, ban_full = $4,
          banned_until = case when $3::int is null then null else now() + make_interval(days => $3::int) end
-       where id = $1 returning id, banned_until, telegram_id, ban_reason`,
-      [id, reason.slice(0, 200), days ?? null],
+       where id = $1 returning id, banned_until, telegram_id, ban_reason, ban_full`,
+      [id, reason.slice(0, 200), days ?? null, Boolean(full)],
     );
     if (!r) fail(404, 'Пользователь не найден');
-    await tellUser(r.telegram_id, `⛔ ${banMessage({ reason: r.ban_reason, until: r.banned_until })}.\n\nЕсли считаешь это ошибкой — напиши сюда, в поддержку.`);
-    return { id, until: r.banned_until };
+    await tellUser(r.telegram_id, `⛔ ${banMessage({ reason: r.ban_reason, until: r.banned_until, full: r.ban_full })}.\n\n${r.ban_full ? 'Обращения в поддержку тоже не принимаются.' : 'Если считаешь это ошибкой — напиши сюда, в поддержку.'}`);
+    return { id, until: r.banned_until, full: r.ban_full };
   }
   if (action === 'adjust') {
     if (!Number.isSafeInteger(amount) || amount === 0) fail(400, 'Укажи сумму');

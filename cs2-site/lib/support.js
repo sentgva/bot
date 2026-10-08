@@ -10,7 +10,7 @@ import { config } from './config.js';
 import { getDb } from './db.js';
 import { fail } from './http.js';
 import { tgApi } from './telegram.js';
-import { isAdmin } from './users.js';
+import { activeBan, isAdmin } from './users.js';
 
 const MAX_TEXT = 3500;
 const clip = (s) => String(s || '').trim().slice(0, MAX_TEXT);
@@ -45,12 +45,24 @@ export async function isAdminTelegram(telegramId) {
   return Boolean(u && isAdmin(u));
 }
 
+// Полный бан: писать в поддержку нельзя (возвращает бан или null)
+export async function supportBan(telegramId) {
+  const u = await (await getDb()).one('select * from users where telegram_id = $1', [String(telegramId)]);
+  const ban = activeBan(u);
+  return ban?.full ? ban : null;
+}
+export const FULL_BAN_TEXT = '⛔ Аккаунт полностью заблокирован — обращения в поддержку не принимаются.';
+
 // Сообщение игрока → тикет; рассылка админам. media — из mediaOf(msg): копируем его админам как есть.
 export async function userMessage(from, text, fetchImpl = fetch, media = null) {
   const db = await getDb();
   const body = clip(text);
   if (!body && !media) return null;
   const tgId = String(from.id);
+  if (await supportBan(tgId)) {
+    await tgApi('sendMessage', { chat_id: tgId, text: FULL_BAN_TEXT }, fetchImpl).catch(() => {});
+    return { blocked: true };
+  }
   const name = [from.first_name, from.last_name].filter(Boolean).join(' ').slice(0, 64) || null;
   const ticket = await db.tx(async (q) => {
     const user = await q.one('select id from users where telegram_id = $1', [tgId]);

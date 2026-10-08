@@ -136,7 +136,7 @@ async function openUser(id) {
           ${me?.isOwner && !u.is_owner ? `<button class="btn btn-ghost" type="button" data-role="${u.is_admin ? 'remove_admin' : 'make_admin'}">${u.is_admin ? 'Снять админку' : 'Сделать админом'}</button>` : ''}
         </div>
       </form>
-      ${u.ban ? `<div class="callout callout-danger">⛔ <div><p><b>Забанен ${u.ban.until ? `до ${dateTime(u.ban.until)}` : 'навсегда'}</b></p>${u.ban.reason ? `<p class="small">Причина: ${esc(u.ban.reason)}</p>` : ''}</div></div>` : ''}
+      ${u.ban ? `<div class="callout callout-danger">⛔ <div><p><b>${u.ban.full ? 'Полный бан' : 'Забанен'} ${u.ban.until ? `до ${dateTime(u.ban.until)}` : 'навсегда'}</b>${u.ban.full ? ' · поддержка закрыта' : ''}</p>${u.ban.reason ? `<p class="small">Причина: ${esc(u.ban.reason)}</p>` : ''}</div></div>` : ''}
       <form class="adm-grant" data-ban-form hidden novalidate>
         <p class="legend">Бан: срок и причина</p>
         <div class="chips">
@@ -146,6 +146,7 @@ async function openUser(id) {
           <button type="button" class="chip" data-ban-days="forever" aria-pressed="false">Навсегда</button>
         </div>
         <input class="input" name="reason" type="text" maxlength="200" placeholder="Причина — игрок увидит её на сайте" aria-label="Причина бана">
+        <label class="row small cas-check"><input type="checkbox" name="full"> <span><b>Полный бан</b> — не сможет писать даже в поддержку</span></label>
         <div class="row"><button class="btn btn-danger" type="submit" data-loading="Баним…">Забанить</button></div>
       </form>
       <dl class="adm-facts">
@@ -228,8 +229,9 @@ $('[data-user-card]').addEventListener('submit', async (e) => {
   const days = picked.dataset.banDays === 'forever' ? null : Number(picked.dataset.banDays);
   await withLoading(e.submitter, async () => {
     try {
-      await api(`/api/admin/users/${currentUserId}`, { method: 'POST', body: { action: 'ban', days, note: reason } });
-      toast(days ? `Забанен на ${days} дн.` : 'Забанен навсегда', 'success');
+      const full = form.elements.full.checked;
+      await api(`/api/admin/users/${currentUserId}`, { method: 'POST', body: { action: 'ban', days, note: reason, full } });
+      toast(`${full ? 'Полный бан' : 'Забанен'} ${days ? `на ${days} дн.` : 'навсегда'}`, 'success');
       openUser(currentUserId);
       load();
     } catch (err) { toastError(err); }

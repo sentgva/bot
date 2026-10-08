@@ -47,9 +47,9 @@ export const isAdmin = (u) => isOwner(u) || Boolean(u?.is_admin);
 export function activeBan(u) {
   if (!u?.is_banned) return null;
   if (u.banned_until && new Date(u.banned_until) <= new Date()) return null;
-  return { reason: u.ban_reason || null, until: u.banned_until ? new Date(u.banned_until).toISOString() : null };
+  return { reason: u.ban_reason || null, until: u.banned_until ? new Date(u.banned_until).toISOString() : null, full: Boolean(u.ban_full) };
 }
-export const banMessage = (ban) => `Аккаунт заблокирован ${ban.until ? `до ${new Date(ban.until).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })} (МСК)` : 'навсегда'}${ban.reason ? `. Причина: ${ban.reason}` : ''}`;
+export const banMessage = (ban) => `Аккаунт ${ban.full ? 'полностью ' : ''}заблокирован ${ban.until ? `до ${new Date(ban.until).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })} (МСК)` : 'навсегда'}${ban.reason ? `. Причина: ${ban.reason}` : ''}`;
 
 export async function getUser(id) {
   if (!id) return null;

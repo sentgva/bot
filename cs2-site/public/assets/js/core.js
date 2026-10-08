@@ -298,7 +298,7 @@ export function renderBan(ban) {
     const when = until
       ? `до ${until.toLocaleString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })} · осталось <b data-ban-left>${fmtLeft(until - Date.now())}</b>`
       : '<b>навсегда</b>';
-    bar.innerHTML = `<span class="ban-icon" aria-hidden="true">⛔</span><div><p><b>Аккаунт заблокирован</b> ${when}</p>${ban.reason ? `<p class="ban-reason">Причина: ${esc(ban.reason)}</p>` : ''}<p class="ban-hint">Играть и выводить нельзя. Вопросы — в поддержку в нашем Telegram-боте.</p></div>`;
+    bar.innerHTML = `<span class="ban-icon" aria-hidden="true">⛔</span><div><p><b>Аккаунт ${ban.full ? 'полностью ' : ''}заблокирован</b> ${when}</p>${ban.reason ? `<p class="ban-reason">Причина: ${esc(ban.reason)}</p>` : ''}<p class="ban-hint">${ban.full ? 'Полная блокировка: играть, выводить и писать в поддержку нельзя.' : 'Играть и выводить нельзя. Вопросы — в поддержку в нашем Telegram-боте.'}</p></div>`;
     document.body.prepend(bar);
     return bar;
   };

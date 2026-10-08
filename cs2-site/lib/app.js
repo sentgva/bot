@@ -31,7 +31,7 @@ import { TIERS, XP_WEIGHT, vipInfo } from './vip.js';
 import { createPromo, listPromos, redeemPromo, setPromoActive } from './promo.js';
 import { referralStats } from './referrals.js';
 import { handleBroadcastCallback, isOwnerTelegram, ownerBotMessage, rememberBotUser, runBroadcast } from './broadcast.js';
-import { adminBotMessage, adminReply, getTicket, isAdminTelegram, listTickets, mediaOf, setTicketStatus, userMessage } from './support.js';
+import { adminBotMessage, adminReply, getTicket, isAdminTelegram, listTickets, mediaOf, setTicketStatus, supportBan, FULL_BAN_TEXT, userMessage } from './support.js';
 
 const r = createRouter();
 
@@ -116,7 +116,7 @@ r.post('/api/telegram/webhook', async (req) => {
       if (cq.data === 'support') {
         // Кнопка «Поддержка» под приветствием
         await tgApi('answerCallbackQuery', { callback_query_id: cq.id });
-        await tgApi('sendMessage', { chat_id: cq.from.id, text: SUPPORT_TEXT });
+        await tgApi('sendMessage', { chat_id: cq.from.id, text: (await supportBan(cq.from.id)) ? FULL_BAN_TEXT : SUPPORT_TEXT });
       } else {
         await handleBroadcastCallback(cq, { schedule: (p) => waitUntil(p.catch((err) => console.error('broadcast:', err.message))) });
       }
@@ -144,7 +144,7 @@ async function handlePrivateMessage(update) {
     }
   }
   if (command === '/support' || command === '/help') {
-    await tgApi('sendMessage', { chat_id: msg.chat.id, text: SUPPORT_TEXT });
+    await tgApi('sendMessage', { chat_id: msg.chat.id, text: (await supportBan(msg.from.id)) ? FULL_BAN_TEXT : SUPPORT_TEXT });
     return;
   }
   if (!command) {
@@ -459,7 +459,7 @@ r.post('/api/admin/users/:id', async (req, res, { params }) => {
   const b = await readJson(req);
   const amount = b.amount === undefined ? undefined : Math.round(Number(b.amount) * 100);
   const days = b.days === null || b.days === undefined || b.days === '' ? null : int(b.days);
-  return admin.updateUser(int(params.id), { action: b.action, amount, note: str(b.note, 200), days }, me);
+  return admin.updateUser(int(params.id), { action: b.action, amount, note: str(b.note, 200), days, full: b.full === true }, me);
 });
 r.get('/api/admin/tickets', async (req, res, { url }) => { await requireAdmin(req); return listTickets(url.searchParams.get('status') || 'open'); });
 r.get('/api/admin/tickets/:id', async (req, res, { params }) => { await requireAdmin(req); return getTicket(int(params.id)); });

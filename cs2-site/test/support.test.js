@@ -96,3 +96,32 @@ test('поддержка: игрок шлёт кружок и альбом, ад
     assert.equal(toUser[1].caption, '');
   } finally { config.adminTgIds = []; }
 });
+
+test('полный бан: обращения в поддержку не принимаются, обычный бан — принимаются', async () => {
+  const { updateUser } = await import('../lib/admin.js');
+  const { supportBan } = await import('../lib/support.js');
+  config.tgBotToken = '1:test';
+  const admin = await makeUser(0);
+  config.adminTgIds = [String(admin.telegram_id)];
+  try {
+    const soft = await makeUser(0);
+    const hard = await makeUser(0);
+    await updateUser(soft.id, { action: 'ban', days: 7, note: 'Спам' });
+    await updateUser(hard.id, { action: 'ban', days: null, note: 'Мошенничество', full: true });
+    assert.equal(await supportBan(soft.telegram_id), null);
+    assert.equal((await supportBan(hard.telegram_id)).full, true);
+
+    const tg = fakeTelegram();
+    const t = await userMessage({ id: Number(soft.telegram_id), first_name: 'Мягкий' }, 'Разбаньте', tg.fetchImpl);
+    assert.ok(t.id, 'обычный бан — тикет создаётся');
+    tg.sent.length = 0;
+    const r = await userMessage({ id: Number(hard.telegram_id), first_name: 'Жёсткий' }, 'Разбаньте', tg.fetchImpl);
+    assert.equal(r.blocked, true);
+    assert.equal(tg.sent.length, 1, 'только ответ игроку');
+    assert.match(tg.sent[0].text, /полностью заблокирован/);
+    assert.equal((await listTickets('open')).filter((x) => x.telegram_id === String(hard.telegram_id)).length, 0);
+    // Разбан снимает и полный бан
+    await updateUser(hard.id, { action: 'unban' });
+    assert.equal(await supportBan(hard.telegram_id), null);
+  } finally { config.adminTgIds = []; }
+});

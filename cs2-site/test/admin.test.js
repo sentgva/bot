@@ -107,7 +107,7 @@ test('бан: срок 1/7/30 дней или навсегда, с причин�
   // Навсегда
   await updateUser(u.id, { action: 'ban', days: null, note: 'Мошенничество' });
   row = await db.one('select * from users where id = $1', [u.id]);
-  assert.deepEqual(activeBan(row), { reason: 'Мошенничество', until: null });
+  assert.deepEqual(activeBan(row), { reason: 'Мошенничество', until: null, full: false });
   await updateUser(u.id, { action: 'unban' });
   assert.equal(activeBan(await db.one('select * from users where id = $1', [u.id])), null);
 });

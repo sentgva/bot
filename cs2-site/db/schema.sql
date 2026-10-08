@@ -370,3 +370,6 @@ create table if not exists item_confiscations (
   created_at   timestamptz not null default now()
 );
 create index if not exists item_confiscations_user_idx on item_confiscations (user_id, id desc);
+
+-- Полный бан: как обычный, но ещё и без поддержки (бот не принимает обращения)
+alter table users add column if not exists ban_full boolean not null default false;
