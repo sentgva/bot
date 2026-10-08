@@ -281,7 +281,7 @@ async function openTicket(id) {
         <p class="small muted">${esc(t.tg_name || 'Игрок')} · ${t.tg_username ? `<a href="https://t.me/${esc(t.tg_username)}" target="_blank" rel="noopener">@${esc(t.tg_username)}</a> · ` : ''}TG ${esc(t.telegram_id)}${t.user_id ? ` · ID на сайте ${t.user_id}` : ''}</p></div>
         <span class="badge${t.status === 'open' ? ' badge-success' : ''}">${t.status === 'open' ? 'Открыт' : 'Закрыт'}</span></div>
       <div class="chat">${messages.map((m) => `<div class="chat-msg is-${m.sender}"><p>${esc(m.text).replace(/\n/g, '<br>')}</p>
-        <span class="tiny muted">${m.sender === 'admin' ? esc(m.admin_name || 'Админ') + ' · ' : ''}${dateTime(m.created_at)}</span></div>`).join('')}</div>
+        <span class="tiny muted">${m.sender === 'admin' ? 'Поддержка · ' : ''}${dateTime(m.created_at)}</span></div>`).join('')}</div>
       <form class="adm-grant" data-ticket-reply novalidate>
         <textarea class="input" name="text" rows="3" maxlength="3500" placeholder="Ответ игроку — придёт в Telegram от бота" aria-label="Ответ"></textarea>
         <div class="row">

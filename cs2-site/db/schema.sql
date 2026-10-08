@@ -311,3 +311,6 @@ begin
     insert into meta (key, value) values ('migration_upgrade_min_chance_0', 'true');
   end if;
 end $$;
+
+-- Разово: ответы поддержки анонимны — стираем сохранённые имена админов в тикетах
+update ticket_messages set admin_name = null where admin_name is not null;

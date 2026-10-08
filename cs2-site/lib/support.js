@@ -74,7 +74,7 @@ export async function userMessage(from, text, fetchImpl = fetch) {
 }
 
 // Ответ админа (из бота или панели) → игроку
-export async function adminReply(ticketId, text, admin, fetchImpl = fetch) {
+export async function adminReply(ticketId, text, _admin, fetchImpl = fetch) {
   const body = clip(text);
   if (!body) fail(400, 'Напиши текст ответа');
   const db = await getDb();
@@ -82,7 +82,8 @@ export async function adminReply(ticketId, text, admin, fetchImpl = fetch) {
   if (!t) fail(404, 'Тикет не найден');
   await tgApi('sendMessage', { chat_id: t.telegram_id, text: `💬 Поддержка LuxeDrop:\n\n${body}` }, fetchImpl)
     .catch((err) => fail(502, `Не удалось доставить ответ в Telegram: ${err.message}`));
-  await db.query(`insert into ticket_messages (ticket_id, sender, admin_name, text) values ($1, 'admin', $2, $3)`, [t.id, admin?.name || 'Админ', body]);
+  // Кто из админов ответил, не сохраняем и не показываем — для всех это просто «Поддержка»
+  await db.query(`insert into ticket_messages (ticket_id, sender, text) values ($1, 'admin', $2)`, [t.id, body]);
   await db.query(`update tickets set status = 'open', updated_at = now() where id = $1`, [t.id]);
   return { ok: true };
 }
@@ -113,7 +114,7 @@ export async function getTicket(id) {
   const db = await getDb();
   const t = await db.one('select * from tickets where id = $1', [id]);
   if (!t) fail(404, 'Тикет не найден');
-  const messages = await db.query('select id, sender, admin_name, text, created_at from ticket_messages where ticket_id = $1 order by id', [id]);
+  const messages = await db.query('select id, sender, text, created_at from ticket_messages where ticket_id = $1 order by id', [id]);
   return { ticket: t, messages };
 }
 
@@ -121,8 +122,6 @@ export async function getTicket(id) {
 export async function adminBotMessage(msg, fetchImpl = fetch) {
   const db = await getDb();
   const send = (text) => tgApi('sendMessage', { chat_id: msg.chat.id, text }, fetchImpl);
-  const admin = await db.one('select * from users where telegram_id = $1', [String(msg.from.id)]);
-  const adminRef = { name: admin?.name || msg.from.first_name || 'Админ' };
   const text = msg.text || '';
 
   if (text.startsWith('/tickets')) {
@@ -147,7 +146,7 @@ export async function adminBotMessage(msg, fetchImpl = fetch) {
   }
   if (!ticketId) return { handled: false };
   try {
-    await adminReply(ticketId, body, adminRef, fetchImpl);
+    await adminReply(ticketId, body, null, fetchImpl);
     await send(`✅ Ответ на тикет #${ticketId} отправлен`);
   } catch (err) { await send(`⚠️ ${err.message}`); }
   return { handled: true };
