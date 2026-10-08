@@ -1,13 +1,13 @@
-// Казино: ракетка, мины и кости. Вся логика и броски — на сервере (lib/casino.js), здесь только интерфейс.
+// Казино: слоты, ракетка, мины и кости. Вся логика и броски — на сервере (lib/casino.js), здесь только интерфейс.
 import {
-  $, $$, api, dateTime, esc, loginUrl, lc, prefersReducedMotion, session, setBalance, toast, toastError, withLoading,
+  $, $$, api, dateTime, esc, loginUrl, lc, prefersReducedMotion, session, setBalance, sized, toast, toastError, withLoading,
 } from './core.js';
 
 const LC = 100;
 const state = {
   user: null,
   cfg: { edge: 0.05, minBet: 100, maxBet: 5_000_000, maxWin: 100_000_000_000, crashK: 0.1, crashMax: 1000 },
-  game: 'crash',
+  game: 'slots',
 };
 const fmtMult = (m) => `×${(Math.floor(m * 100 + 1e-9) / 100).toFixed(2).replace('.', ',')}`;
 const floor2 = (x) => Math.floor(x * 100 + 1e-9) / 100;
@@ -74,7 +74,7 @@ function guard(game, why) {
 // ── Вкладки игр ────────────────────────────────────────────
 
 function showGame(game, push = true) {
-  if (!['crash', 'mines', 'dice'].includes(game)) game = 'crash';
+  if (!['slots', 'crash', 'mines', 'dice'].includes(game)) game = 'slots';
   state.game = game;
   $$('[data-game]').forEach((t) => {
     const on = t.dataset.game === game;
@@ -98,7 +98,7 @@ $('.cas-tabs').addEventListener('keydown', (e) => {
 
 // ── История ────────────────────────────────────────────────
 
-const GAME_NAME = { crash: '🚀 Ракетка', mines: '💣 Мины', dice: '🎲 Кости' };
+const GAME_NAME = { slots: '🎰 Слоты', crash: '🚀 Ракетка', mines: '💣 Мины', dice: '🎲 Кости' };
 async function loadHistory() {
   const box = $('[data-cas-history]');
   if (!state.user) { box.innerHTML = '<p class="muted small">Войди, чтобы играть — здесь появятся твои игры.</p>'; return; }
@@ -451,16 +451,146 @@ dice.go.addEventListener('click', async () => {
   renderDice();
 });
 
+
+// ── Слоты ──────────────────────────────────────────────────
+
+const slots = {
+  go: $('[data-slots-go]'), why: $('[data-slots-why]'), reels: $('[data-slots-reels]'), linesEl: $('[data-slots-lines]'),
+  banner: $('[data-slots-banner]'), busy: false, info: null,
+};
+const STRIP = 22; // символов в ленте барабана при прокрутке
+const sym = (i) => slots.info.symbols[i];
+const symImg = (i) => {
+  const s = sym(i);
+  const badge = s.wild ? `<span class="slot-badge">WILD ×${s.wild}</span>` : s.scatter ? '<span class="slot-badge is-scatter">БОНУС</span>' : '';
+  return `<div class="slot-cell${s.wild ? ' is-wild' : ''}${s.scatter ? ' is-scatter' : ''}" title="${esc(s.name)}"><img src="${esc(sized(s.img))}" alt="${esc(s.name)}" loading="lazy" decoding="async" draggable="false">${badge}</div>`;
+};
+const randSym = () => {
+  // Для ленты — случайные символы примерно с теми же частотами (кроме кейса — пореже, чтобы не дразнить)
+  const pool = [0, 0, 1, 1, 2, 2, 3, 3, 4, 5, 6, 7, 8, 10];
+  return pool[Math.floor(Math.random() * pool.length)];
+};
+
+function renderReels(grid) {
+  slots.reels.innerHTML = grid.map((col, r) => `<div class="slot-reel" data-reel="${r}"><div class="slot-strip">${col.map(symImg).join('')}</div></div>`).join('');
+}
+
+function spinReels(grid, fast) {
+  const ms = prefersReducedMotion() ? 0 : fast ? 450 : 1100;
+  slots.reels.innerHTML = grid.map((col, r) => {
+    const filler = Array.from({ length: ms ? STRIP : 0 }, randSym);
+    return `<div class="slot-reel" data-reel="${r}"><div class="slot-strip">${[...col, ...filler].map(symImg).join('')}</div></div>`;
+  }).join('');
+  if (!ms) return Promise.resolve();
+  const strips = $$('.slot-strip', slots.reels);
+  return new Promise((resolve) => {
+    requestAnimationFrame(() => {
+      strips.forEach((st, r) => {
+        const cell = st.firstElementChild.getBoundingClientRect().height;
+        // Лента начинается со сдвигом вверх и съезжает к итоговым трём символам
+        st.style.setProperty('--from', `${-cell * STRIP}px`);
+        st.style.setProperty('--dur', `${ms + r * (fast ? 90 : 220)}ms`);
+        st.classList.add('is-spinning');
+      });
+      setTimeout(resolve, ms + 4 * (fast ? 90 : 220) + 80);
+    });
+  });
+}
+
+function highlight(spin) {
+  const cells = new Set();
+  for (const l of spin.lines) for (let r = 0; r < l.count; r++) cells.add(`${r}:${slots.info.lines[l.line][r]}`);
+  $$('.slot-reel', slots.reels).forEach((reel, r) => {
+    [...$('.slot-strip', reel).children].slice(0, 3).forEach((c, row) => {
+      c.classList.toggle('is-hit', cells.has(`${r}:${row}`));
+      if (sym(spin.grid[r][row]).scatter && spin.scatters >= 3) c.classList.add('is-hit');
+    });
+  });
+  const name = (id) => slots.info.symbols.find((s) => s.id === id)?.name.replace(/ \|.*/, '') || id;
+  slots.linesEl.innerHTML = spin.lines.length
+    ? spin.lines.slice(0, 6).map((l) => `<span class="badge badge-success">${esc(name(l.symbol))} ×${l.count}${l.mult > 1 ? ` · wild ×${l.mult}` : ''} → ${fmtMult(l.x)}</span>`).join(' ')
+      + (spin.lines.length > 6 ? ` <span class="muted">и ещё ${spin.lines.length - 6}</span>` : '')
+    : '';
+}
+
+const showBanner = (html, ms = 1400) => new Promise((resolve) => {
+  slots.banner.innerHTML = html;
+  slots.banner.hidden = false;
+  setTimeout(() => { slots.banner.hidden = true; resolve(); }, prefersReducedMotion() ? 300 : ms);
+});
+
+function renderSlotsControls() {
+  const label = $('span', slots.go);
+  label.textContent = state.user ? (slots.busy ? 'Крутим…' : 'Крутить') : 'Войти, чтобы играть';
+  slots.go.disabled = slots.busy;
+  lockBet('slots', slots.busy);
+}
+
+slots.go.addEventListener('click', async () => {
+  if (!state.user) { location.href = loginUrl('/casino/#slots'); return; }
+  if (slots.busy || !guard('slots', slots.why)) return;
+  slots.busy = true;
+  renderSlotsControls();
+  $('[data-slots-win]').textContent = '—';
+  $('[data-slots-fs]').textContent = '—';
+  slots.linesEl.textContent = '';
+  const fast = $('[data-slots-fast]').checked;
+  const bet = betOf('slots');
+  try {
+    const r = await api('/api/casino/slots', { method: 'POST', body: { bet } });
+    // Баланс после ставки показываем сразу, выигрыш — в конце анимации
+    setBalance(state.user.balance - bet);
+    await spinReels(r.base.grid, fast);
+    highlight(r.base);
+    let shown = Math.floor((bet * r.base.win) / 100) * 100;
+    $('[data-slots-win]').textContent = shown ? lc(shown) : '—';
+    if (r.free.length) {
+      await showBanner(`<b>🎁 БОНУС!</b><span>${r.free.length} фриспинов · выигрыши ×${slots.info.fsMult}</span>`, 1800);
+      for (const [i, f] of r.free.entries()) {
+        $('[data-slots-fs]').textContent = `${i + 1} / ${r.free.length}`;
+        await spinReels(f.grid, true);
+        highlight(f);
+        shown += Math.floor((bet * f.win) / 100) * 100;
+        $('[data-slots-win]').textContent = shown ? lc(Math.min(shown, r.payout || shown)) : '—';
+        await new Promise((res) => setTimeout(res, f.lines.length ? 650 : 250));
+      }
+    }
+    $('[data-slots-win]').textContent = r.payout ? lc(r.payout) : '—';
+    updateBalance(r.balance);
+    if (r.multiplier >= 20) await showBanner(`<b>💥 БОЛЬШОЙ ВЫИГРЫШ</b><span>${lc(r.payout)} · ${fmtMult(r.multiplier)}</span>`, 2200);
+    slots.why.textContent = r.payout ? `Выигрыш ${lc(r.payout)} (${fmtMult(r.multiplier)})` : 'Мимо — крути ещё';
+    loadHistory();
+  } catch (err) { toastError(err); updateBalance(state.user.balance); }
+  slots.busy = false;
+  renderSlotsControls();
+});
+
+function renderPaytable() {
+  const rows = slots.info.symbols.filter((s) => s.pays).reverse();
+  $('[data-slots-pay]').innerHTML = rows.map((s) => `
+    <div class="slots-pay-row"><img src="${esc(sized(s.img))}" alt="" loading="lazy"><span class="small">${esc(s.name)}</span>
+      <span class="num small">${s.pays.map((p, i) => `<b>${i + 3}</b> ${fmtMult(p)}`).join(' · ')}</span></div>`).join('')
+    + slots.info.symbols.filter((s) => s.wild).slice(0, 1).map((s) => `<div class="slots-pay-row"><img src="${esc(sized(s.img))}" alt="" loading="lazy"><span class="small"><b>WILD</b> — перчатки ×2 / ×3</span><span class="small muted">заменяют любой скин</span></div>`).join('')
+    + slots.info.symbols.filter((s) => s.scatter).map((s) => `<div class="slots-pay-row"><img src="${esc(sized(s.img))}" alt="" loading="lazy"><span class="small"><b>БОНУС</b> — кейс</span><span class="small muted">3 / 4 / 5 → 8 / 12 / 20 фриспинов ×2</span></div>`).join('');
+}
+
 // ── Старт ──────────────────────────────────────────────────
 
 const s = await session();
 state.user = s.user;
 if (s.config?.casino) state.cfg = s.config.casino;
 $$('[data-rtp]').forEach((el) => { el.textContent = `${Math.round((1 - state.cfg.edge) * 100)}%`; });
-for (const g of ['crash', 'mines', 'dice']) betField(g);
+for (const g of ['slots', 'crash', 'mines', 'dice']) betField(g);
+slots.info = state.cfg.slots;
+if (slots.info) {
+  // Стартовое поле — просто красивое: по символу каждого вида
+  renderReels(Array.from({ length: 5 }, (_, r) => [(r + 0) % 8, (r + 3) % 8, (r + 5) % 8]));
+  renderPaytable();
+}
+renderSlotsControls();
 mines.count = [1, 3, 5, 10, 20, 24].includes(Number(store.get('ld-mines'))) ? Number(store.get('ld-mines')) : 3;
 if (state.user) mines.game = (await api('/api/casino/mines').catch(() => ({}))).game || null;
 renderMines();
 renderDice();
 renderCrash();
-showGame(location.hash.slice(1) || 'crash', false);
+showGame(location.hash.slice(1) || 'slots', false);

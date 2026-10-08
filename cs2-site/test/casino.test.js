@@ -157,3 +157,39 @@ test('казино: выигрыш больше миллиона LC не обр�
   assert.equal(r.payout, 1_187_500 * LC, '50 000 × 23,75 = 1 187 500 LC — больше старого потолка в 1 млн');
   assert.equal((await balanceOf(u.id)).balance, 1_187_500 * LC);
 });
+
+test('слоты: wild-перчатки перемножают множители, кейс не платит по линии, возврат ровно 95%', async () => {
+  const { SYMBOLS, lineWin, payScale, rawStats, evaluate, playRound } = await import('../lib/slots.js');
+  const id = (x) => SYMBOLS.findIndex((s) => s.id === x);
+  // AK, перчатки ×2, AK, перчатки ×3, Glock → 4 AK подряд с множителем ×6
+  assert.deepEqual(lineWin([id('ak'), id('wild2'), id('ak'), id('wild3'), id('glock')]), { symbol: 'ak', count: 4, mult: 6, pay: 40 * 6 });
+  assert.equal(lineWin([id('ak'), id('ak'), id('glock'), id('ak'), id('ak')]), null, 'только подряд слева');
+  assert.equal(lineWin([id('case'), id('case'), id('case'), id('case'), id('case')]), null);
+  // Пять кейсов на поле → фриспины
+  const grid = [[id('case'), 0, 0], [id('case'), 0, 0], [id('case'), 0, 0], [1, 1, 1], [2, 2, 2]];
+  assert.equal(evaluate(grid).scatters, 3);
+  // Точный возврат × коэффициент = 1 − край
+  assert.ok(Math.abs(rawStats().rtp * payScale(0.05) - 0.95) < 1e-12);
+  // Раунд детерминирован сидом
+  assert.deepEqual(playRound('s', 'c', 7), playRound('s', 'c', 7));
+  assert.notDeepEqual(playRound('s', 'c', 7).base.grid, playRound('s', 'c', 8).base.grid);
+});
+
+test('слоты: ставка списывается, выигрыш = ставка × множитель раунда, журнал сходится', async () => {
+  const { playSlots } = await import('../lib/casino.js');
+  const { playRound, payScale } = await import('../lib/slots.js');
+  const u = await makeUser(10_000 * LC);
+  const start = await bal(u.id);
+  const db = await getDb();
+  let expected = start;
+  for (let i = 0; i < 30; i++) {
+    const { server_seed: seed, client_seed: cs, nonce } = await db.one('select * from users where id = $1', [u.id]);
+    const r = await playSlots(u.id, { bet: 20 * LC });
+    const round = playRound(seed, cs, nonce);
+    assert.deepEqual(r.base.grid, round.base.grid);
+    assert.equal(r.free.length, round.free.length);
+    assert.equal(r.payout, Math.floor((20 * LC * round.total * payScale(0.05)) / LC) * LC);
+    expected += r.payout - 20 * LC;
+  }
+  assert.equal(await bal(u.id), expected);
+});

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Казино CS2 — ракетка, мины и кости | LuxeDrop</title>
-  <meta name="description" content="Казино в стиле CS2: ракетка, мины с C4 и кости. Честные броски от твоего сида, средний возврат 95%.">
+  <meta name="description" content="Казино в стиле CS2: слоты со скинами, ракетка, мины с C4 и кости. Честные броски от твоего сида, средний возврат 95%.">
   <link rel="canonical" href="https://luxedrop.gg/casino/">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://luxedrop.gg/casino/">
@@ -94,18 +94,44 @@
     <div class="container page-head upg-head">
       <p class="eyebrow"><svg class="icon icon-sm" aria-hidden="true"><use href="/assets/icons.svg#i-dices"/></svg>Казино</p>
       <h1 class="h2">Казино</h1>
-      <p class="lead">Ракетка, мины с C4 и кости. Каждый бросок считается от твоего сида — как в апгрейдере, средний возврат <span data-rtp>95%</span>.</p>
+      <p class="lead">Слоты со скинами, ракетка, мины с C4 и кости. Каждый бросок считается от твоего сида — как в апгрейдере, средний возврат <span data-rtp>95%</span>.</p>
     </div>
 
     <div class="container app-section">
       <div class="cas-tabs" role="tablist" aria-label="Игры">
-        <button class="cas-tab" role="tab" id="tab-crash" aria-controls="game-crash" aria-selected="true" data-game="crash"><span aria-hidden="true">🚀</span>Ракетка</button>
+        <button class="cas-tab" role="tab" id="tab-slots" aria-controls="game-slots" aria-selected="true" data-game="slots"><span aria-hidden="true">🎰</span>Слоты</button>
+        <button class="cas-tab" role="tab" id="tab-crash" aria-controls="game-crash" aria-selected="false" tabindex="-1" data-game="crash"><span aria-hidden="true">🚀</span>Ракетка</button>
         <button class="cas-tab" role="tab" id="tab-mines" aria-controls="game-mines" aria-selected="false" tabindex="-1" data-game="mines"><span aria-hidden="true">💣</span>Мины</button>
         <button class="cas-tab" role="tab" id="tab-dice" aria-controls="game-dice" aria-selected="false" tabindex="-1" data-game="dice"><span aria-hidden="true">🎲</span>Кости</button>
       </div>
 
+      <!-- Слоты -->
+      <section class="cas" id="game-slots" role="tabpanel" aria-labelledby="tab-slots" data-panel="slots">
+        <div class="card cas-controls">
+          <div class="field" data-bet-field></div>
+          <div class="upg-summary cas-sum">
+            <div class="box"><span class="tiny muted">Выигрыш</span><b data-slots-win>—</b></div>
+            <svg class="icon accent" aria-hidden="true"><use href="/assets/icons.svg#i-arrow-right"/></svg>
+            <div class="box"><span class="tiny muted">Фриспины</span><b data-slots-fs>—</b></div>
+          </div>
+          <button class="btn btn-primary btn-lg btn-block" type="button" data-slots-go data-loading="Крутим…"><span>Крутить</span></button>
+          <label class="row small muted cas-check"><input type="checkbox" data-slots-fast> Быстрая прокрутка</label>
+          <p class="hint" data-slots-why aria-live="polite">20 линий. Перчатки — wild ×2 / ×3, 3 кейса — фриспины.</p>
+        </div>
+        <div class="card cas-stage cas-slots">
+          <div class="slots-banner" data-slots-banner hidden></div>
+          <div class="slots-reels" data-slots-reels aria-label="Барабаны"></div>
+          <p class="slots-lines small" data-slots-lines aria-live="polite"></p>
+          <details class="slots-pay mt-4">
+            <summary>Таблица выплат</summary>
+            <div class="slots-pay-grid" data-slots-pay></div>
+            <p class="hint mt-2">Выплаты — во сколько раз ставки за 3 / 4 / 5 одинаковых подряд слева по линии. Перчатки (только на барабанах 2–4) заменяют любой скин, кроме кейса, и умножают выигрыш линии на ×2 или ×3 — множители перемножаются. 3 / 4 / 5 кейсов где угодно — 8 / 12 / 20 фриспинов, все выигрыши в них ×2.</p>
+          </details>
+        </div>
+      </section>
+
       <!-- Ракетка -->
-      <section class="cas" id="game-crash" role="tabpanel" aria-labelledby="tab-crash" data-panel="crash">
+      <section class="cas" id="game-crash" role="tabpanel" aria-labelledby="tab-crash" data-panel="crash" hidden>
         <div class="card cas-controls">
           <div class="field" data-bet-field></div>
           <div class="field">

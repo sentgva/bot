@@ -18,11 +18,12 @@ import { changeBalance, lockUser } from './users.js';
 import { ROLL_MAX, computeRoll, hashSeed } from './fair.js';
 import { fmtLc, floorLc, isWholeLc } from './lc.js';
 import { addXp } from './vip.js';
+import { FS_MULT, LINES, payScale, playRound } from './slots.js';
 
 export const CRASH_K = 0.1;           // скорость ракетки: ×2 за ~6,9 с, ×10 за ~23 с, ×100 за ~46 с
 export const CRASH_MAX = 1000;        // потолок множителя ракетки
 export const MINES_CELLS = 25;
-const NAMES = { crash: 'Ракетка', mines: 'Мины', dice: 'Кости' };
+const NAMES = { crash: 'Ракетка', mines: 'Мины', dice: 'Кости', slots: 'Слоты' };
 
 const floor2 = (x) => Math.floor(x * 100 + 1e-9) / 100;
 export const crashMultAt = (ms) => floor2(Math.exp((CRASH_K * Math.max(0, ms)) / 1000));
@@ -112,6 +113,32 @@ export async function playDice(userId, { bet, chance, over }) {
     const done = await finish(q, g, { won, mult });
     return {
       id: g.id, won, roll, chance, over: Boolean(over), multiplier: floor2(mult), payout: done.game.payout,
+      balance: done.balance ?? balance, fair: fairOf(g),
+    };
+  });
+}
+
+// ── Слоты ──────────────────────────────────────────────────
+
+export async function playSlots(userId, { bet }) {
+  const s = await getSettings();
+  checkBet(bet, s);
+  const k = payScale(s.casinoEdge);
+  const db = await getDb();
+  return db.tx(async (q) => {
+    const u = await lockUser(q, userId);
+    const round = playRound(u.server_seed, u.client_seed, u.nonce);
+    const mult = round.total * k;
+    const { g, balance } = await placeBet(q, u, 'slots', bet, { scatters: round.base.scatters, freeSpins: round.free.length });
+    const done = await finish(q, g, { won: payoutOf(bet, mult, s) > 0, mult });
+    // Для экрана: выигрыш каждой линии — во сколько раз ставки (с коэффициентом выплат)
+    const view = (spin, fsMult = 1) => ({
+      grid: spin.grid, scatters: spin.scatters, win: floor2(spin.win * k),
+      lines: spin.lines.map((l) => ({ line: l.line, symbol: l.symbol, count: l.count, mult: l.mult, x: floor2((l.pay * k * fsMult) / LINES.length) })),
+    });
+    return {
+      id: g.id, base: view(round.base), free: round.free.map((f) => view(f, FS_MULT)),
+      multiplier: done.game.payout ? floor2(done.game.payout / bet) : 0, payout: done.game.payout,
       balance: done.balance ?? balance, fair: fairOf(g),
     };
   });

@@ -1271,3 +1271,46 @@ html.is-banned .site-header { top: auto; }
 .promo-bar .promo-cta { font-weight: 700; color: var(--accent-text); white-space: nowrap; }
 .promo-bar:hover .promo-cta { text-decoration: underline; }
 .callout-promo { display: flex; gap: var(--s3); align-items: flex-start; border-color: var(--accent); background: var(--accent-soft); }
+
+/* Слоты */
+.cas-slots { display: grid; gap: var(--s3); align-content: start; }
+.slots-reels {
+  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: clamp(4px, 1vw, 8px); padding: clamp(6px, 1.4vw, 12px);
+  border-radius: var(--r-lg); background: linear-gradient(180deg, #1b150b, #0d0a05); border: 1px solid var(--border-strong);
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, .6);
+}
+.slot-reel { position: relative; overflow: hidden; border-radius: var(--r-md); background: rgba(255, 255, 255, .03); }
+/* Окно барабана — ровно три клетки: высота считается от ширины (работает и в старом Safari) */
+.slot-reel::before { content: ''; display: block; padding-bottom: 240%; }
+.slot-strip { position: absolute; left: 0; right: 0; top: 0; will-change: transform; }
+.slot-strip.is-spinning { animation: reel-spin var(--dur, 1s) cubic-bezier(.15, .7, .2, 1) both; }
+@keyframes reel-spin { from { transform: translateY(var(--from, 0)); filter: blur(1.5px); } 85% { filter: none; } to { transform: translateY(0); } }
+.slot-cell { position: relative; display: block; border-radius: 10px; transition: background var(--dur) var(--ease), box-shadow var(--dur) var(--ease); }
+.slot-cell::before { content: ''; display: block; padding-bottom: 80%; }
+.slot-cell img { position: absolute; inset: 8%; width: 84%; height: 84%; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(0, 0, 0, .55)); user-select: none; }
+.slot-cell.is-wild { background: radial-gradient(circle at 50% 45%, rgba(226, 177, 60, .28), transparent 70%); }
+.slot-cell.is-scatter { background: radial-gradient(circle at 50% 45%, rgba(91, 140, 255, .3), transparent 70%); }
+.slot-cell.is-hit { background: rgba(74, 222, 128, .16); box-shadow: inset 0 0 0 2px var(--success), 0 0 18px rgba(74, 222, 128, .35); animation: cell-pop .35s var(--ease); }
+.slot-badge {
+  position: absolute; left: 50%; bottom: 3px; transform: translateX(-50%); padding: 1px 6px; border-radius: var(--r-pill);
+  background: var(--accent); color: #1a1203; font-family: var(--font-display); font-size: clamp(7px, 1.6vw, 10px); font-weight: 700; white-space: nowrap;
+}
+.slot-badge.is-scatter { background: #5b8cff; color: #fff; }
+.slots-lines { min-height: 28px; display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 0; }
+.slots-banner {
+  position: absolute; z-index: 5; left: 50%; top: 42%; transform: translate(-50%, -50%); display: grid; gap: 4px; justify-items: center; text-align: center;
+  padding: var(--s4) var(--s6); border-radius: var(--r-lg); background: rgba(10, 9, 6, .92); border: 1px solid var(--accent);
+  box-shadow: 0 0 40px rgba(226, 177, 60, .35); animation: cell-pop .3s var(--ease);
+}
+.slots-banner b { font-family: var(--font-display); font-size: clamp(20px, 4vw, 30px); color: var(--accent-text); }
+.slots-pay summary { cursor: pointer; font-weight: 600; color: var(--accent-text); }
+.slots-pay-grid { display: grid; gap: 6px; margin-top: var(--s3); }
+.slots-pay-row { display: grid; grid-template-columns: 44px 1fr auto; align-items: center; gap: var(--s3); padding: 6px var(--s2); border-radius: var(--r-md); background: var(--surface-2); }
+.slots-pay-row img { width: 44px; height: 33px; object-fit: contain; }
+@media (max-width: 599px) { .slots-pay-row { grid-template-columns: 40px 1fr; } .slots-pay-row > :last-child { grid-column: 2; } }
+.cas-check { gap: var(--s2); align-items: center; cursor: pointer; }
+@media (max-width: 599px) {
+  .cas-tabs { grid-template-columns: repeat(2, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) { .slot-strip.is-spinning { animation: none; } }
+@media (max-width: 899px) { .cas-slots { order: -1; } }

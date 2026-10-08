@@ -23,8 +23,9 @@ import { parseTradeUrl, rublesToKop } from './validate.js';
 import * as admin from './admin.js';
 import { getCase, listCases, openCase } from './cases.js';
 import { previewContract, signContract } from './contracts.js';
+import { slotsInfo } from './slots.js';
 import {
-  activeMines, cashoutCrash, cashoutMines, myCasinoGames, openMine, playDice, startCrash, startMines, waitCrash, CRASH_K, CRASH_MAX,
+  activeMines, cashoutCrash, cashoutMines, myCasinoGames, openMine, playDice, playSlots, startCrash, startMines, waitCrash, CRASH_K, CRASH_MAX,
 } from './casino.js';
 import { TIERS, XP_WEIGHT, vipInfo } from './vip.js';
 import { createPromo, listPromos, redeemPromo, setPromoActive } from './promo.js';
@@ -174,7 +175,7 @@ r.get('/api/me', async (req) => {
       market: { markup: s.marketMarkup, sellRate: s.siteSellRate },
       cases: { edge: s.caseEdge },
       vip: { tiers: TIERS, weights: XP_WEIGHT },
-      casino: { edge: s.casinoEdge, minBet: s.casinoMinBet, maxBet: s.casinoMaxBet, maxWin: s.casinoMaxWin, crashK: CRASH_K, crashMax: CRASH_MAX },
+      casino: { edge: s.casinoEdge, minBet: s.casinoMinBet, maxBet: s.casinoMaxBet, maxWin: s.casinoMaxWin, crashK: CRASH_K, crashMax: CRASH_MAX, slots: slotsInfo(s.casinoEdge) },
       contracts: { edge: s.contractEdge, minMult: s.contractMinMult, maxMult: s.contractMaxMult, minItems: s.contractMinItems, maxItems: s.contractMaxItems },
       // Для страницы входа: ID и имя бота LuxeDrop (не секретные), тестовый вход — только локально
       auth: { telegramBotId: botId(), botUsername: config.tgBotUsername || null, devLogin: config.devLogin },
@@ -296,6 +297,12 @@ r.post('/api/casino/dice', async (req) => {
   const { bet, chance, over } = await readJson(req);
   return playDice(u.id, { bet: num(bet), chance: num(chance), over: over === true });
 });
+r.post('/api/casino/slots', async (req) => {
+  const u = await requireUser(req);
+  await rateLimit(`casino:${u.id}`, 240, 60);
+  const { bet } = await readJson(req);
+  return playSlots(u.id, { bet: num(bet) });
+});
 r.get('/api/casino/mines', async (req) => ({ game: await activeMines((await requireUser(req)).id) }));
 r.post('/api/casino/mines/start', async (req) => {
   const u = await requireUser(req);
@@ -333,7 +340,7 @@ r.get('/api/casino/crash/:id/wait', async (req, res, { params }) => {
 r.get('/api/casino/history', async (req, res, { url }) => {
   const u = await requireUser(req);
   const game = url.searchParams.get('game');
-  return myCasinoGames(u.id, ['crash', 'mines', 'dice'].includes(game) ? game : null);
+  return myCasinoGames(u.id, ['crash', 'mines', 'dice', 'slots'].includes(game) ? game : null);
 });
 
 // ── Кейсы ──────────────────────────────────────────────────
