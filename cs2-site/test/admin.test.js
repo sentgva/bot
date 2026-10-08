@@ -111,3 +111,34 @@ test('бан: срок 1/7/30 дней или навсегда, с причин�
   await updateUser(u.id, { action: 'unban' });
   assert.equal(activeBan(await db.one('select * from users where id = $1', [u.id])), null);
 });
+
+test('изъятие скинов: пропадают из инвентаря, журнал с причиной, выводимые и чужие не трогаются', async () => {
+  const { confiscateItems, userDetail } = await import('../lib/admin.js');
+  const { listOwned } = await import('../lib/inventory.js');
+  const db = await getDb();
+  const adminUser = await makeUser(0);
+  const u = await makeUser(0);
+  const other = await makeUser(0);
+  const { hash_name: hash, price } = await db.one('select hash_name, price from items where quantity > 0 order by price desc limit 1');
+  const give = async (owner, status = 'owned') => (await db.one(
+    `insert into user_items (user_id, hash_name, price, source, status) values ($1, $2, $3, 'case', $4) returning id`, [owner, hash, price, status],
+  )).id;
+  const a = await give(u.id);
+  const b = await give(u.id);
+  const w = await give(u.id, 'withdrawing');
+  const foreign = await give(other.id);
+
+  await assert.rejects(confiscateItems(u.id, [a], '', adminUser), /причину/);
+  await assert.rejects(confiscateItems(u.id, [a, foreign], 'Абуз бонусов', adminUser), /недоступна/, 'чужой скин — нельзя');
+  await assert.rejects(confiscateItems(u.id, [w], 'Абуз бонусов', adminUser), /недоступна/, 'выводимый — нельзя');
+  const r = await confiscateItems(u.id, [a, b], 'Абуз бонусов', adminUser);
+  assert.equal(r.count, 2);
+  assert.equal(r.total, price * 2);
+  const left = (await listOwned(u.id)).map((i) => i.id);
+  assert.deepEqual(left, [w], 'в инвентаре остался только выводимый');
+  await assert.rejects(confiscateItems(u.id, [a], 'Повтор', adminUser), /недоступна/, 'второй раз не изъять');
+  const d = await userDetail(u.id);
+  assert.equal(d.confiscated.length, 2);
+  assert.equal(d.confiscated[0].reason, 'Абуз бонусов');
+  assert.equal((await db.one('select status from user_items where id = $1', [foreign])).status, 'owned');
+});

@@ -449,6 +449,11 @@ r.post('/api/admin/skin-withdrawals/:id', async (req, res, { params }) => {
 });
 r.get('/api/admin/users', async (req, res, { url }) => { await requireAdmin(req); return admin.findUsers(url.searchParams.get('q')); });
 r.get('/api/admin/users/:id', async (req, res, { params }) => { await requireAdmin(req); return admin.userDetail(int(params.id)); });
+r.post('/api/admin/users/:id/confiscate', async (req, res, { params }) => {
+  const me = await requireAdmin(req);
+  const b = await readJson(req);
+  return admin.confiscateItems(int(params.id), Array.isArray(b.ids) ? b.ids.map(int) : [], str(b.reason, 200), me);
+});
 r.post('/api/admin/users/:id', async (req, res, { params }) => {
   const me = await requireAdmin(req);
   const b = await readJson(req);

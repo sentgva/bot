@@ -105,13 +105,16 @@ const KIND = {
 };
 const QUICK = [100, 1000, 10000, 50000];
 
+const SOURCE = { case: 'Из кейса', upgrade: 'Апгрейд', contract: 'Контракт', admin: 'От админа', market: 'Маркет' };
+
 async function openUser(id) {
   currentUserId = id;
   $$('[data-user]').forEach((r) => r.classList.toggle('is-active', r.dataset.user === String(id)));
   const card = $('[data-user-card]');
   card.innerHTML = '<p class="muted">Загружаем…</p>';
   try {
-    const { user: u, stats: st, ledger } = await api(`/api/admin/users/${id}`);
+    const { user: u, stats: st, ledger, items = [], confiscated = [] } = await api(`/api/admin/users/${id}`);
+    const owned = items.filter((i) => i.status === 'owned');
     const row = (l, v) => `<div><dt>${l}</dt><dd>${v}</dd></div>`;
     card.innerHTML = `
       <div class="adm-user-head">
@@ -151,6 +154,25 @@ async function openUser(id) {
         ${row('Апгрейдов', `${st.upgrades} (побед ${st.upgrades_won})`)}${row('Кейсов открыто', st.cases)}${row('Скинов в инвентаре', `${st.items} · ${lc(st.items_value)}`)}
         ${row('Зарегистрирован', dateTime(u.created_at))}${row('Последний вход', dateTime(u.last_seen_at))}
       </dl>
+      <h3 class="h3 mt-6 mb-2">Инвентарь <span class="muted small">${items.length ? `${items.length} шт. · ${lc(items.reduce((a, i) => a + i.price, 0))}` : ''}</span></h3>
+      ${items.length ? `
+      <form class="adm-grant" data-confiscate novalidate>
+        <input class="input" name="reason" type="text" maxlength="200" placeholder="Причина изъятия — игрок получит её в боте" aria-label="Причина изъятия">
+        <div class="row">
+          <button class="btn btn-danger btn-sm" type="button" data-confiscate-selected disabled data-loading="Изымаем…">Изъять выбранные</button>
+          ${owned.length > 1 ? `<button class="btn btn-ghost btn-sm" type="button" data-confiscate-all data-loading="Изымаем…">Изъять всё (${owned.length})</button>` : ''}
+        </div>
+      </form>
+      <div class="adm-items">${items.map((i) => `
+        <label class="adm-item${i.status !== 'owned' ? ' is-locked' : ''}">
+          <input type="checkbox" value="${i.id}" data-item-check ${i.status !== 'owned' ? 'disabled' : ''}>
+          ${i.image ? `<img src="${esc(i.image)}/96fx72f" alt="" loading="lazy" width="48" height="36">` : '<span></span>'}
+          <span class="grow small">${esc(i.hash_name)}${i.status === 'withdrawing' ? ' <span class="badge badge-warning">выводится</span>' : ''}<br><span class="muted">${esc(SOURCE[i.source] || i.source)} · ${dateTime(i.created_at)}</span></span>
+          <span class="amount small">${lc(i.price)}</span>
+        </label>`).join('')}</div>` : '<p class="muted small">Скинов нет</p>'}
+      ${confiscated.length ? `<details class="mt-4"><summary class="small">Изъято раньше (${confiscated.length})</summary><div class="adm-ledger mt-2">${confiscated.map((c) => `<div class="adm-ledger-row"><span class="badge">Изъят</span>
+        <span class="grow small">${esc(c.hash_name)} · ${esc(c.reason)} <span class="muted">${esc(c.admin_name || '')} · ${dateTime(c.created_at)}</span></span>
+        <span class="amount small">${lc(c.price)}</span></div>`).join('')}</div></details>` : ''}
       <h3 class="h3 mt-6 mb-2">История баланса</h3>
       <div class="adm-ledger">${ledger.length ? ledger.map((l) => `<div class="adm-ledger-row"><span class="badge">${esc(KIND[l.kind] || l.kind)}</span>
         <span class="grow small">${esc(l.note || '')} <span class="muted">${dateTime(l.created_at)}</span></span>
@@ -216,6 +238,7 @@ $('[data-user-card]').addEventListener('submit', async (e) => {
 $('[data-user-card]').addEventListener('submit', async (e) => {
   e.preventDefault();
   const form = e.target.closest('[data-grant]');
+  if (!form) return; // форма изъятия отправляется кнопками, не Enter-ом
   const btn = e.submitter;
   const value = Number(form.elements.amount.value);
   if (!Number.isInteger(value) || value <= 0) { toast('Введи целое число LC больше нуля', 'error'); form.elements.amount.focus(); return; }
@@ -229,6 +252,37 @@ $('[data-user-card]').addEventListener('submit', async (e) => {
       openUser(currentUserId);
       overview();
       load();
+    } catch (err) { toastError(err); }
+  });
+});
+// Изъятие скинов: отметить галочками или «Изъять всё», причина обязательна
+$('[data-user-card]').addEventListener('change', (e) => {
+  if (!e.target.matches('[data-item-check]')) return;
+  const n = $$('[data-item-check]:checked').length;
+  const btn = $('[data-confiscate-selected]');
+  btn.disabled = !n;
+  btn.textContent = n ? `Изъять выбранные (${n})` : 'Изъять выбранные';
+});
+$('[data-user-card]').addEventListener('click', async (e) => {
+  const btn = e.target.closest('[data-confiscate-selected], [data-confiscate-all]');
+  if (!btn) return;
+  const form = $('[data-confiscate]');
+  const reason = form.elements.reason.value.trim();
+  if (!reason) { toast('Укажи причину изъятия', 'error'); form.elements.reason.focus(); return; }
+  const checks = btn.matches('[data-confiscate-all]') ? $$('[data-item-check]:not(:disabled)') : $$('[data-item-check]:checked');
+  const ids = checks.map((c) => Number(c.value));
+  if (!ids.length) return;
+  const ok = await confirmDialog({
+    title: `Изъять ${ids.length === 1 ? 'скин' : `${ids.length} скинов`}?`,
+    html: `<p>Скины пропадут из инвентаря игрока без компенсации. Игрок получит сообщение в боте с причиной:</p><p><b>${esc(reason)}</b></p>`,
+    confirm: 'Изъять',
+  });
+  if (!ok) return;
+  await withLoading(btn, async () => {
+    try {
+      const r = await api(`/api/admin/users/${currentUserId}/confiscate`, { method: 'POST', body: { ids, reason } });
+      toast(`Изъято: ${r.count} шт. на ${lc(r.total)}`, 'success');
+      openUser(currentUserId);
     } catch (err) { toastError(err); }
   });
 });

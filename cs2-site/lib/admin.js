@@ -108,7 +108,52 @@ export async function userDetail(id) {
     'select id, amount, balance_after, kind, note, created_at from ledger where user_id = $1 order by id desc limit 40',
     [id],
   );
-  return { user, stats, ledger };
+  // Инвентарь (что можно изъять) и последние изъятия
+  const items = await db.query(
+    `select ui.id, ui.hash_name, ui.price, ui.status, ui.source, ui.created_at, i.name, i.image, i.rarity
+     from user_items ui join items i on i.hash_name = ui.hash_name
+     where ui.user_id = $1 and ui.status in ('owned', 'withdrawing') order by ui.price desc, ui.id desc limit 200`,
+    [id],
+  );
+  const confiscated = await db.query(
+    `select c.id, c.hash_name, c.price, c.reason, c.created_at, a.name as admin_name
+     from item_confiscations c left join users a on a.id = c.admin_id where c.user_id = $1 order by c.id desc limit 20`,
+    [id],
+  );
+  return { user, stats, ledger, items, confiscated };
+}
+
+// Изъять скины из инвентаря игрока (только те, что лежат в инвентаре — не выводимые и не проданные).
+// Игроку приходит сообщение в бота с причиной.
+export async function confiscateItems(userId, ids, reason, actor) {
+  const list = [...new Set((Array.isArray(ids) ? ids : []).filter(Number.isSafeInteger))];
+  if (!list.length || list.length > 200) fail(400, 'Выбери скины для изъятия');
+  const why = String(reason || '').trim().slice(0, 200);
+  if (!why) fail(400, 'Укажи причину изъятия');
+  const db = await getDb();
+  const result = await db.tx(async (q) => {
+    const target = await q.one('select * from users where id = $1 for update', [userId]);
+    if (!target) fail(404, 'Пользователь не найден');
+    if (isOwner(target) && !isOwner(actor)) fail(403, 'У владельца изымать скины нельзя');
+    const rows = await q.query(
+      `select ui.id, ui.hash_name, ui.price from user_items ui
+       where ui.user_id = $1 and ui.id = any($2) and ui.status = 'owned' for update`,
+      [userId, list],
+    );
+    if (rows.length !== list.length) fail(409, 'Часть скинов уже недоступна (продана, выводится или изъята). Обнови карточку');
+    await q.query(`update user_items set status = 'confiscated', updated_at = now() where id = any($1)`, [list]);
+    for (const r of rows) {
+      await q.query(
+        'insert into item_confiscations (user_item_id, user_id, admin_id, hash_name, price, reason) values ($1, $2, $3, $4, $5, $6)',
+        [r.id, userId, actor?.id ?? null, r.hash_name, r.price, why],
+      );
+    }
+    return { target, rows };
+  });
+  const names = result.rows.map((r) => r.hash_name);
+  const total = result.rows.reduce((a, r) => a + r.price, 0);
+  tellUser(result.target.telegram_id, `⚠️ Администрация изъяла ${names.length === 1 ? 'скин' : `скины (${names.length})`} из твоего инвентаря:\n${names.slice(0, 10).map((n) => `• ${n}`).join('\n')}${names.length > 10 ? `\n…и ещё ${names.length - 10}` : ''}\n\nПричина: ${why}\n\nЕсли не согласен — напиши в поддержку прямо здесь.`);
+  return { ok: true, count: result.rows.length, total };
 }
 
 export async function updateUser(id, { action, amount, note, days }, actor = null) {

@@ -1314,3 +1314,10 @@ html.is-banned .site-header { top: auto; }
 }
 @media (prefers-reduced-motion: reduce) { .slot-strip.is-spinning { animation: none; } }
 @media (max-width: 899px) { .cas-slots { order: -1; } }
+
+/* Админка: инвентарь игрока и изъятие */
+.adm-items { display: grid; gap: 6px; max-height: 420px; overflow-y: auto; margin-top: var(--s3); }
+.adm-item { display: grid; grid-template-columns: auto 48px 1fr auto; align-items: center; gap: var(--s3); padding: 6px var(--s3); border-radius: var(--r-md); background: var(--surface-2); cursor: pointer; }
+.adm-item img { width: 48px; height: 36px; object-fit: contain; }
+.adm-item:has(input:checked) { box-shadow: inset 0 0 0 2px var(--danger); }
+.adm-item.is-locked { opacity: .55; cursor: default; }

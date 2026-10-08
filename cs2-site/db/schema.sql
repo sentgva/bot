@@ -356,3 +356,17 @@ begin
     insert into meta (key, value) values ('migration_casino_maxbet_50k', 'true');
   end if;
 end $$;
+
+-- Изъятие скинов админом: скин получает статус confiscated и пропадает из инвентаря игрока.
+-- Кто, у кого, что и почему — журнал для разбора спорных случаев.
+create table if not exists item_confiscations (
+  id           bigserial primary key,
+  user_item_id bigint not null references user_items(id),
+  user_id      bigint not null references users(id),
+  admin_id     bigint references users(id),
+  hash_name    text not null,
+  price        bigint not null,
+  reason       text not null,
+  created_at   timestamptz not null default now()
+);
+create index if not exists item_confiscations_user_idx on item_confiscations (user_id, id desc);
