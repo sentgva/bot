@@ -93,7 +93,7 @@ const openButton = (text = '🎯 Открыть LuxeDrop', ref = null) => ({
 // Приветствие: открыть приложение + поддержка (кнопка «Поддержка» обрабатывается в lib/app.js, callback_data = support)
 const welcomeKeyboard = (ref) => ({ inline_keyboard: [...openButton(undefined, ref).inline_keyboard, [{ text: '💬 Поддержка', callback_data: 'support' }]] });
 
-export const SUPPORT_TEXT = '💬 Поддержка LuxeDrop\n\nНапиши вопрос сюда одним сообщением — передадим админам, ответ придёт в этот чат.';
+export const SUPPORT_TEXT = '💬 Поддержка LuxeDrop\n\nНапиши вопрос сюда — можно текстом, фото, видео, кружком или голосовым. Передадим админам, ответ придёт в этот чат.';
 export const welcomeImageUrl = () => `${config.siteUrl}/assets/img/bot-welcome.jpg`;
 const escHtml = (v) => String(v ?? '').replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
 

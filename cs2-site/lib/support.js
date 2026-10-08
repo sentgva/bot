@@ -1,9 +1,10 @@
 // Поддержка через Telegram-бота.
-//   • Игрок пишет боту текст → сообщение попадает в его открытый тикет (или создаётся новый),
+//   • Игрок пишет боту текст или шлёт медиа (фото, видео, кружок, голосовое, файл…) → сообщение попадает в его открытый тикет (или создаётся новый),
 //     бот пересылает его всем админам (владельцы из настроек + назначенные в панели), которые нажимали /start.
 //   • Админ отвечает на это сообщение (reply) — бот доставляет ответ игроку. Ещё можно: /reply N текст,
 //     /tickets — открытые тикеты, /close N — закрыть.
-//   • То же самое — во вкладке «Поддержка» в админ-панели.
+//   • Медиа копируется (copyMessage) — без пересылки «от кого», поэтому ответы админов анонимны.
+//   • То же самое — во вкладке «Поддержка» в админ-панели (медиа там отмечено, смотреть его — в боте).
 
 import { config } from './config.js';
 import { getDb } from './db.js';
@@ -13,6 +14,17 @@ import { isAdmin } from './users.js';
 
 const MAX_TEXT = 3500;
 const clip = (s) => String(s || '').trim().slice(0, MAX_TEXT);
+// Медиа в сообщении Telegram → подпись для журнала тикета (null — обычный текст)
+const MEDIA = [
+  ['video_note', 'Кружок'], ['voice', 'Голосовое'], ['photo', 'Фото'], ['video', 'Видео'], ['animation', 'GIF'],
+  ['audio', 'Аудио'], ['sticker', 'Стикер'], ['document', 'Файл'],
+];
+export function mediaOf(msg) {
+  const hit = MEDIA.find(([k]) => msg?.[k]);
+  return hit ? { chatId: msg.chat.id, messageId: msg.message_id, label: hit[1], group: msg.media_group_id || null } : null;
+}
+const logText = (body, media) => (media ? `📎 ${media.label} (смотреть в боте)${body ? `\n${body}` : ''}` : body);
+
 const who = (t) => [t.tg_name || 'Игрок', t.tg_username ? `@${t.tg_username}` : null, `TG ${t.telegram_id}`].filter(Boolean).join(' · ');
 
 // Все админы с Telegram: владельцы (по ID/нику из окружения) и назначенные в панели
@@ -33,11 +45,11 @@ export async function isAdminTelegram(telegramId) {
   return Boolean(u && isAdmin(u));
 }
 
-// Сообщение игрока → тикет; рассылка админам
-export async function userMessage(from, text, fetchImpl = fetch) {
+// Сообщение игрока → тикет; рассылка админам. media — из mediaOf(msg): копируем его админам как есть.
+export async function userMessage(from, text, fetchImpl = fetch, media = null) {
   const db = await getDb();
   const body = clip(text);
-  if (!body) return null;
+  if (!body && !media) return null;
   const tgId = String(from.id);
   const name = [from.first_name, from.last_name].filter(Boolean).join(' ').slice(0, 64) || null;
   const ticket = await db.tx(async (q) => {
@@ -49,41 +61,53 @@ export async function userMessage(from, text, fetchImpl = fetch) {
         [tgId, user?.id ?? null, name, from.username || null],
       );
       t.isNew = true;
-    } else {
-      await q.query('update tickets set tg_name = $2, tg_username = $3, updated_at = now() where id = $1', [t.id, name, from.username || null]);
     }
-    await q.query(`insert into ticket_messages (ticket_id, sender, text) values ($1, 'user', $2)`, [t.id, body]);
+    // Следующие фото того же альбома — без повторного «Добавили в обращение» и шапки у админов
+    t.sameAlbum = Boolean(media?.group && t.last_media_group === media.group);
+    await q.query('update tickets set tg_name = $2, tg_username = $3, last_media_group = $4, updated_at = now() where id = $1', [t.id, name, from.username || null, media?.group || null]);
+    await q.query(`insert into ticket_messages (ticket_id, sender, text) values ($1, 'user', $2)`, [t.id, logText(body, media)]);
     return { ...t, tg_name: name, tg_username: from.username || null };
   });
-  await tgApi('sendMessage', {
-    chat_id: tgId,
-    text: ticket.isNew ? `✉️ Обращение #${ticket.id} создано — передали в поддержку. Ответим прямо здесь, обычно в течение часа.` : '✉️ Добавили в обращение — поддержка увидит.',
-  }, fetchImpl).catch(() => {});
+  if (!ticket.sameAlbum) {
+    await tgApi('sendMessage', {
+      chat_id: tgId,
+      text: ticket.isNew ? `✉️ Обращение #${ticket.id} создано — передали в поддержку. Ответим прямо здесь, обычно в течение часа.` : '✉️ Добавили в обращение — поддержка увидит.',
+    }, fetchImpl).catch(() => {});
+  }
   const chats = await adminChats(db);
   const head = `🆘 Тикет #${ticket.id}${ticket.isNew ? ' (новый)' : ''}\n${who(ticket)}`;
+  const hint = `↩️ Ответь на это сообщение (текстом, фото, кружком…), чтобы ответить игроку. /close ${ticket.id} — закрыть.`;
+  const remember = (chat, m) => db.query('insert into ticket_admin_messages (chat_id, message_id, ticket_id) values ($1, $2, $3) on conflict do nothing', [String(chat), m.message_id, ticket.id]);
   for (const chat of chats) {
     try {
-      const m = await tgApi('sendMessage', {
-        chat_id: chat,
-        text: `${head}\n\n${body}\n\n↩️ Ответь на это сообщение, чтобы ответить игроку. /close ${ticket.id} — закрыть.`,
-      }, fetchImpl);
-      await db.query('insert into ticket_admin_messages (chat_id, message_id, ticket_id) values ($1, $2, $3) on conflict do nothing', [String(chat), m.message_id, ticket.id]);
+      if (!media) {
+        await remember(chat, await tgApi('sendMessage', { chat_id: chat, text: `${head}\n\n${body}\n\n${hint}` }, fetchImpl));
+        continue;
+      }
+      if (!ticket.sameAlbum) await remember(chat, await tgApi('sendMessage', { chat_id: chat, text: `${head}\n\n📎 ${media.label}${body ? ' с подписью' : ''} — ниже.\n\n${hint}` }, fetchImpl));
+      await remember(chat, await tgApi('copyMessage', { chat_id: chat, from_chat_id: media.chatId, message_id: media.messageId }, fetchImpl));
     } catch (err) { console.warn(`Тикет #${ticket.id}: не доставлен админу ${chat}: ${err.message}`); }
   }
   return ticket;
 }
 
 // Ответ админа (из бота или панели) → игроку
-export async function adminReply(ticketId, text, _admin, fetchImpl = fetch) {
+// media — из mediaOf(msg): админ ответил фото, кружком и т.п. (копия, без «переслано от»)
+export async function adminReply(ticketId, text, _admin, fetchImpl = fetch, media = null) {
   const body = clip(text);
-  if (!body) fail(400, 'Напиши текст ответа');
+  if (!body && !media) fail(400, 'Напиши текст ответа');
   const db = await getDb();
   const t = await db.one('select * from tickets where id = $1', [ticketId]);
   if (!t) fail(404, 'Тикет не найден');
-  await tgApi('sendMessage', { chat_id: t.telegram_id, text: `💬 Поддержка LuxeDrop:\n\n${body}` }, fetchImpl)
-    .catch((err) => fail(502, `Не удалось доставить ответ в Telegram: ${err.message}`));
+  const deliver = async () => {
+    if (!media) return tgApi('sendMessage', { chat_id: t.telegram_id, text: `💬 Поддержка LuxeDrop:\n\n${body}` }, fetchImpl);
+    await tgApi('sendMessage', { chat_id: t.telegram_id, text: body ? `💬 Поддержка LuxeDrop:\n\n${body}` : '💬 Поддержка LuxeDrop:' }, fetchImpl);
+    // Подпись уже отправлена текстом выше — у копии её убираем (caption: '')
+    return tgApi('copyMessage', { chat_id: t.telegram_id, from_chat_id: media.chatId, message_id: media.messageId, caption: '' }, fetchImpl);
+  };
+  await deliver().catch((err) => fail(502, `Не удалось доставить ответ в Telegram: ${err.message}`));
   // Кто из админов ответил, не сохраняем и не показываем — для всех это просто «Поддержка»
-  await db.query(`insert into ticket_messages (ticket_id, sender, text) values ($1, 'admin', $2)`, [t.id, body]);
+  await db.query(`insert into ticket_messages (ticket_id, sender, text) values ($1, 'admin', $2)`, [t.id, logText(body, media)]);
   await db.query(`update tickets set status = 'open', updated_at = now() where id = $1`, [t.id]);
   return { ok: true };
 }
@@ -122,7 +146,8 @@ export async function getTicket(id) {
 export async function adminBotMessage(msg, fetchImpl = fetch) {
   const db = await getDb();
   const send = (text) => tgApi('sendMessage', { chat_id: msg.chat.id, text }, fetchImpl);
-  const text = msg.text || '';
+  const text = msg.text || msg.caption || '';
+  const media = mediaOf(msg);
 
   if (text.startsWith('/tickets')) {
     const list = await listTickets('open');
@@ -137,16 +162,16 @@ export async function adminBotMessage(msg, fetchImpl = fetch) {
     await send(`Тикет #${close[1]} закрыт`);
     return { handled: true };
   }
-  const cmd = text.match(/^\/reply\s+#?(\d+)\s+([\s\S]+)/);
+  const cmd = text.match(/^\/reply\s+#?(\d+)(?:\s+([\s\S]+))?$/);
   let ticketId = cmd ? Number(cmd[1]) : null;
-  let body = cmd ? cmd[2] : null;
+  let body = cmd ? cmd[2] || '' : null;
   if (!ticketId && msg.reply_to_message) {
     const map = await db.one('select ticket_id from ticket_admin_messages where chat_id = $1 and message_id = $2', [String(msg.chat.id), msg.reply_to_message.message_id]);
     if (map) { ticketId = map.ticket_id; body = text; }
   }
   if (!ticketId) return { handled: false };
   try {
-    await adminReply(ticketId, body, null, fetchImpl);
+    await adminReply(ticketId, body, null, fetchImpl, media);
     await send(`✅ Ответ на тикет #${ticketId} отправлен`);
   } catch (err) { await send(`⚠️ ${err.message}`); }
   return { handled: true };

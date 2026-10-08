@@ -27,7 +27,7 @@ import { TIERS, XP_WEIGHT, vipInfo } from './vip.js';
 import { createPromo, listPromos, redeemPromo, setPromoActive } from './promo.js';
 import { referralStats } from './referrals.js';
 import { handleBroadcastCallback, isOwnerTelegram, ownerBotMessage, rememberBotUser, runBroadcast } from './broadcast.js';
-import { adminBotMessage, adminReply, getTicket, isAdminTelegram, listTickets, setTicketStatus, userMessage } from './support.js';
+import { adminBotMessage, adminReply, getTicket, isAdminTelegram, listTickets, mediaOf, setTicketStatus, userMessage } from './support.js';
 
 const r = createRouter();
 
@@ -135,7 +135,7 @@ async function handlePrivateMessage(update) {
   if (await isAdminTelegram(msg.from.id)) {
     if ((await adminBotMessage(msg)).handled) return;
     if (!command) {
-      await tgApi('sendMessage', { chat_id: msg.chat.id, text: 'Чтобы ответить игроку — ответь (reply) на сообщение тикета или напиши /reply N текст.\n/tickets — открытые тикеты, /close N — закрыть.' });
+      await tgApi('sendMessage', { chat_id: msg.chat.id, text: 'Чтобы ответить игроку — ответь (reply) на сообщение тикета: текстом, фото, видео, кружком или голосовым. Или напиши /reply N текст.\n/tickets — открытые тикеты, /close N — закрыть.' });
       return;
     }
   }
@@ -144,8 +144,10 @@ async function handlePrivateMessage(update) {
     return;
   }
   if (!command) {
-    if (!text) { await tgApi('sendMessage', { chat_id: msg.chat.id, text: 'Пока принимаем только текст — опиши вопрос словами 🙏' }); return; }
-    await userMessage(msg.from, text);
+    // Текст или медиа (фото, видео, кружок, голосовое, файл…) — в тикет поддержки
+    const media = mediaOf(msg);
+    if (!text && !media) { await tgApi('sendMessage', { chat_id: msg.chat.id, text: 'Такое не получится передать — пришли текст, фото, видео, кружок, голосовое или файл 🙏' }); return; }
+    await userMessage(msg.from, text || msg.caption || '', fetch, media);
     return;
   }
   await handleUpdate(update, fetch, { bonusLc: Math.floor((await getSettings()).signupBonus / 100) });

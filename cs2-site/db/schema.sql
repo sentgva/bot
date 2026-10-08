@@ -314,3 +314,6 @@ end $$;
 
 -- Разово: ответы поддержки анонимны — стираем сохранённые имена админов в тикетах
 update ticket_messages set admin_name = null where admin_name is not null;
+
+-- Поддержка: альбомы (несколько фото одним сообщением) — подтверждение и шапка тикета только для первого
+alter table tickets add column if not exists last_media_group text;

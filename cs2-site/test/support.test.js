@@ -60,3 +60,39 @@ test('поддержка: сообщение игрока → тикет и ра
     config.tgBotToken = '';
   }
 });
+
+test('поддержка: игрок шлёт кружок и альбом, админ отвечает фото — всё копируется без «переслано от»', async () => {
+  config.tgBotToken = '1:test';
+  const admin = await makeUser(0);
+  config.adminTgIds = [String(admin.telegram_id)];
+  try {
+    const { mediaOf } = await import('../lib/support.js');
+    const tg = fakeTelegram();
+    const circle = { chat: { id: 777 }, message_id: 10, video_note: { file_id: 'x' } };
+    const t = await userMessage({ id: 777, first_name: 'Петя' }, '', tg.fetchImpl, mediaOf(circle));
+    assert.ok(t.isNew);
+    const copy = tg.sent.find((m) => m.method === 'copyMessage');
+    assert.deepEqual([copy.chat_id, copy.from_chat_id, copy.message_id], [String(admin.telegram_id), 777, 10]);
+    assert.ok(tg.sent.some((m) => m.method === 'sendMessage' && m.chat_id === String(admin.telegram_id) && /Кружок/.test(m.text)));
+    // Альбом из двух фото: шапка у админа и «Добавили в обращение» — один раз
+    tg.sent.length = 0;
+    for (const id of [11, 12]) {
+      await userMessage({ id: 777, first_name: 'Петя' }, id === 11 ? 'скрин ошибки' : '', tg.fetchImpl, mediaOf({ chat: { id: 777 }, message_id: id, photo: [{}], media_group_id: 'g1' }));
+    }
+    assert.equal(tg.sent.filter((m) => m.method === 'copyMessage').length, 2);
+    assert.equal(tg.sent.filter((m) => m.method === 'sendMessage' && m.chat_id === '777').length, 1);
+    assert.equal(tg.sent.filter((m) => m.method === 'sendMessage' && m.chat_id === String(admin.telegram_id)).length, 1);
+    const { messages } = await getTicket(t.id);
+    assert.match(messages[0].text, /Кружок/);
+    assert.match(messages[1].text, /Фото[\s\S]*скрин ошибки/);
+    // Админ отвечает фото reply'ем на копию медиа
+    const replyTo = tg.sent.filter((m) => m.method === 'copyMessage').length && (await (await (await import('../lib/db.js')).getDb()).one('select max(message_id)::int as id from ticket_admin_messages')).id;
+    tg.sent.length = 0;
+    const r = await adminBotMessage({ chat: { id: admin.telegram_id }, from: { id: admin.telegram_id }, message_id: 50, photo: [{}], caption: 'Вот так', reply_to_message: { message_id: replyTo } }, tg.fetchImpl);
+    assert.equal(r.handled, true);
+    const toUser = tg.sent.filter((m) => m.chat_id === t.telegram_id);
+    assert.match(toUser[0].text, /Поддержка LuxeDrop:\n\nВот так/);
+    assert.equal(toUser[1].method, 'copyMessage');
+    assert.equal(toUser[1].caption, '');
+  } finally { config.adminTgIds = []; }
+});
