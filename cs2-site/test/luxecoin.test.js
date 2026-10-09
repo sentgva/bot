@@ -102,3 +102,23 @@ test('акция на пополнение: +N% к оплате звёздами
     await updateSettings({ depositBonus: 0, depositBonusUntil: 0 });
   }
 });
+
+test('пополнение звёздами: уведомление приходит всем админам в бота', async () => {
+  config.tgBotToken = '123:stars-test';
+  const owner = await makeUser(0);
+  const helper = await makeUser(0);
+  await (await getDb()).query('update users set is_admin = true where id = $1', [helper.id]);
+  config.adminTgIds = [String(owner.telegram_id)];
+  try {
+    const u = await makeUser(0);
+    const tg = fakeTelegram();
+    const inv = await createStarsInvoice(u.id, 77, tg.fetchImpl);
+    await handleStarsPaid({ chat: { id: 5 }, from: { id: 5 }, successful_payment: { currency: 'XTR', total_amount: 77, invoice_payload: `stars:${inv.id}`, telegram_payment_charge_id: 'ch_n' } }, tg.fetchImpl);
+    const toAdmins = tg.calls.filter((c) => c.method === 'sendMessage' && /Пополнение: 77 ⭐ → 100 LC/.test(c.body.text));
+    assert.deepEqual(toAdmins.map((c) => String(c.body.chat_id)).sort(), [String(owner.telegram_id), String(helper.telegram_id)].sort());
+    assert.match(toAdmins[0].body.text, new RegExp(`ID ${u.id}`));
+  } finally {
+    config.tgBotToken = '';
+    config.adminTgIds = [];
+  }
+});

@@ -39,6 +39,17 @@ async function adminChats(q) {
   return [...ids];
 }
 
+// Сообщение всем админам в бота (уведомления: пополнения и т.п.). Ошибки не ломают основную операцию.
+export async function notifyAdmins(text, fetchImpl = fetch) {
+  if (!config.tgBotToken) return 0;
+  const chats = await adminChats(await getDb());
+  let sent = 0;
+  for (const chat of chats) {
+    try { await tgApi('sendMessage', { chat_id: chat, text, disable_web_page_preview: true }, fetchImpl); sent++; } catch (err) { console.warn(`Уведомление админу ${chat} не доставлено: ${err.message}`); }
+  }
+  return sent;
+}
+
 export async function isAdminTelegram(telegramId) {
   if (config.adminTgIds.includes(String(telegramId))) return true;
   const u = await (await getDb()).one('select * from users where telegram_id = $1', [String(telegramId)]);

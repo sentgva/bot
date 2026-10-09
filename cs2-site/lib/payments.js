@@ -18,6 +18,7 @@ import { floorLc, fmtLc, isWholeLc, starsToLc } from './lc.js';
 import { tgApi } from './telegram.js';
 import { rewardReferrer } from './referrals.js';
 import { addXp } from './vip.js';
+import { notifyAdmins } from './support.js';
 import * as cryptopay from './providers/cryptopay.js';
 
 export const BANKS = ['Сбербанк', 'Т-Банк', 'Альфа-Банк', 'ВТБ', 'Газпромбанк', 'Райффайзенбанк', 'Озон Банк', 'Яндекс Банк', 'Другой банк'];
@@ -170,6 +171,14 @@ export async function handleStarsPaid(message, fetchImpl) {
     return { ok: true, p, balance, bonus, promoBonus, promoPercent: promo?.percent };
   });
   if (result.ok) {
+    // Всем админам в бота: кто пополнил и на сколько
+    const u = await db.one('select id, name, tg_username, telegram_id from users where id = $1', [result.p.user_id]);
+    const extra = (result.promoBonus || 0) + (result.bonus || 0);
+    await notifyAdmins([
+      `💰 Пополнение: ${result.p.details.stars} ⭐ → ${fmtLc(result.p.amount)}${extra ? ` (+${fmtLc(extra)} бонусы)` : ''}`,
+      `👤 ${u?.name || 'Игрок'}${u?.tg_username ? ` · @${u.tg_username}` : ''} · ID ${result.p.user_id}${u?.telegram_id ? ` · TG ${u.telegram_id}` : ''}`,
+      `Баланс после: ${fmtLc(result.balance)}`,
+    ].join('\n'), fetchImpl).catch((err) => console.warn('notifyAdmins:', err.message));
     await tgApi('sendMessage', { chat_id: message.chat.id, text: `✅ Зачислено ${fmtLc(result.p.amount)} за ${result.p.details.stars} ⭐${result.promoBonus ? `\n🔥 Акция +${Math.round(result.promoPercent * 100)}%: +${fmtLc(result.promoBonus)}` : ''}${result.bonus ? `\n🎁 Бонус уровня: +${fmtLc(result.bonus)}` : ''}\nБаланс: ${fmtLc(result.balance)}` }, fetchImpl).catch(() => {});
   } else if (result.review) {
     await notifyAdmin([`⚠️ Оплата звёздами #${result.p.id}: сумма не совпала, проверь вручную`]);
